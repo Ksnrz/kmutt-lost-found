@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build output and test reports
+dist/
+dist-ssr/
+build/
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Local environment variables and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.local
+*.pem
+*.key
+.aws/
+
+# Logs
+logs/
+*.log
+
+# Editor and operating system files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+
+# Local agent configuration
+.codex/
+.agents/
