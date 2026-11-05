@@ -1,0 +1,61 @@
+.register-form {
+  margin-top: 28px;
+}
+
+.register-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 16px;
+}
+
+.register-fields .login-field {
+  min-width: 0;
+  margin-top: 0;
+}
+
+.register-fields input {
+  padding-inline: 14px;
+}
+
+@media (min-width: 851px) and (max-height: 700px) {
+  .register-form {
+    margin-top: 20px;
+  }
+
+  .register-fields {
+    row-gap: 16px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .register-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 851px) and (max-width: 1100px) {
+  .register-card {
+    padding-block: 24px;
+  }
+
+  .register-card .login-brand {
+    margin-bottom: 16px;
+  }
+
+  .register-form {
+    margin-top: 20px;
+  }
+
+  .register-fields {
+    row-gap: 12px;
+  }
+
+  .register-fields input {
+    height: 44px;
+  }
+
+  .register-card .login-submit,
+  .register-card .login-register {
+    margin-top: 16px;
+  }
+}
