@@ -22,9 +22,9 @@ export default function Login() {
           <p className="login-brand">KMUTT <strong>Lost &amp; Found</strong></p>
           <header className="login-header">
             <h1>เข้าสู่ระบบ</h1>
-            <p>กรอกข้อมูลบัญชีนักศึกษาเพื่อเข้าใช้งาน</p>
+            <p>กรอกข้อมูลบัญชีเพื่อเข้าใช้งาน</p>
           </header>
-          <form className="login-form">
+          <form className="login-form" onSubmit={(event) => event.preventDefault()}>
             <div className="login-field">
               <label htmlFor="studentId">รหัสนักศึกษา / อีเมล</label>
               <input id="studentId" name="studentId" type="text" placeholder="กรอกรหัสนักศึกษาหรืออีเมล" required />
@@ -33,7 +33,7 @@ export default function Login() {
               <label htmlFor="password">รหัสผ่าน</label>
               <input id="password" name="password" type="password" placeholder="กรอกรหัส" required />
             </div>
-            <button className="login-submit" type="button">เข้าสู่ระบบ</button>
+            <button className="login-submit" type="submit">เข้าสู่ระบบ</button>
           </form>
           <p className="login-register">ยังไม่มีบัญชี? <a href="/register">สมัครสมาชิก</a></p>
         </section>

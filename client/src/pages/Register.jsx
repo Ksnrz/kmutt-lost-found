@@ -23,17 +23,17 @@ export default function Register() {
           <p className="login-brand">KMUTT <strong>Lost &amp; Found</strong></p>
           <header className="login-header">
             <h1>สมัครสมาชิก</h1>
-            <p>สร้างบัญชีนักศึกษาเพื่อเริ่มใช้งาน</p>
+            <p>สร้างบัญชีเพื่อเริ่มใช้งาน</p>
           </header>
-          <form className="register-form">
+          <form className="register-form" onSubmit={(event) => event.preventDefault()}>
             <div className="register-fields">
               <div className="login-field">
                 <label htmlFor="register-student-id">รหัสนักศึกษา</label>
-                <input id="register-student-id" name="studentId" type="text" placeholder="รหัสนักศึกษา" required />
+                <input id="register-student-id" name="studentId" type="text" placeholder="กรอกรหัสนักศึกษา" required />
               </div>
               <div className="login-field">
                 <label htmlFor="register-email">อีเมล</label>
-                <input id="register-email" name="email" type="email" placeholder="อีเมลนักศึกษา" required />
+                <input id="register-email" name="email" type="email" placeholder="กรอกอีเมล" required />
               </div>
               <div className="login-field">
                 <label htmlFor="register-password">รหัสผ่าน</label>
@@ -44,7 +44,7 @@ export default function Register() {
                 <input id="register-confirm-password" name="confirmPassword" type="password" placeholder="กรอกรหัสผ่านอีกครั้ง" required />
               </div>
             </div>
-            <button className="login-submit" type="button">สมัครสมาชิก</button>
+            <button className="login-submit" type="submit">สมัครสมาชิก</button>
           </form>
           <p className="login-register">มีบัญชีอยู่แล้ว? <a href="/login">เข้าสู่ระบบ</a></p>
         </section>
