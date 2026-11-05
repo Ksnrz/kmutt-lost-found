@@ -10,7 +10,7 @@ export default function Login() {
       <div className="login-layout">
         <section className="login-intro" aria-labelledby="login-intro-title">
           <div className="login-illustration">
-            <img src={mascot} alt="มาสคอตถือแว่นขยายพร้อมช่วยค้นหาของหาย" />
+            <img src={mascot}/>
           </div>
           <h2 id="login-intro-title" className="login-headline">
             ของหาย?<br />ให้เรา<span>ช่วยหา</span>
@@ -19,11 +19,11 @@ export default function Login() {
             ค้นหาประกาศตามตึก แจ้งพบสิ่งของ<br className="login-description-break" />
             และส่งคำขอรับคืน พร้อมหลักฐาน
           </p>
-          <ul className="login-features" aria-label="บริการของเรา">
+          {/* <ul className="login-features" aria-label="บริการของเรา">
             <li><img src={mapIcon} alt="" />แผนที่มหาวิทยาลัย</li>
             <li><img src={postIcon} alt="" />ประกาศของฉัน</li>
             <li><img src={claimIcon} alt="" />ขอรับคืน</li>
-          </ul>
+          </ul> */}
         </section>
 
         <section className="login-card" aria-labelledby="login-title">
