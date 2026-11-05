@@ -1,0 +1,68 @@
+/**
+ * KMUTT Lost & Found — Design Tokens
+ * สร้างตามตาราง Color Palette & Typography ในคู่มือสเปก UI
+ */
+
+:root {
+  /* ============================================================
+     🎨 COLOR TOKENS (Color Palette)
+     ============================================================ */
+  /* สีส้มหลัก (KMUTT Orange / Primary Accent) */
+  --color-orange: #f0441c;
+  --color-orange-hover: #d83a14;
+  --color-orange-active: #b92f0e;
+  --color-orange-light: #fff0eb;      /* สำหรับพื้นหลัง badge/pill */
+  --color-orange-subtle: #fde6df;
+
+  /* สีเทา (Gray / Neutral) */
+  --color-gray: #71767c;              /* ตัวหนังสือรอง / ไอคอน */
+  --color-gray-dark: #1e2022;         /* หัวข้อ / ตัวหนังสือหลัก */
+  --color-gray-muted: #5e646a;        /* คำอธิบายรอง */
+  --color-gray-light: #f1f3f5;        /* พื้นหลังกล่อง placeholder / dashed box */
+  --color-gray-border: #e2e4e8;       /* เส้นขอบการ์ดและอินพุต */
+  --color-gray-border-dashed: #d1d5db;/* เส้นขอบประรูปภาพ/หลักฐาน */
+
+  /* สีขาวและพื้นหลังหน้าเว็บ (White & Page Backgrounds) */
+  --color-white: #ffffff;
+  --color-bg-page: #f8f9fa;           /* พื้นหลังหน้าเว็บ */
+  --color-bg-card: #ffffff;
+
+  /* สีสถานะอื่นๆ (Status Colors) */
+  --color-status-success: #16a34a;
+  --color-status-success-bg: #ecfdf5;
+  --color-status-danger: #dc2626;
+  --color-status-danger-bg: #fef2f2;
+
+  /* ============================================================
+     🔤 TYPOGRAPHY TOKENS (ตามตารางขนาด Font และน้ำหนัก)
+     ============================================================ */
+  /* Font Family */
+  --font-family-base: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* Font Weights */
+  --fw-regular: 400;
+  --fw-bold: 700;
+
+  /* Font Sizes */
+  --text-h1-login: 36px;       /* หัวข้อใหญ่หน้า Login (36px Bold) */
+  --text-h1-page: 28px;        /* หัวข้อหลักของแต่ละหน้า (28px Bold) */
+  --text-h2-section: 20px;     /* หัวข้อส่วนในหน้า / ฟอร์ม (20px Bold) */
+  --text-card-title: 18px;     /* ชื่อสิ่งของบน card โพสต์ (18px Bold) */
+  --text-body: 16px;           /* เนื้อหาและรายละเอียดสิ่งของ (16px Regular) */
+  --text-btn-primary: 16px;    /* ข้อความบนปุ่มหลัก (16px Bold) */
+  --text-input-label: 14px;    /* ชื่อช่องกรอกข้อมูล (14px Bold) */
+  --text-meta: 14px;           /* เมนู วันที่ สถานที่ และข้อมูลรอง (14px Regular) */
+  --text-helper-status: 12px;  /* ข้อความช่วยเหลือ / สถานะสั้น ๆ (12px Regular) */
+
+  /* ============================================================
+     📐 SPACING & BORDER RADIUS
+     ============================================================ */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 2px 8px -2px rgba(0, 0, 0, 0.06), 0 1px 4px -1px rgba(0, 0, 0, 0.04);
+}
+

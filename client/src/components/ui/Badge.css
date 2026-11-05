@@ -1,0 +1,47 @@
+@import '../../styles/tokens.css';
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: var(--text-helper-status);
+  font-weight: var(--fw-bold);
+  border-radius: var(--radius-full);
+  padding: 4px 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Pending (Orange) */
+.badge-pending {
+  background-color: var(--color-orange-light);
+  color: var(--color-orange);
+}
+
+/* Success (Green) */
+.badge-success {
+  background-color: var(--color-status-success-bg);
+  color: var(--color-status-success);
+}
+
+/* Danger (Red) */
+.badge-danger {
+  background-color: var(--color-status-danger-bg);
+  color: var(--color-status-danger);
+}
+
+/* Neutral */
+.badge-neutral {
+  background-color: var(--color-gray-light);
+  color: var(--color-gray-muted);
+}
+
+/* Count badge */
+.badge-count {
+  background-color: var(--color-orange-light);
+  color: var(--color-orange);
+  font-weight: 500;
+  padding: 4px 12px;
+}
+

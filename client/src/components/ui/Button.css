@@ -1,0 +1,61 @@
+@import '../../styles/tokens.css';
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-weight: var(--fw-bold);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Variants */
+.btn-primary {
+  background-color: var(--color-orange);
+  color: var(--color-white);
+  border-color: var(--color-orange);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-orange-hover);
+  border-color: var(--color-orange-hover);
+}
+
+.btn-secondary {
+  background-color: var(--color-white);
+  color: var(--color-gray-dark);
+  border-color: var(--color-gray-border);
+  font-weight: var(--fw-regular);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-gray-light);
+  border-color: #cbd5e1;
+}
+
+/* Sizes */
+.btn-sm {
+  font-size: var(--text-helper-status);
+  padding: 6px 14px;
+}
+
+.btn-md {
+  font-size: var(--text-meta);
+  padding: 8px 18px;
+}
+
+.btn-lg {
+  font-size: var(--text-btn-primary);
+  padding: 10px 24px;
+}
+

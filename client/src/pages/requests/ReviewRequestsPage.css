@@ -1,0 +1,214 @@
+@import '../../styles/tokens.css';
+
+.review-requests-container {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+/* เลย์เอาต์แบ่ง 2 คอลัมน์ (ซ้าย: รายการคำขอ, ขวา: รายละเอียด) */
+.review-requests-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.95fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .review-requests-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   คอลัมน์ซ้าย: การ์ดรายการคำขอที่ได้รับ
+   ============================================================ */
+.review-list-card {
+  padding: 28px;
+}
+
+.review-list-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.review-list-title {
+  color: var(--color-gray-dark);
+  font-size: var(--text-h2-section);
+  font-weight: var(--fw-bold);
+  margin: 0;
+}
+
+.review-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* แถวคำขอแต่ละรายการ */
+.review-item-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--color-gray-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-white);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  user-select: none;
+}
+
+.review-item-card:hover {
+  border-color: var(--color-orange);
+  box-shadow: var(--shadow-sm);
+}
+
+.review-item-card.is-selected {
+  border-color: var(--color-orange);
+  background-color: #fffaf8;
+}
+
+.review-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.review-item-title {
+  color: var(--color-gray-dark);
+  font-size: var(--text-card-title);
+  font-weight: var(--fw-bold);
+  margin: 0;
+}
+
+.review-item-meta {
+  color: var(--color-gray);
+  font-size: var(--text-meta);
+  margin: 0;
+}
+
+.review-item-badge-wrap {
+  margin-top: 2px;
+}
+
+/* ============================================================
+   คอลัมน์ขวา: การ์ดรายละเอียดคำขอ
+   ============================================================ */
+.review-detail-card {
+  padding: 28px;
+}
+
+.review-detail-title {
+  color: var(--color-gray-dark);
+  font-size: var(--text-h2-section);
+  font-weight: var(--fw-bold);
+  margin: 0 0 12px 0;
+}
+
+.review-detail-description {
+  color: var(--color-gray-dark);
+  font-size: var(--text-meta);
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+}
+
+.review-description-label {
+  font-weight: var(--fw-bold);
+}
+
+/* แถวแสดงกล่องหลักฐาน */
+.review-evidences-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.review-evidence-box {
+  width: 105px;
+  height: 80px;
+  background-color: var(--color-gray-light);
+  border: 1.5px dashed var(--color-gray-border-dashed);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gray);
+  font-size: var(--text-meta);
+  user-select: none;
+}
+
+/* ส่วนหมายเหตุสำหรับผู้ส่ง */
+.review-note-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.review-note-title {
+  color: var(--color-gray-dark);
+  font-size: var(--text-card-title);
+  font-weight: var(--fw-bold);
+  margin: 0;
+}
+
+.review-note-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-gray-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-meta);
+  font-family: inherit;
+  color: var(--color-gray-dark);
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.review-note-input:focus {
+  border-color: var(--color-orange);
+}
+
+.review-note-helper {
+  color: var(--color-gray);
+  font-size: var(--text-helper-status);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ปุ่มควบคุมล่างสุด */
+.review-detail-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* กล่องแจ้งเตือนเมื่อตรวจเสร็จแล้ว */
+.review-status-alert {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-meta);
+  margin-bottom: 16px;
+}
+
+.review-status-alert.is-approved {
+  background-color: var(--color-status-success-bg);
+  color: var(--color-status-success);
+  border: 1px solid var(--color-status-success);
+}
+
+.review-status-alert.is-rejected {
+  background-color: var(--color-status-danger-bg);
+  color: var(--color-status-danger);
+  border: 1px solid var(--color-status-danger);
+}
+
