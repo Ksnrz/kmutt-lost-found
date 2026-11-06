@@ -1,12 +1,30 @@
 import React from 'react';
 
-function Page4() {
+function BackButton() {
+  const handleBack = () => {
+    window.history.back(); 
+  };
+
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>หน้า 4</h1>
-      <p>พื้นที่สำหรับเขียนโค้ดหน้า 4</p>
+    <div style={{ marginBottom: '15px' }}>
+      <button 
+        onClick={handleBack}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: '#555',
+          fontSize: '14px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItem: 'center',
+          gap: '5px',
+          padding: '0'
+        }}
+      >
+        ← กลับไปรายการโพสต์
+      </button>
     </div>
   );
 }
 
-export default Page4;
+export default BackButton;
