@@ -1,0 +1,23 @@
+.back-icon {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  top: -3px;
+}
+
+.back-link-btn {
+    background: none;
+    border: none;
+    color: #7B8189;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 0;
+    margin-bottom: 25px;
+}
+
+.back-link-btn:hover {
+    color: #ff5722;
+}
