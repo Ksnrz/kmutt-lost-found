@@ -1,4 +1,4 @@
-.page4-container {
+.container {
   padding: 60px 50px;
   background-color: #F7F7F7;
   min-height: 100vh;
@@ -16,24 +16,24 @@ h2 {
     font-size: 24px;
     font-weight: bold;
     color: #000000;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 }
 
 h3 {
     font-size: 18px;
     font-weight: bold;
     color: #000000;
+    margin-bottom: 10px;
 }
 
 p{
   color: #7B8189;
 }
 
-.comment:first-of-type{
-  margin-top: 20px;
-}
-.comment:last-of-type{
-  margin-bottom: 40px;
+.Date {
+  text-align: right;
+  width: 100%;
+  margin-bottom: 98px;
 }
 
 .form-layout{
@@ -46,23 +46,21 @@ p{
 }
 
 .form-right {
-  flex: 1.25;
+  flex: 1;
 }
 
-.form-left .flex-button{
-  display: flex;
-  gap: 10px;
-  margin: 0px 0px 50px 5px;
+.comment:first-of-type{
+  margin-top: 20px;
+}
+.comment:last-of-type{
+  margin-bottom: 175px;
 }
 
-.form-right .flex-button1{
+.flex-image{
   display: flex;
-  gap: 10px;
-  margin: 0px 0px 50px 5px;
+  gap: 8px;
 }
 
-.form-right .flex-button2{
-  display: flex;
-  gap: 10px;
-  margin: 0px 0px 117px 5px;
+.pos-but{
+  margin: 30px 0 30px 5px;
 }
