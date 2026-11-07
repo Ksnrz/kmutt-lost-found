@@ -4,9 +4,9 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import ImageUpload from '../components/ImageUpload';
 import Line from '../components/Line';
-import './page4.css';
+import './CreatePost.css';
 
-function Page4() {
+function CreatePost() {
 	
 	return (
 		<div className="container">
@@ -61,4 +61,4 @@ function Page4() {
 	);
 }
 
-export default Page4;
+export default CreatePost;
