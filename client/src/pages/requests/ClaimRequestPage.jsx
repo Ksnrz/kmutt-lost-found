@@ -11,18 +11,32 @@ import './ClaimRequestPage.css';
  * ClaimRequestPage Component — หน้าส่งคำขอตรวจสอบ (VERIFICATION REQUEST)
  * Route URL: /claims/new
  * 
- * 🌟 React Best Practices:
- * 1. React Router: ใช้ useNavigate() จัดการการเปลี่ยน path เมื่อกดย้อนกลับ หรือส่งข้อมูลเสร็จ
- * 2. ZERO Inline Styles: ควบคุมสไตล์ผ่าน Class ใน CSS ทั้งหมด
- * 3. Controlled Form: state ควบคุม textarea และการแนบรูปภาพพร้อม preview
- * 4. Memory Safe: เคลียร์ URL.revokeObjectURL ใน useEffect
+ * 🌟 สอดคล้องกับ ER Diagram:
+ * - Entity: VERIFY_ITEMS (ความสัมพันธ์ USERS (0,N) submit (1,1) VERIFY_ITEMS)
+ *   - verify_id (PK): สร้างอัตโนมัติเมื่อ submit
+ *   - verify_status: กำหนดค่าเริ่มต้นเป็น 'PENDING'
+ *   - proof_description: ข้อความตำหนิหรือเอกสารยืนยันสิทธิ์
+ *   - created_at: เวลาที่ส่งคำขอ
+ * - Entity: VERIFY_IMAGES (VERIFY_ITEMS (0,N) contain (1,1) VERIFY_IMAGES)
+ *   - verify_image_id (PK) / verify_image_url
+ * - Entity: POSTS (VERIFY_ITEMS (1,1) receives (0,N) POSTS)
+ *   - post_id, post_type, custody_type, contact_text
+ * - Entity: LOCATION (POSTS (1,1) HAS (0,N) LOCATION)
+ *   - building_name, pickup_detail
+ * 
+ * 🌟 ZERO Inline Styles: ควบคุมสไตล์ผ่าน Class ใน CSS ทั้งหมด
  */
 export default function ClaimRequestPage({
-  // ข้อมูลโพสต์ที่ส่งคำขอ (มีค่าเริ่มต้นตรงตามภาพสเปก)
+  // ข้อมูลโพสต์ที่ส่งคำขอ (ดึงมาจาก Entity POSTS + LOCATION ตาม ER Diagram)
   item = {
+    id: 'p-101',
     title: 'พบกระเป๋าสตางค์สีดำ',
+    post_type: 'ประกาศเจอของ (FOUND)',
+    custody_type: 'ผู้พบเก็บรักษาเอง',
+    contact_text: 'ติดต่อผ่านระบบคำขอรับของ',
+    building_name: 'อาคาร S4 ชั้น 1',
     category: 'ประกาศเจอของ',
-    location: 'S4',
+    location: 'S4 ชั้น 1',
     imageUrl: null,
   },
   onBack,
@@ -31,10 +45,10 @@ export default function ClaimRequestPage({
 }) {
   const navigate = useNavigate();
 
-  // State 1: ข้อความรายละเอียดตำหนิ
+  // State 1: ข้อความรายละเอียดตำหนิ (ตรงกับ proof_description ใน VERIFY_ITEMS)
   const [defectDetail, setDefectDetail] = useState('');
   
-  // State 2: รายการรูปภาพหลักฐานที่ผู้ใช้อัปโหลด
+  // State 2: รายการรูปภาพหลักฐาน (ตรงกับ Entity VERIFY_IMAGES)
   const [evidenceImages, setEvidenceImages] = useState([]);
   
   // State 3: ข้อความ Error เมื่อกรอกข้อมูลไม่ครบ
@@ -66,7 +80,6 @@ export default function ClaimRequestPage({
     }));
 
     setEvidenceImages((prev) => [...prev, ...newImages]);
-    // รีเซ็ตค่า input เพื่อให้เลือกไฟล์ชื่อเดิมซ้ำได้ถ้าต้องการ
     e.target.value = '';
   };
 
@@ -93,15 +106,25 @@ export default function ClaimRequestPage({
     setIsSubmitting(true);
 
     try {
-      // 2. จำลองการส่งข้อมูล (API Request)
+      // 2. โครงสร้าง Payload ส่งข้อมูลตาม ER Diagram
+      // - ตาราง VERIFY_ITEMS: verify_id, post_id, user_id, verify_status, proof_description, created_at
+      // - ตาราง VERIFY_IMAGES: verify_image_id, verify_image_url
       const payload = {
+        post_id: item.id || 'p-101',
+        user_id: 'u-101', // ผู้ใช้ปัจจุบัน
+        verify_status: 'PENDING',
+        proof_description: defectDetail.trim(),
+        created_at: new Date().toISOString(),
+        verify_images: evidenceImages.map((img, idx) => ({
+          verify_image_id: `vimg-${Date.now()}-${idx}`,
+          verify_image_url: img.previewUrl,
+          file_name: img.name,
+        })),
         itemTitle: item.title,
-        defectDetail: defectDetail.trim(),
         evidenceCount: evidenceImages.length,
-        submittedAt: new Date().toISOString(),
       };
 
-      console.log('ส่งคำขอสำเร็จ:', payload);
+      console.log('ส่งคำขอยืนยันสิทธิ์ตาม ER Diagram (VERIFY_ITEMS):', payload);
 
       // จำลอง network delay สั้นๆ
       await new Promise((resolve) => setTimeout(resolve, 600));
@@ -131,7 +154,7 @@ export default function ClaimRequestPage({
 
   return (
     <div className="claim-request-container">
-      {/* 1. ส่วนหัวหน้าเว็บ (ย้อนกลับ + แท็กส้ม + ชื่อหน้า) */}
+      {/* 1. ส่วนหัวหน้าเว็บ */}
       <PageHeader
         backText="กลับไปรายการประกาศ"
         onBack={handleGoBack}
@@ -142,16 +165,18 @@ export default function ClaimRequestPage({
 
       {/* 2. การ์ดฟอร์มหลัก */}
       <Card className="claim-request-card">
-        {/* กล่องสรุปโพสต์ที่กำลังทำเรื่องขอคืน */}
+        {/* กล่องสรุปโพสต์ที่กำลังทำเรื่องขอคืน (ดึงจาก POSTS + LOCATION) */}
         <div className="claim-post-summary">
           <Thumbnail
             text="รูปโพสต์"
             src={item.imageUrl}
           />
           <div className="claim-post-info">
-            <p className="claim-post-title">{item.title}</p>
+            <p className="claim-post-title">
+              {item.title}
+            </p>
             <p className="claim-post-meta">
-              {item.category} · {item.location}
+              {item.post_type || item.category} · {item.building_name || item.location} · การเก็บรักษา: {item.custody_type || 'เก็บรักษาเอง'}
             </p>
           </div>
         </div>
@@ -162,10 +187,10 @@ export default function ClaimRequestPage({
         <form onSubmit={handleSubmit} className="claim-form" noValidate>
           <h2 className="claim-section-title">ข้อมูลเพื่อยืนยันสิทธิ์</h2>
 
-          {/* ช่องกรอกที่ 1: รายละเอียดตำหนิหรือข้อมูลเฉพาะ */}
+          {/* ช่องกรอกที่ 1: รายละเอียดตำหนิ (proof_description) */}
           <div className="claim-form-group">
             <label className="claim-label" htmlFor="defectDetail">
-              รายละเอียดตำหนิหรือข้อมูลเฉพาะ
+              รายละเอียดตำหนิหรือข้อมูลเฉพาะ (proof_description)
             </label>
             <textarea
               id="defectDetail"
@@ -186,7 +211,7 @@ export default function ClaimRequestPage({
             )}
           </div>
 
-          {/* ช่องกรอกที่ 2: แนบรูปหลักฐาน (หลายรูป) */}
+          {/* ช่องกรอกที่ 2: แนบรูปหลักฐาน (VERIFY_IMAGES) */}
           <div className="claim-form-group">
             <label className="claim-label">
               รูปหลักฐาน (หลายรูป)
@@ -197,15 +222,15 @@ export default function ClaimRequestPage({
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
-              multiple
               accept="image/*"
-              className="claim-hidden-file-input"
-              aria-hidden="true"
+              multiple
+              className="claim-file-input-hidden"
+              aria-label="เลือกไฟล์รูปหลักฐาน"
             />
 
-            {/* กล่องประคลิกเพื่อเปิดหน้าต่างเลือกไฟล์ */}
+            {/* กล่อง Drag/Drop & Click Upload */}
             <div
-              className="claim-upload-zone"
+              className="claim-dropzone"
               onClick={() => fileInputRef.current?.click()}
               role="button"
               tabIndex={0}
@@ -215,56 +240,62 @@ export default function ClaimRequestPage({
                 }
               }}
             >
-              + แนบรูปตำหนิหรือรูปของเดิม
+              <span className="claim-dropzone-text">
+                + แนบรูปตำหนิหรือรูปของเดิม (VERIFY_IMAGES)
+              </span>
             </div>
 
-            {/* พรีวิวรูปภาพที่เลือกไว้ */}
+            {/* แสดง Preview รูปที่ผู้ใช้อัปโหลด */}
             {evidenceImages.length > 0 && (
-              <div className="claim-preview-grid">
+              <div className="claim-evidence-preview-list">
                 {evidenceImages.map((img) => (
-                  <div key={img.id} className="claim-preview-item" title={img.name}>
+                  <div key={img.id} className="claim-evidence-preview-item">
                     <img
                       src={img.previewUrl}
                       alt={img.name}
-                      className="claim-preview-img"
+                      className="claim-evidence-preview-img"
                     />
                     <button
                       type="button"
-                      className="claim-preview-remove"
+                      className="claim-evidence-remove-btn"
                       onClick={() => handleRemoveImage(img.id)}
-                      aria-label={`ลบรูป ${img.name}`}
+                      aria-label={`ลบรูปภาพ ${img.name}`}
                     >
                       ✕
                     </button>
+                    <span className="claim-evidence-name">{img.name}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* แถบด้านล่าง: กล่องข้อความแจ้งเตือน + ปุ่มควบคุม */}
-          <div className="claim-bottom-bar">
-            <AlertCallout className="claim-alert">
-              หลักฐานจะแสดงเฉพาะผู้ส่งคำขอ เจ้าของโพสต์ และผู้ดูแลระบบ
-            </AlertCallout>
+          {/* Alert คำเตือนเรื่องความเป็นส่วนตัว */}
+          <AlertCallout
+            variant="warning"
+            text="หลักฐานจะแสดงเฉพาะผู้ส่งคำขอ เจ้าของโพสต์ และผู้ดูแลระบบ"
+          />
 
-            <div className="claim-actions">
-              <Button
-                variant="secondary"
-                type="button"
-                onClick={onCancel || handleGoBack}
-                disabled={isSubmitting}
-              >
-                ยกเลิก
-              </Button>
-              <Button
-                variant="primary"
-                type="submit"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'กำลังส่งคำขอ...' : 'ส่งคำขอ'}
-              </Button>
-            </div>
+          {/* ปุ่มควบคุมท้ายฟอร์ม (Form Actions) */}
+          <div className="claim-actions">
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => {
+                if (onCancel) onCancel();
+                else navigate('/account');
+              }}
+              disabled={isSubmitting}
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'กำลังส่งข้อมูล...' : 'ส่งคำขอ'}
+            </Button>
           </div>
         </form>
       </Card>

@@ -320,6 +320,13 @@
   gap: 14px;
 }
 
+.account-table-sub-id {
+  font-size: 12px;
+  color: var(--color-gray);
+  margin-left: 6px;
+  font-weight: normal;
+}
+
 .account-table-item-title {
   font-weight: var(--fw-bold);
   color: var(--color-gray-dark);

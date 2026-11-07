@@ -11,54 +11,91 @@ import './ReviewRequestsPage.css';
  * ReviewRequestsPage Component — หน้าตรวจคำขอที่ส่งมายังประกาศของฉัน (RECEIVED REQUESTS)
  * Route URL: /requests/review
  * 
- * 🌟 กฎทางธุรกิจและสถานะตามสเปกของระบบ (Business Logic & State Machine):
- * 1. มีผู้ขอที่ได้รับการตอบรับได้เพียง 1 คนต่อโพสต์ในเวลาเดียวกัน (ACCEPTED lock)
- * 2. การส่งมอบต้องได้รับการยืนยันจากทั้ง 2 ฝ่าย (ผู้พบ + ผู้รับ)
- * 3. เมื่อทั้ง 2 ฝ่ายยืนยันครบ ➔ สถานะคำขอเป็น COMPLETED, สถานะโพสต์เป็น CLOSED, และคำขออื่นที่ค้างอยู่จะถูก CANCELLED
- * 4. หากส่งมอบไม่สำเร็จ ➔ สามารถยกเลิกคำขอที่ตอบรับแล้ว (CANCELLED) เพื่อกลับไปเลือกคำขออื่นที่รออยู่ได้
- * 5. ZERO Inline Styles: 100% ควบคุมผ่าน CSS Classes
+ * 🌟 สอดคล้องกับ ER Diagram:
+ * - Entity: POSTS (ความสัมพันธ์ POSTS (0,N) receives (1,1) VERIFY_ITEMS)
+ *   - post_id, post_status ('OPEN' | 'CLOSED' | 'CANCELLED'), post_type, custody_type, contact_text
+ * - Entity: LOCATION (POSTS (1,1) HAS (0,N) LOCATION)
+ *   - building_name, pickup_detail
+ * - Entity: VERIFY_ITEMS
+ *   - verify_id (PK), post_id (FK), user_id (FK), verify_status, proof_description, created_at
+ * - Entity: USERS (USERS (0,N) submit (1,1) VERIFY_ITEMS)
+ *   - user_id, first_name, last_name, phone_number, email
+ * - Entity: VERIFY_IMAGES (VERIFY_ITEMS (0,N) contain (1,1) VERIFY_IMAGES)
+ *   - verify_image_id, verify_image_url
+ * 
+ * 🌟 ZERO Inline Styles: 100% ควบคุมผ่าน CSS Classes
  */
 export default function ReviewRequestsPage({
-  // ข้อมูลคำขอเริ่มต้น (2 รายการเพื่อจำลองกฎ 1 คนต่อโพสต์)
+  // ข้อมูลจำลองสอดคล้องกับ Entity: VERIFY_ITEMS, USERS, POSTS ตาม ER Diagram
   initialRequests = [
     {
+      verify_id: '102',
       id: '102',
+      post_id: 'p-101',
       postId: 'p-101',
       itemTitle: 'กระเป๋าสตางค์สีดำ',
-      requester: 'นักศึกษา B',
+      requester: 'ภัทรพล สุขเกษม (นักศึกษา B)',
+      first_name: 'ภัทรพล',
+      last_name: 'สุขเกษม',
+      phone_number: '089-123-4567',
+      email: 'pattarapol.b@mail.kmutt.ac.th',
+      created_at: '24 ก.ย. 2026',
       date: '24 ก.ย. 2026',
-      status: 'PENDING', // 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED'
+      verify_status: 'PENDING', // 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED'
+      status: 'PENDING',
+      proof_description: 'มีรอยถลอกเล็ก ๆ ที่มุมด้านใน และมีบัตรสีฟ้าอยู่หนึ่งใบ',
       description: 'มีรอยถลอกเล็ก ๆ ที่มุมด้านใน และมีบัตรสีฟ้าอยู่หนึ่งใบ',
-      evidences: ['หลักฐาน 1', 'หลักฐาน 2'],
+      verify_images: ['ภาพหลักฐานบัตรสีฟ้า', 'ภาพรอยถลอกมุมกระเป๋า'],
+      evidences: ['ภาพหลักฐานบัตรสีฟ้า', 'ภาพรอยถลอกมุมกระเป๋า'],
       finderConfirmed: false,
       receiverConfirmed: false,
       note: '',
     },
     {
+      verify_id: '103',
       id: '103',
+      post_id: 'p-101',
       postId: 'p-101',
       itemTitle: 'กระเป๋าสตางค์สีดำ',
-      requester: 'นักศึกษา D',
+      requester: 'กานดา วิริยะ (นักศึกษา D)',
+      first_name: 'กานดา',
+      last_name: 'วิริยะ',
+      phone_number: '086-987-6543',
+      email: 'kanda.w@mail.kmutt.ac.th',
+      created_at: '25 ก.ย. 2026',
       date: '25 ก.ย. 2026',
+      verify_status: 'PENDING',
       status: 'PENDING',
+      proof_description: 'กระเป๋าตังค์หนังแท้สีดำ มีช่องใส่เหรียญซิปทอง มีเศษบิลซื้อของอยู่ด้านใน',
       description: 'กระเป๋าตังค์หนังแท้สีดำ มีช่องใส่เหรียญซิปทอง มีเศษบิลซื้อของอยู่ด้านใน',
-      evidences: ['รูปใบเสร็จที่เคยซื้อ'],
+      verify_images: ['รูปใบเสร็จที่เคยซื้อ', 'รูปบัตรสะสมแต้ม'],
+      evidences: ['รูปใบเสร็จที่เคยซื้อ', 'รูปบัตรสะสมแต้ม'],
       finderConfirmed: false,
       receiverConfirmed: false,
       note: '',
     },
   ],
+  // ข้อมูลโพสต์ที่กำลังจัดการ (ดึงมาจาก POSTS + LOCATION)
+  postInfo = {
+    post_id: 'p-101',
+    title: 'พบกระเป๋าสตางค์สีดำ',
+    post_type: 'ประกาศเจอของ (FOUND)',
+    custody_type: 'ผู้พบเก็บรักษาเอง',
+    contact_text: 'LINE: @finder_kmutt · โทร 081-999-8888',
+    building_name: 'อาคาร S4 ชั้น 1',
+    pickup_detail: 'โถงประชาสัมพันธ์หน้าลิฟต์',
+  },
   onBack,
 }) {
   const navigate = useNavigate();
 
-  // State 1: สถานะของโพสต์ประกาศหลัก ('OPEN' | 'CLOSED' | 'CANCELLED')
+  // State 1: สถานะของโพสต์ประกาศหลัก (ตรงกับ post_status ใน Entity POSTS: 'OPEN' | 'CLOSED' | 'CANCELLED')
   const [postStatus, setPostStatus] = useState('OPEN');
 
-  // State 2: รายการคำขอทั้งหมด
+  // State 2: รายการคำขอทั้งหมด (Entity VERIFY_ITEMS)
   const [requests, setRequests] = useState(initialRequests);
 
-  // State 3: รหัสคำขอที่กำลังเลือกดูรายละเอียดอยู่
+  // State 3: รหัสคำขอที่กำลังเลือกดูรายละเอียดอยู่ (verify_id)
   const [selectedId, setSelectedId] = useState('102');
 
   // State 4: ข้อความในช่อง "หมายเหตุสำหรับผู้ส่ง"
@@ -81,7 +118,14 @@ export default function ReviewRequestsPage({
     setRequests((prev) =>
       prev.map((r) =>
         r.id === activeRequest.id
-          ? { ...r, status: 'ACCEPTED', note: noteText, finderConfirmed: false, receiverConfirmed: false }
+          ? {
+              ...r,
+              status: 'ACCEPTED',
+              verify_status: 'ACCEPTED',
+              note: noteText,
+              finderConfirmed: false,
+              receiverConfirmed: false,
+            }
           : r
       )
     );
@@ -99,7 +143,7 @@ export default function ReviewRequestsPage({
     setRequests((prev) =>
       prev.map((r) =>
         r.id === activeRequest.id
-          ? { ...r, status: 'REJECTED', note: noteText }
+          ? { ...r, status: 'REJECTED', verify_status: 'REJECTED', note: noteText }
           : r
       )
     );
@@ -124,12 +168,14 @@ export default function ReviewRequestsPage({
             ...r,
             finderConfirmed: true,
             status: willComplete ? 'COMPLETED' : r.status,
+            verify_status: willComplete ? 'COMPLETED' : r.verify_status,
           };
         }
         if (willComplete && r.status === 'PENDING') {
           return {
             ...r,
             status: 'CANCELLED',
+            verify_status: 'CANCELLED',
             note: 'ระบบยกเลิกอัตโนมัติเนื่องจากส่งมอบสิ่งของสำเร็จแล้ว',
           };
         }
@@ -155,12 +201,14 @@ export default function ReviewRequestsPage({
             ...r,
             receiverConfirmed: true,
             status: willComplete ? 'COMPLETED' : r.status,
+            verify_status: willComplete ? 'COMPLETED' : r.verify_status,
           };
         }
         if (willComplete && r.status === 'PENDING') {
           return {
             ...r,
             status: 'CANCELLED',
+            verify_status: 'CANCELLED',
             note: 'ระบบยกเลิกอัตโนมัติเนื่องจากส่งมอบสิ่งของสำเร็จแล้ว',
           };
         }
@@ -177,7 +225,14 @@ export default function ReviewRequestsPage({
     setRequests((prev) =>
       prev.map((r) =>
         r.id === id
-          ? { ...r, status: 'CANCELLED', note: 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ', finderConfirmed: false, receiverConfirmed: false }
+          ? {
+              ...r,
+              status: 'CANCELLED',
+              verify_status: 'CANCELLED',
+              note: 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ',
+              finderConfirmed: false,
+              receiverConfirmed: false,
+            }
           : r
       )
     );
@@ -189,7 +244,14 @@ export default function ReviewRequestsPage({
     setRequests((prev) =>
       prev.map((r) =>
         r.id === id
-          ? { ...r, status: 'PENDING', note: '', finderConfirmed: false, receiverConfirmed: false }
+          ? {
+              ...r,
+              status: 'PENDING',
+              verify_status: 'PENDING',
+              note: '',
+              finderConfirmed: false,
+              receiverConfirmed: false,
+            }
           : r
       )
     );
@@ -221,15 +283,17 @@ export default function ReviewRequestsPage({
         onBack={handleGoBack}
       />
 
-      {/* แบนเนอร์แสดงข้อมูลโพสต์และสถานะโพสต์ */}
+      {/* แบนเนอร์แสดงข้อมูล Entity POSTS + LOCATION ตาม ER Diagram */}
       <div className="review-post-banner">
         <div className="review-post-banner-info">
-          <span className="review-post-banner-label">โพสต์ที่กำลังจัดการ:</span>
-          <strong className="review-post-banner-title">พบกระเป๋าสตางค์สีดำ (รหัส #p-101 · อาคาร S4)</strong>
+          <span className="review-post-banner-label">โพสต์ที่กำลังจัดการ (POSTS):</span>
+          <strong className="review-post-banner-title">
+            {postInfo.title} (รหัส #{postInfo.post_id} · {postInfo.building_name})
+          </strong>
         </div>
         <div className="review-post-banner-right">
           <div className="review-post-banner-status">
-            <span className="review-post-banner-label">สถานะโพสต์:</span>
+            <span className="review-post-banner-label">post_status:</span>
             {postStatus === 'OPEN' && (
               <Badge variant="success">OPEN · เปิดรับคำขอ</Badge>
             )}
@@ -255,7 +319,7 @@ export default function ReviewRequestsPage({
       {/* เลย์เอาต์แบ่ง 2 คอลัมน์ */}
       <div className="review-requests-grid">
         {/* ========================================================
-            คอลัมน์ซ้าย: การ์ดรายการคำขอที่ได้รับ
+            คอลัมน์ซ้าย: การ์ดรายการคำขอที่ได้รับ (VERIFY_ITEMS)
             ======================================================== */}
         <Card className="review-list-card">
           <div className="review-list-header">
@@ -284,10 +348,10 @@ export default function ReviewRequestsPage({
 
                   <div className="review-item-info">
                     <h3 className="review-item-title">
-                      {item.itemTitle} · #{item.id}
+                      {item.itemTitle} · #{item.verify_id || item.id}
                     </h3>
                     <p className="review-item-meta">
-                      โดย {item.requester} · {item.date}
+                      โดย {item.requester} · {item.created_at || item.date}
                     </p>
 
                     <div className="review-item-badge-wrap">
@@ -315,13 +379,13 @@ export default function ReviewRequestsPage({
         </Card>
 
         {/* ========================================================
-            คอลัมน์ขวา: รายละเอียดคำขอ
+            คอลัมน์ขวา: รายละเอียดคำขอ (VERIFY_ITEMS + USERS + VERIFY_IMAGES)
             ======================================================== */}
         {activeRequest ? (
           <Card className="review-detail-card">
             <div className="review-detail-header-row">
               <h2 className="review-detail-title">
-                รายละเอียดคำขอ #{activeRequest.id}
+                รายละเอียดคำขอ #{activeRequest.verify_id || activeRequest.id}
               </h2>
               {activeRequest.status === 'PENDING' && (
                 <Badge variant="pending">PENDING · รอตรวจ</Badge>
@@ -340,19 +404,27 @@ export default function ReviewRequestsPage({
               )}
             </div>
 
+            {/* ข้อมูลผู้ส่งคำขอจาก Entity USERS */}
             <p className="review-detail-description">
-              <span className="review-description-label">ผู้ส่งคำขอ: </span>
+              <span className="review-description-label">ผู้ส่งคำขอ (USERS): </span>
               {activeRequest.requester}
+              {activeRequest.phone_number && (
+                <span> · โทร: {activeRequest.phone_number}</span>
+              )}
             </p>
 
+            {/* คำอธิบายตำหนิจาก Entity VERIFY_ITEMS: proof_description */}
             <p className="review-detail-description">
-              <span className="review-description-label">คำอธิบายตำหนิ: </span>
-              {activeRequest.description}
+              <span className="review-description-label">รายละเอียดตำหนิ (proof_description): </span>
+              {activeRequest.proof_description || activeRequest.description}
             </p>
 
-            {/* กล่องแสดงรูปหลักฐาน */}
+            {/* รูปภาพหลักฐานจาก Entity VERIFY_IMAGES */}
+            <p className="review-detail-description">
+              <span className="review-description-label">รูปภาพหลักฐาน (VERIFY_IMAGES):</span>
+            </p>
             <div className="review-evidences-row">
-              {activeRequest.evidences.map((evText, idx) => (
+              {(activeRequest.verify_images || activeRequest.evidences).map((evText, idx) => (
                 <div key={idx} className="review-evidence-box">
                   {evText}
                 </div>
@@ -364,7 +436,7 @@ export default function ReviewRequestsPage({
                 ======================================================== */}
             {isOtherAccepted && activeRequest.status === 'PENDING' && (
               <div className="review-status-alert is-blocked">
-                ⚠️ มีคำขอ <strong>#{acceptedClaim.id} ({acceptedClaim.requester})</strong> ได้รับการตอบรับอยู่แล้ว — ระบบจำกัดตอบรับได้เพียง 1 คนต่อโพสต์ในเวลาเดียวกัน
+                ⚠️ มีคำขอ <strong>#{acceptedClaim.verify_id || acceptedClaim.id} ({acceptedClaim.requester})</strong> ได้รับการตอบรับอยู่แล้ว — ระบบจำกัดตอบรับได้เพียง 1 คนต่อโพสต์ในเวลาเดียวกัน
               </div>
             )}
 
@@ -378,7 +450,7 @@ export default function ReviewRequestsPage({
                   <span className="review-handover-badge">รอทั้ง 2 ฝ่ายยืนยัน</span>
                 </div>
                 <p className="review-handover-sub">
-                  ตามกฎระบบ: ทั้งผู้พบและผู้รับต้องยืนยันการส่งมอบ เมื่อยืนยันครบ โพสต์จะเปลี่ยนเป็น <strong>CLOSED</strong> และคำขออื่นที่ค้างอยู่จะถูกยกเลิกอัตโนมัติ
+                  ตามกฎระบบ: ทั้งผู้พบและผู้รับต้องยืนยันการส่งมอบ เมื่อยืนยันครบ post_status จะเปลี่ยนเป็น <strong>CLOSED</strong> และคำขออื่นที่ค้างอยู่จะถูกยกเลิกอัตโนมัติ
                 </p>
 
                 <div className="review-handover-steps-grid">
@@ -408,7 +480,7 @@ export default function ReviewRequestsPage({
                   <div className={`handover-step-card ${activeRequest.receiverConfirmed ? 'is-done' : ''}`}>
                     <div className="handover-step-header">
                       <span className="step-num">{activeRequest.receiverConfirmed ? '✓' : '2'}</span>
-                      <span className="step-label">ฝ่ายผู้รับ ({activeRequest.requester})</span>
+                      <span className="step-label">ฝ่ายผู้รับ ({activeRequest.first_name || activeRequest.requester})</span>
                     </div>
                     <p className="step-status-text">
                       {activeRequest.receiverConfirmed ? 'ยืนยันได้รับของแล้ว' : 'รอผู้รับยืนยัน'}
