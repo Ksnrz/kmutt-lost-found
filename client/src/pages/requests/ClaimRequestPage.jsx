@@ -177,7 +177,7 @@ export default function ClaimRequestPage({
               {item.title}
             </p>
             <p className="claim-post-meta">
-              {item.post_type || item.category} · {item.building_name || item.location} · การเก็บรักษา: {item.custody_type || 'เก็บรักษาเอง'}
+              {item.category || item.post_type} · {item.location || item.building_name}
             </p>
           </div>
         </div>
@@ -191,7 +191,7 @@ export default function ClaimRequestPage({
           {/* ช่องกรอกที่ 1: รายละเอียดตำหนิ (proof_description) */}
           <div className="claim-form-group">
             <label className="claim-label" htmlFor="defectDetail">
-              รายละเอียดตำหนิหรือข้อมูลเฉพาะ (proof_description)
+              รายละเอียดตำหนิหรือข้อมูลเฉพาะ
             </label>
             <textarea
               id="defectDetail"
@@ -242,7 +242,7 @@ export default function ClaimRequestPage({
               }}
             >
               <ImagePlus size={18} className="claim-upload-icon" />
-              <span>แนบรูปตำหนิหรือรูปของเดิม (VERIFY_IMAGES)</span>
+              <span>แนบรูปตำหนิหรือรูปของเดิม</span>
             </div>
 
             {/* แสดง Preview รูปที่ผู้ใช้อัปโหลด */}

@@ -263,7 +263,7 @@ export default function AccountPage({
           tabIndex={0}
         >
           <div className="account-stat-info">
-            <span className="account-stat-label">ประกาศที่ฉันสร้าง (POSTS)</span>
+            <span className="account-stat-label">ประกาศที่ฉันสร้าง</span>
             <p className="account-stat-number">{myPosts.length} รายการ</p>
           </div>
           <span className="account-stat-badge">จัดการ</span>
@@ -276,7 +276,7 @@ export default function AccountPage({
           tabIndex={0}
         >
           <div className="account-stat-info">
-            <span className="account-stat-label">คำขอที่ฉันส่ง (VERIFY_ITEMS)</span>
+            <span className="account-stat-label">คำขอที่ฉันส่ง (My Requests)</span>
             <p className="account-stat-number">{sentClaims.length} รายการ</p>
           </div>
           <span className="account-stat-badge">ตารางสถานะ</span>
@@ -289,7 +289,7 @@ export default function AccountPage({
           tabIndex={0}
         >
           <div className="account-stat-info">
-            <span className="account-stat-label">คำขอที่ฉันได้รับ (รอตรวจ)</span>
+            <span className="account-stat-label">คำขอที่ฉันได้รับ</span>
             <p className="account-stat-number">2 รายการ</p>
           </div>
           <span className="account-stat-badge">ไปหน้าตรวจ</span>
@@ -386,7 +386,7 @@ export default function AccountPage({
                     <div className="account-post-details">
                       <h3 className="account-post-title">{post.title}</h3>
                       <p className="account-post-meta">
-                        {post.post_type} · {post.building_name} · การเก็บรักษา: {post.custody_type}
+                        {post.location} · {post.date}
                       </p>
                       <div>
                         {post.status === 'OPEN' && (
@@ -454,7 +454,7 @@ export default function AccountPage({
       {activeTab === 'my_sent_claims' && (
         <section aria-labelledby="sent-claims-heading">
           <h2 id="sent-claims-heading" className="sr-only">
-            รายการคำขอที่ฉันส่ง (VERIFY_ITEMS)
+            รายการคำขอที่ฉันส่ง (My Requests)
           </h2>
           <div className="account-table-wrapper">
             <table className="account-data-table">
@@ -464,7 +464,7 @@ export default function AccountPage({
                   <th>สิ่งของที่ส่งคำขอรับคืน</th>
                   <th>ผู้โพสต์</th>
                   <th>วันที่ส่ง</th>
-                  <th>สถานะคำขอ (verify_status)</th>
+                  <th>สถานะคำขอ</th>
                   <th>หมายเหตุจากผู้พบ</th>
                   <th>การกระทำ / ยืนยันการส่งมอบ</th>
                 </tr>

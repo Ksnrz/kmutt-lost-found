@@ -20,23 +20,14 @@ import './ReviewRequestsPage.css';
  * ReviewRequestsPage Component — หน้าตรวจคำขอที่ส่งมายังประกาศของฉัน (RECEIVED REQUESTS)
  * Route URL: /requests/review
  * 
- * 🌟 สอดคล้องกับ ER Diagram:
- * - Entity: POSTS (ความสัมพันธ์ POSTS (0,N) receives (1,1) VERIFY_ITEMS)
- *   - post_id, post_status ('OPEN' | 'CLOSED' | 'CANCELLED'), post_type, custody_type, contact_text
- * - Entity: LOCATION (POSTS (1,1) HAS (0,N) LOCATION)
- *   - building_name, pickup_detail
- * - Entity: VERIFY_ITEMS
- *   - verify_id (PK), post_id (FK), user_id (FK), verify_status, proof_description, created_at
- * - Entity: USERS (USERS (0,N) submit (1,1) VERIFY_ITEMS)
- *   - user_id, first_name, last_name, phone_number, email
- * - Entity: VERIFY_IMAGES (VERIFY_ITEMS (0,N) contain (1,1) VERIFY_IMAGES)
- *   - verify_image_id, verify_image_url
- * 
- * 🌟 ไอคอน: ใช้ Lucide Icons ทั้งหมดตามมาตรฐานการออกแบบ
- * 🌟 ZERO Inline Styles: 100% ควบคุมผ่าน CSS Classes
+ * 🌟 ดีไซน์ตรงตาม Figma:
+ * - ข้อความและเลย์เอาต์แสดงผลตามดีไซน์ใน Figma สะอาดตา ไม่แสดงชื่อแอตทริบิวต์เทคนิคบน UI
+ * - การประมวลผลภายในสอดคล้องกับ ER Diagram (VERIFY_ITEMS, POSTS, USERS, VERIFY_IMAGES)
+ * - รองรับกฎธุรกิจ: ตอบรับได้ 1 คนต่อโพสต์ และการส่งมอบแบบ Dual Confirmation
+ * - ZERO Inline Styles: 100% ควบคุมผ่าน CSS Classes
  */
 export default function ReviewRequestsPage({
-  // ข้อมูลจำลองสอดคล้องกับ Entity: VERIFY_ITEMS, USERS, POSTS ตาม ER Diagram
+  // ข้อมูลเริ่มต้นตรงตาม Figma
   initialRequests = [
     {
       verify_id: '102',
@@ -44,19 +35,15 @@ export default function ReviewRequestsPage({
       post_id: 'p-101',
       postId: 'p-101',
       itemTitle: 'กระเป๋าสตางค์สีดำ',
-      requester: 'ภัทรพล สุขเกษม (นักศึกษา B)',
-      first_name: 'ภัทรพล',
-      last_name: 'สุขเกษม',
-      phone_number: '089-123-4567',
-      email: 'pattarapol.b@mail.kmutt.ac.th',
-      created_at: '24 ก.ย. 2026',
+      requester: 'นักศึกษา B',
       date: '24 ก.ย. 2026',
-      verify_status: 'PENDING', // 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED'
+      created_at: '24 ก.ย. 2026',
+      verify_status: 'PENDING',
       status: 'PENDING',
       proof_description: 'มีรอยถลอกเล็ก ๆ ที่มุมด้านใน และมีบัตรสีฟ้าอยู่หนึ่งใบ',
       description: 'มีรอยถลอกเล็ก ๆ ที่มุมด้านใน และมีบัตรสีฟ้าอยู่หนึ่งใบ',
-      verify_images: ['ภาพหลักฐานบัตรสีฟ้า', 'ภาพรอยถลอกมุมกระเป๋า'],
-      evidences: ['ภาพหลักฐานบัตรสีฟ้า', 'ภาพรอยถลอกมุมกระเป๋า'],
+      verify_images: ['หลักฐาน 1', 'หลักฐาน 2'],
+      evidences: ['หลักฐาน 1', 'หลักฐาน 2'],
       finderConfirmed: false,
       receiverConfirmed: false,
       note: '',
@@ -67,45 +54,31 @@ export default function ReviewRequestsPage({
       post_id: 'p-101',
       postId: 'p-101',
       itemTitle: 'กระเป๋าสตางค์สีดำ',
-      requester: 'กานดา วิริยะ (นักศึกษา D)',
-      first_name: 'กานดา',
-      last_name: 'วิริยะ',
-      phone_number: '086-987-6543',
-      email: 'kanda.w@mail.kmutt.ac.th',
-      created_at: '25 ก.ย. 2026',
+      requester: 'นักศึกษา D',
       date: '25 ก.ย. 2026',
+      created_at: '25 ก.ย. 2026',
       verify_status: 'PENDING',
       status: 'PENDING',
       proof_description: 'กระเป๋าตังค์หนังแท้สีดำ มีช่องใส่เหรียญซิปทอง มีเศษบิลซื้อของอยู่ด้านใน',
       description: 'กระเป๋าตังค์หนังแท้สีดำ มีช่องใส่เหรียญซิปทอง มีเศษบิลซื้อของอยู่ด้านใน',
-      verify_images: ['รูปใบเสร็จที่เคยซื้อ', 'รูปบัตรสะสมแต้ม'],
-      evidences: ['รูปใบเสร็จที่เคยซื้อ', 'รูปบัตรสะสมแต้ม'],
+      verify_images: ['หลักฐาน 1'],
+      evidences: ['หลักฐาน 1'],
       finderConfirmed: false,
       receiverConfirmed: false,
       note: '',
     },
   ],
-  // ข้อมูลโพสต์ที่กำลังจัดการ (ดึงมาจาก POSTS + LOCATION)
-  postInfo = {
-    post_id: 'p-101',
-    title: 'พบกระเป๋าสตางค์สีดำ',
-    post_type: 'ประกาศเจอของ (FOUND)',
-    custody_type: 'ผู้พบเก็บรักษาเอง',
-    contact_text: 'LINE: @finder_kmutt · โทร 081-999-8888',
-    building_name: 'อาคาร S4 ชั้น 1',
-    pickup_detail: 'โถงประชาสัมพันธ์หน้าลิฟต์',
-  },
   onBack,
 }) {
   const navigate = useNavigate();
 
-  // State 1: สถานะของโพสต์ประกาศหลัก (ตรงกับ post_status ใน Entity POSTS: 'OPEN' | 'CLOSED' | 'CANCELLED')
+  // State 1: สถานะของโพสต์ประกาศหลัก ('OPEN' | 'CLOSED' | 'CANCELLED')
   const [postStatus, setPostStatus] = useState('OPEN');
 
-  // State 2: รายการคำขอทั้งหมด (Entity VERIFY_ITEMS)
+  // State 2: รายการคำขอทั้งหมด
   const [requests, setRequests] = useState(initialRequests);
 
-  // State 3: รหัสคำขอที่กำลังเลือกดูรายละเอียดอยู่ (verify_id)
+  // State 3: รหัสคำขอที่กำลังเลือกดูรายละเอียดอยู่
   const [selectedId, setSelectedId] = useState('102');
 
   // State 4: ข้อความในช่อง "หมายเหตุสำหรับผู้ส่ง"
@@ -121,7 +94,7 @@ export default function ReviewRequestsPage({
   // จำนวนรายการที่ยังรอตรวจ (PENDING)
   const pendingCount = requests.filter((r) => r.status === 'PENDING').length;
 
-  // 1. ตอบรับคำขอ (ACCEPTED) — ล็อกให้ตอบรับได้ทีละ 1 คนต่อโพสต์
+  // 1. ตอบรับคำขอ (ACCEPTED / อนุมัติคำขอ) — ล็อกให้ตอบรับได้ทีละ 1 คนต่อโพสต์
   const handleAccept = () => {
     if (!activeRequest || isOtherAccepted) return;
 
@@ -293,19 +266,19 @@ export default function ReviewRequestsPage({
         onBack={handleGoBack}
       />
 
-      {/* แบนเนอร์แสดงข้อมูล Entity POSTS + LOCATION ตาม ER Diagram */}
+      {/* แบนเนอร์แสดงสถานะโพสต์ */}
       <div className="review-post-banner">
         <div className="review-post-banner-info">
-          <span className="review-post-banner-label">โพสต์ที่กำลังจัดการ (POSTS):</span>
+          <span className="review-post-banner-label">โพสต์ที่จัดการ:</span>
           <strong className="review-post-banner-title">
-            {postInfo.title} (รหัส #{postInfo.post_id} · {postInfo.building_name})
+            พบกระเป๋าสตางค์สีดำ (#p-101 · S4 ชั้น 1)
           </strong>
         </div>
         <div className="review-post-banner-right">
           <div className="review-post-banner-status">
-            <span className="review-post-banner-label">post_status:</span>
+            <span className="review-post-banner-label">สถานะโพสต์:</span>
             {postStatus === 'OPEN' && (
-              <Badge variant="success">OPEN · เปิดรับคำขอ</Badge>
+              <Badge variant="success">OPEN · กำลังเปิดรับคำขอ</Badge>
             )}
             {postStatus === 'CLOSED' && (
               <Badge variant="completed">CLOSED · ส่งมอบสำเร็จแล้ว</Badge>
@@ -327,10 +300,10 @@ export default function ReviewRequestsPage({
         </div>
       </div>
 
-      {/* เลย์เอาต์แบ่ง 2 คอลัมน์ */}
+      {/* เลย์เอาต์แบ่ง 2 คอลัมน์ตาม Figma */}
       <div className="review-requests-grid">
         {/* ========================================================
-            คอลัมน์ซ้าย: การ์ดรายการคำขอที่ได้รับ (VERIFY_ITEMS)
+            คอลัมน์ซ้าย: การ์ดรายการคำขอที่ได้รับ (ตาม Figma)
             ======================================================== */}
         <Card className="review-list-card">
           <div className="review-list-header">
@@ -355,19 +328,19 @@ export default function ReviewRequestsPage({
                     if (e.key === 'Enter') setSelectedId(item.id);
                   }}
                 >
-                  <Thumbnail text="รูปคำขอ" />
+                  <Thumbnail text="รูปโพสต์" />
 
                   <div className="review-item-info">
                     <h3 className="review-item-title">
-                      {item.itemTitle} · #{item.verify_id || item.id}
+                      {item.itemTitle} · #{item.id}
                     </h3>
                     <p className="review-item-meta">
-                      โดย {item.requester} · {item.created_at || item.date}
+                      โดย {item.requester} · {item.date}
                     </p>
 
                     <div className="review-item-badge-wrap">
                       {item.status === 'PENDING' && (
-                        <Badge variant="pending">PENDING · รอตรวจ</Badge>
+                        <Badge variant="pending">PENDING</Badge>
                       )}
                       {item.status === 'ACCEPTED' && (
                         <Badge variant="success">ACCEPTED · ตอบรับแล้ว</Badge>
@@ -390,52 +363,23 @@ export default function ReviewRequestsPage({
         </Card>
 
         {/* ========================================================
-            คอลัมน์ขวา: รายละเอียดคำขอ (VERIFY_ITEMS + USERS + VERIFY_IMAGES)
+            คอลัมน์ขวา: รายละเอียดคำขอ (ตาม Figma เป๊ะ)
             ======================================================== */}
         {activeRequest ? (
           <Card className="review-detail-card">
-            <div className="review-detail-header-row">
-              <h2 className="review-detail-title">
-                รายละเอียดคำขอ #{activeRequest.verify_id || activeRequest.id}
-              </h2>
-              {activeRequest.status === 'PENDING' && (
-                <Badge variant="pending">PENDING · รอตรวจ</Badge>
-              )}
-              {activeRequest.status === 'ACCEPTED' && (
-                <Badge variant="success">ACCEPTED · ตอบรับแล้ว</Badge>
-              )}
-              {activeRequest.status === 'REJECTED' && (
-                <Badge variant="danger">REJECTED · ปฏิเสธ</Badge>
-              )}
-              {activeRequest.status === 'CANCELLED' && (
-                <Badge variant="neutral">CANCELLED · ยกเลิก</Badge>
-              )}
-              {activeRequest.status === 'COMPLETED' && (
-                <Badge variant="completed">COMPLETED · สำเร็จ</Badge>
-              )}
-            </div>
+            <h2 className="review-detail-title">
+              รายละเอียดคำขอ #{activeRequest.id}
+            </h2>
 
-            {/* ข้อมูลผู้ส่งคำขอจาก Entity USERS */}
+            {/* คำอธิบายตำหนิตรงตาม Figma */}
             <p className="review-detail-description">
-              <span className="review-description-label">ผู้ส่งคำขอ (USERS): </span>
-              {activeRequest.requester}
-              {activeRequest.phone_number && (
-                <span> · โทร: {activeRequest.phone_number}</span>
-              )}
+              <span className="review-description-label">คำอธิบาย: </span>
+              {activeRequest.description}
             </p>
 
-            {/* คำอธิบายตำหนิจาก Entity VERIFY_ITEMS: proof_description */}
-            <p className="review-detail-description">
-              <span className="review-description-label">รายละเอียดตำหนิ (proof_description): </span>
-              {activeRequest.proof_description || activeRequest.description}
-            </p>
-
-            {/* รูปภาพหลักฐานจาก Entity VERIFY_IMAGES */}
-            <p className="review-detail-description">
-              <span className="review-description-label">รูปภาพหลักฐาน (VERIFY_IMAGES):</span>
-            </p>
+            {/* กล่องแสดงรูปหลักฐานตรงตาม Figma */}
             <div className="review-evidences-row">
-              {(activeRequest.verify_images || activeRequest.evidences).map((evText, idx) => (
+              {activeRequest.evidences.map((evText, idx) => (
                 <div key={idx} className="review-evidence-box">
                   {evText}
                 </div>
@@ -449,7 +393,7 @@ export default function ReviewRequestsPage({
               <div className="review-status-alert is-blocked">
                 <AlertTriangle size={18} className="review-alert-icon" />
                 <div>
-                  มีคำขอ <strong>#{acceptedClaim.verify_id || acceptedClaim.id} ({acceptedClaim.requester})</strong> ได้รับการตอบรับอยู่แล้ว — ระบบจำกัดตอบรับได้เพียง 1 คนต่อโพสต์ในเวลาเดียวกัน
+                  มีคำขอ <strong>#{acceptedClaim.id} ({acceptedClaim.requester})</strong> ได้รับการตอบรับอยู่แล้ว — ระบบจำกัดตอบรับได้เพียง 1 คนต่อโพสต์ในเวลาเดียวกัน
                 </div>
               </div>
             )}
@@ -467,7 +411,7 @@ export default function ReviewRequestsPage({
                   <span className="review-handover-badge">รอทั้ง 2 ฝ่ายยืนยัน</span>
                 </div>
                 <p className="review-handover-sub">
-                  ตามกฎระบบ: ทั้งผู้พบและผู้รับต้องยืนยันการส่งมอบ เมื่อยืนยันครบ post_status จะเปลี่ยนเป็น <strong>CLOSED</strong> และคำขออื่นที่ค้างอยู่จะถูกยกเลิกอัตโนมัติ
+                  ตามกฎระบบ: ทั้งผู้พบและผู้รับต้องยืนยันการส่งมอบ เมื่อยืนยันครบ โพสต์จะเปลี่ยนเป็น <strong>CLOSED</strong> และคำขออื่นที่ค้างอยู่จะถูกยกเลิกอัตโนมัติ
                 </p>
 
                 <div className="review-handover-steps-grid">
@@ -504,7 +448,7 @@ export default function ReviewRequestsPage({
                       <span className="step-num">
                         {activeRequest.receiverConfirmed ? <Check size={14} /> : '2'}
                       </span>
-                      <span className="step-label">ฝ่ายผู้รับ ({activeRequest.first_name || activeRequest.requester})</span>
+                      <span className="step-label">ฝ่ายผู้รับ ({activeRequest.requester})</span>
                     </div>
                     <p className="step-status-text">
                       {activeRequest.receiverConfirmed ? 'ยืนยันได้รับของแล้ว' : 'รอผู้รับยืนยัน'}
@@ -566,26 +510,26 @@ export default function ReviewRequestsPage({
               </div>
             )}
 
-            {/* ช่องกรอกหมายเหตุ */}
+            {/* ช่องกรอกหมายเหตุ (ตาม Figma เป๊ะ) */}
             <div className="review-note-section">
               <label htmlFor="reviewNoteInput" className="review-note-title">
-                หมายเหตุสำหรับผู้ส่ง (เหตุผลหรือนัดรับ)
+                หมายเหตุสำหรับผู้ส่ง
               </label>
               <input
                 id="reviewNoteInput"
                 type="text"
                 className="review-note-input"
-                placeholder="ระบุสถานที่นัดรับ เวลา หรือเหตุผลประกอบ..."
+                placeholder="ระบุเหตุผลหรือขั้นตอนนัดรับ"
                 value={noteText || activeRequest.note || ''}
                 onChange={(e) => setNoteText(e.target.value)}
                 disabled={activeRequest.status !== 'PENDING'}
               />
               <p className="review-note-helper">
-                หมายเหตุนี้จะแสดงในหน้าตารางคำขอ (My Requests) ของผู้ส่งคำขอ
+                เมื่อส่งของคืนจริงแล้ว จึงกดยืนยันการส่งคืนและปิดสถานะ
               </p>
             </div>
 
-            {/* ปุ่มกดปฏิเสธ / ตอบรับคำขอ */}
+            {/* ปุ่มกดปฏิเสธ / อนุมัติคำขอ (ตาม Figma เป๊ะ) */}
             <div className="review-detail-actions">
               {activeRequest.status !== 'PENDING' && (
                 <Button
@@ -615,7 +559,7 @@ export default function ReviewRequestsPage({
                     disabled={Boolean(isOtherAccepted)}
                     title={isOtherAccepted ? 'ไม่สามารถตอบรับได้ เนื่องจากมีคำขออื่นได้รับการตอบรับอยู่แล้ว' : ''}
                   >
-                    ตอบรับคำขอ
+                    อนุมัติคำขอ
                   </Button>
                 </>
               )}
