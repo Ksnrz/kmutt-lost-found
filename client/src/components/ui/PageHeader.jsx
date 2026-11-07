@@ -19,15 +19,15 @@ export default function PageHeader({
 }) {
   return (
     <header className={`page-header ${className}`}>
-      <div className="page-header-top-row">
-        {backText && (
+      {backText && (
+        <div className="page-header-back-row">
           <button type="button" className="page-header-back-btn" onClick={onBack}>
             <img src={arrowBackIcon} alt="" className="page-header-back-icon" aria-hidden="true" />
             <span>{backText}</span>
           </button>
-        )}
-        {tag && <div className="page-header-tag">{tag}</div>}
-      </div>
+        </div>
+      )}
+      {tag && <div className="page-header-tag">{tag}</div>}
       <h1 className="page-header-title">{title}</h1>
       {subtitle && <p className="page-header-subtitle">{subtitle}</p>}
     </header>
