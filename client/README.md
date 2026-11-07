@@ -1,16 +1,31 @@
-# React + Vite
+# KMUTT Lost & Found (ระบบแจ้งของหายและพบของ มจธ.)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+เว็บแอปพลิเคชันสำหรับนักศึกษาและบุคลากร มจธ. ในการแจ้งของหายและตามหาเจ้าของสิ่งของที่พบในมหาวิทยาลัย
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 👤 งานที่รับผิดชอบ — กฤษณรัตน์ สัจจา (กำหนดส่ง: 7 พฤศจิกายน 2026)
 
-## React Compiler
+| หน้าที่ | งาน | รายละเอียด | Route URL |
+|---|---|---|---|
+| **1** | **หน้าล็อกอิน** | กรอกรหัสนักศึกษา/อีเมล + รหัสผ่าน, แจ้งเตือนเมื่อกรอกผิด | `/login` |
+| **2** | **สมัครสมาชิก** | สมัครด้วยรหัสนักศึกษา 11 หลัก, เช็คห้ามรหัสซ้ำ | `/register` |
+| **3** | **แผนที่** | สลับของหาย/เจอของ, dropdown ตึกแบ่งโซน S/N + ค้นหาตึก, รูปแผนที่, ปุ่มค้นหา, ปุ่มสร้างโพสต์ | `/` หรือ `/map` |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+👉 อ่านสเปกฉบับเต็มและคู่มือสำหรับสั่ง AI ได้ที่: **[REQUIREMENTS.md](./REQUIREMENTS.md)**
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🚀 การเริ่มต้นรันโปรเจกต์ (Getting Started)
+
+```bash
+# 1. เข้าสู่โฟลเดอร์ client
+cd client
+
+# 2. ติดตั้ง Dependencies ที่จำเป็น
+npm install
+npm install react-router-dom lucide-react
+
+# 3. รัน Development Server
+npm run dev
+```

@@ -1,0 +1,66 @@
+@import '../../styles/tokens.css';
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: var(--text-helper-status);
+  font-weight: var(--fw-bold);
+  border-radius: var(--radius-full);
+  padding: 4px 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Pending (Orange/Peach) - รอตรวจ / รอส่งมอบ */
+.badge-pending {
+  background-color: var(--color-orange-light);
+  color: var(--color-orange);
+}
+
+/* Success (Green) - กำลังเปิดรับคำขอ (OPEN) / ตอบรับแล้ว (ACCEPTED) */
+.badge-success {
+  background-color: var(--color-status-success-bg);
+  color: var(--color-status-success);
+}
+
+/* Danger (Red) - ปฏิเสธ (REJECTED) / ยกเลิกโพสต์ (CANCELLED) */
+.badge-danger {
+  background-color: var(--color-status-danger-bg);
+  color: var(--color-status-danger);
+}
+
+/* Neutral (Gray) - ปิดประกาศแล้ว (CLOSED) / ยกเลิก (CANCELLED) */
+.badge-neutral {
+  background-color: var(--color-gray-light);
+  color: var(--color-gray-muted);
+}
+
+/* Completed (Dark slate) - ส่งมอบสำเร็จแล้ว (COMPLETED) */
+.badge-completed {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+/* Found (Blue) - ประกาศพบของ (FOUND) */
+.badge-found {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+/* Lost (Peach/Amber) - ประกาศของหาย (LOST) */
+.badge-lost {
+  background-color: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+/* Count badge */
+.badge-count {
+  background-color: var(--color-orange-light);
+  color: var(--color-orange);
+  font-weight: 500;
+  padding: 4px 12px;
+}
