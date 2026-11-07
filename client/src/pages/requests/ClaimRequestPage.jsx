@@ -136,6 +136,7 @@ export default function ClaimRequestPage({
         onBack={handleGoBack}
         tag="VERIFICATION REQUEST"
         title="ส่งคำขอตรวจสอบ"
+        subtitle="กรอกรายละเอียดตำหนิและแนบหลักฐานเพื่อยืนยันความเป็นเจ้าของ"
       />
 
       {/* 2. การ์ดฟอร์มหลัก */}
