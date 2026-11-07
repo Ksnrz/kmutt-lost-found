@@ -1,5 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Handshake,
+  Check,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Ban,
+  RotateCcw,
+} from 'lucide-react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
@@ -23,6 +32,7 @@ import './ReviewRequestsPage.css';
  * - Entity: VERIFY_IMAGES (VERIFY_ITEMS (0,N) contain (1,1) VERIFY_IMAGES)
  *   - verify_image_id, verify_image_url
  * 
+ * 🌟 ไอคอน: ใช้ Lucide Icons ทั้งหมดตามมาตรฐานการออกแบบ
  * 🌟 ZERO Inline Styles: 100% ควบคุมผ่าน CSS Classes
  */
 export default function ReviewRequestsPage({
@@ -310,7 +320,8 @@ export default function ReviewRequestsPage({
               className="review-post-reset-btn"
               onClick={handleResetAll}
             >
-              ↺ รีเซ็ตการทดสอบ
+              <RotateCcw size={13} className="review-btn-icon" />
+              <span>รีเซ็ตการทดสอบ</span>
             </button>
           )}
         </div>
@@ -436,17 +447,23 @@ export default function ReviewRequestsPage({
                 ======================================================== */}
             {isOtherAccepted && activeRequest.status === 'PENDING' && (
               <div className="review-status-alert is-blocked">
-                ⚠️ มีคำขอ <strong>#{acceptedClaim.verify_id || acceptedClaim.id} ({acceptedClaim.requester})</strong> ได้รับการตอบรับอยู่แล้ว — ระบบจำกัดตอบรับได้เพียง 1 คนต่อโพสต์ในเวลาเดียวกัน
+                <AlertTriangle size={18} className="review-alert-icon" />
+                <div>
+                  มีคำขอ <strong>#{acceptedClaim.verify_id || acceptedClaim.id} ({acceptedClaim.requester})</strong> ได้รับการตอบรับอยู่แล้ว — ระบบจำกัดตอบรับได้เพียง 1 คนต่อโพสต์ในเวลาเดียวกัน
+                </div>
               </div>
             )}
 
             {/* ========================================================
-                กฎข้อที่ 2 & 3: ขั้นตอนการส่งมอบ (Dual Confirmation)
+                กฎข้อที่ 2 & 3: ขั้นตอนการส่งมอบ (Dual Confirmation พร้อม Lucide Icon)
                 ======================================================== */}
             {activeRequest.status === 'ACCEPTED' && (
               <div className="review-handover-box">
                 <div className="review-handover-header">
-                  <strong>🤝 ขั้นตอนการส่งมอบสิ่งของ (Dual Confirmation)</strong>
+                  <div className="review-handover-title-wrap">
+                    <Handshake size={20} className="review-handover-icon" />
+                    <strong>ขั้นตอนการส่งมอบสิ่งของ (Dual Confirmation)</strong>
+                  </div>
                   <span className="review-handover-badge">รอทั้ง 2 ฝ่ายยืนยัน</span>
                 </div>
                 <p className="review-handover-sub">
@@ -457,7 +474,9 @@ export default function ReviewRequestsPage({
                   {/* ฝ่ายที่ 1: ผู้พบ (คุณ) */}
                   <div className={`handover-step-card ${activeRequest.finderConfirmed ? 'is-done' : ''}`}>
                     <div className="handover-step-header">
-                      <span className="step-num">{activeRequest.finderConfirmed ? '✓' : '1'}</span>
+                      <span className="step-num">
+                        {activeRequest.finderConfirmed ? <Check size={14} /> : '1'}
+                      </span>
                       <span className="step-label">ฝ่ายผู้พบ (คุณ)</span>
                     </div>
                     <p className="step-status-text">
@@ -472,14 +491,19 @@ export default function ReviewRequestsPage({
                         ยืนยันการส่งมอบ
                       </Button>
                     ) : (
-                      <span className="handover-confirmed-tag">✓ ยืนยันแล้ว</span>
+                      <span className="handover-confirmed-tag">
+                        <CheckCircle2 size={13} />
+                        <span>ยืนยันแล้ว</span>
+                      </span>
                     )}
                   </div>
 
                   {/* ฝ่ายที่ 2: ผู้รับ (นักศึกษา) */}
                   <div className={`handover-step-card ${activeRequest.receiverConfirmed ? 'is-done' : ''}`}>
                     <div className="handover-step-header">
-                      <span className="step-num">{activeRequest.receiverConfirmed ? '✓' : '2'}</span>
+                      <span className="step-num">
+                        {activeRequest.receiverConfirmed ? <Check size={14} /> : '2'}
+                      </span>
                       <span className="step-label">ฝ่ายผู้รับ ({activeRequest.first_name || activeRequest.requester})</span>
                     </div>
                     <p className="step-status-text">
@@ -494,7 +518,10 @@ export default function ReviewRequestsPage({
                         จำลอง: ผู้รับยืนยัน
                       </Button>
                     ) : (
-                      <span className="handover-confirmed-tag">✓ ยืนยันแล้ว</span>
+                      <span className="handover-confirmed-tag">
+                        <CheckCircle2 size={13} />
+                        <span>ยืนยันแล้ว</span>
+                      </span>
                     )}
                   </div>
                 </div>
@@ -506,7 +533,8 @@ export default function ReviewRequestsPage({
                     className="review-cancel-link"
                     onClick={() => handleCancelAccepted(activeRequest.id)}
                   >
-                    ✕ ส่งมอบไม่สำเร็จ? ยกเลิกการตอบรับเพื่อกลับไปเลือกคำขออื่นที่รออยู่
+                    <XCircle size={14} className="review-cancel-icon" />
+                    <span>ส่งมอบไม่สำเร็จ? ยกเลิกการตอบรับเพื่อกลับไปเลือกคำขออื่นที่รออยู่</span>
                   </button>
                 </div>
               </div>
@@ -515,21 +543,26 @@ export default function ReviewRequestsPage({
             {/* แสดงสถานะเมื่อส่งมอบสำเร็จ (COMPLETED) */}
             {activeRequest.status === 'COMPLETED' && (
               <div className="review-status-alert is-completed">
-                🎉 <strong>ส่งมอบสำเร็จเรียบร้อยแล้ว!</strong> ทั้งสองฝ่ายยืนยันครบถ้วน โพสต์ประกาศถูกเปลี่ยนเป็น <strong>CLOSED</strong> และคำขออื่นที่ค้างอยู่ถูกยกเลิกแล้ว
+                <CheckCircle2 size={20} className="review-alert-icon" />
+                <div>
+                  <strong>ส่งมอบสำเร็จเรียบร้อยแล้ว!</strong> ทั้งสองฝ่ายยืนยันครบถ้วน โพสต์ประกาศถูกเปลี่ยนเป็น <strong>CLOSED</strong> และคำขออื่นที่ค้างอยู่ถูกยกเลิกแล้ว
+                </div>
               </div>
             )}
 
             {/* แสดงสถานะเมื่อถูกปฏิเสธ (REJECTED) */}
             {activeRequest.status === 'REJECTED' && (
               <div className="review-status-alert is-rejected">
-                ✕ คำขอนี้ถูกปฏิเสธแล้ว
+                <XCircle size={18} className="review-alert-icon" />
+                <span>คำขอนี้ถูกปฏิเสธแล้ว</span>
               </div>
             )}
 
             {/* แสดงสถานะเมื่อถูกยกเลิก (CANCELLED) */}
             {activeRequest.status === 'CANCELLED' && (
               <div className="review-status-alert is-cancelled">
-                ⊘ คำขอนี้ถูกยกเลิกแล้ว
+                <Ban size={18} className="review-alert-icon" />
+                <span>คำขอนี้ถูกยกเลิกแล้ว</span>
               </div>
             )}
 
@@ -561,7 +594,8 @@ export default function ReviewRequestsPage({
                   type="button"
                   onClick={() => handleResetStatus(activeRequest.id)}
                 >
-                  ↺ รีเซ็ตเพื่อตรวจใหม่
+                  <RotateCcw size={13} className="review-btn-icon" />
+                  <span>รีเซ็ตเพื่อตรวจใหม่</span>
                 </Button>
               )}
 

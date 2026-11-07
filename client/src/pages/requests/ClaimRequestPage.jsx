@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ImagePlus, X } from 'lucide-react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
@@ -224,13 +225,13 @@ export default function ClaimRequestPage({
               onChange={handleFileChange}
               accept="image/*"
               multiple
-              className="claim-file-input-hidden"
+              className="claim-hidden-file-input"
               aria-label="เลือกไฟล์รูปหลักฐาน"
             />
 
             {/* กล่อง Drag/Drop & Click Upload */}
             <div
-              className="claim-dropzone"
+              className="claim-upload-zone"
               onClick={() => fileInputRef.current?.click()}
               role="button"
               tabIndex={0}
@@ -240,30 +241,28 @@ export default function ClaimRequestPage({
                 }
               }}
             >
-              <span className="claim-dropzone-text">
-                + แนบรูปตำหนิหรือรูปของเดิม (VERIFY_IMAGES)
-              </span>
+              <ImagePlus size={18} className="claim-upload-icon" />
+              <span>แนบรูปตำหนิหรือรูปของเดิม (VERIFY_IMAGES)</span>
             </div>
 
             {/* แสดง Preview รูปที่ผู้ใช้อัปโหลด */}
             {evidenceImages.length > 0 && (
-              <div className="claim-evidence-preview-list">
+              <div className="claim-preview-grid">
                 {evidenceImages.map((img) => (
-                  <div key={img.id} className="claim-evidence-preview-item">
+                  <div key={img.id} className="claim-preview-item">
                     <img
                       src={img.previewUrl}
                       alt={img.name}
-                      className="claim-evidence-preview-img"
+                      className="claim-preview-img"
                     />
                     <button
                       type="button"
-                      className="claim-evidence-remove-btn"
+                      className="claim-preview-remove"
                       onClick={() => handleRemoveImage(img.id)}
                       aria-label={`ลบรูปภาพ ${img.name}`}
                     >
-                      ✕
+                      <X size={12} />
                     </button>
-                    <span className="claim-evidence-name">{img.name}</span>
                   </div>
                 ))}
               </div>

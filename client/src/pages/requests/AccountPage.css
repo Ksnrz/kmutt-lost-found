@@ -130,6 +130,9 @@
 }
 
 .account-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: transparent;
   border: none;
   padding: 10px 22px;
@@ -562,4 +565,18 @@
   color: var(--color-gray);
   font-size: var(--text-meta);
   margin: 0;
+}
+
+.account-tab-icon {
+  flex-shrink: 0;
+}
+
+.account-btn-icon {
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.account-banner-icon-lucide {
+  color: var(--color-status-success, #16a34a);
+  flex-shrink: 0;
 }

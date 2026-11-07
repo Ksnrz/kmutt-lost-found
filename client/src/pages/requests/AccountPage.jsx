@@ -1,5 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  Megaphone,
+  Send,
+  Inbox,
+  Check,
+  CheckCircle2,
+  X,
+} from 'lucide-react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
@@ -18,7 +26,8 @@ import './AccountPage.css';
  *    - verify_id, verify_status, proof_description, created_at
  * 3. Dual Confirmation (ฝ่ายผู้รับ): ในแท็บ "คำขอที่ฉันส่ง (My Requests)" สามารถกดยืนยันได้รับของเมื่อคำขอได้รับการ ACCEPTED
  * 4. จัดการคำขอที่ได้รับ: มีแท็บและปุ่มตรงไปยังหน้าตรวจคำขอ /requests/review (POSTS (0,N) receives (1,1) VERIFY_ITEMS)
- * 5. ZERO Inline Styles: 100% ควบคุมผ่าน CSS Classes
+ * 5. ไอคอน: ใช้ Lucide Icons ทั้งหมดตามมาตรฐานการออกแบบ
+ * 6. ZERO Inline Styles: 100% ควบคุมผ่าน CSS Classes
  */
 export default function AccountPage({
   onNavigateReview,
@@ -229,7 +238,7 @@ export default function AccountPage({
       {bannerMessage && (
         <div className="account-success-banner" role="status">
           <div className="account-banner-content">
-            <span className="account-banner-icon">✓</span>
+            <CheckCircle2 size={18} className="account-banner-icon-lucide" />
             <span>{bannerMessage}</span>
           </div>
           <button
@@ -238,7 +247,7 @@ export default function AccountPage({
             onClick={() => setBannerMessage(null)}
             aria-label="ปิดการแจ้งเตือน"
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
       )}
@@ -288,7 +297,7 @@ export default function AccountPage({
       </div>
 
       {/* ============================================================
-          2. แถบสลับแท็บเมนู (Tab Navigation)
+          2. แถบสลับแท็บเมนู (Tab Navigation พร้อม Lucide Icons)
           ============================================================ */}
       <div className="account-tabs-wrapper">
         <div className="account-tabs-header" role="tablist">
@@ -297,21 +306,24 @@ export default function AccountPage({
             className={`account-tab-btn ${activeTab === 'my_posts' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('my_posts')}
           >
-            📢 ประกาศที่ฉันสร้าง ({myPosts.length})
+            <Megaphone size={16} className="account-tab-icon" />
+            <span>ประกาศที่ฉันสร้าง ({myPosts.length})</span>
           </button>
           <button
             type="button"
             className={`account-tab-btn ${activeTab === 'my_sent_claims' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('my_sent_claims')}
           >
-            📤 คำขอที่ฉันส่ง (My Requests) ({sentClaims.length})
+            <Send size={16} className="account-tab-icon" />
+            <span>คำขอที่ฉันส่ง (My Requests) ({sentClaims.length})</span>
           </button>
           <button
             type="button"
             className={`account-tab-btn ${activeTab === 'my_received_claims' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('my_received_claims')}
           >
-            📥 คำขอที่ฉันได้รับ ({receivedClaims.length})
+            <Inbox size={16} className="account-tab-icon" />
+            <span>คำขอที่ฉันได้รับ ({receivedClaims.length})</span>
           </button>
         </div>
       </div>
@@ -361,7 +373,7 @@ export default function AccountPage({
           {/* รายการการ์ดโพสต์ */}
           {filteredPosts.length === 0 ? (
             <div className="account-empty-state">
-              <span className="account-empty-icon">📭</span>
+              <Inbox size={42} className="account-empty-icon" />
               <p className="account-empty-title">ไม่พบรายการประกาศในหมวดหมู่นี้</p>
               <p className="account-empty-desc">ลองเลือกตัวกรองอื่น หรือสร้างประกาศใหม่</p>
             </div>
@@ -500,10 +512,14 @@ export default function AccountPage({
                           size="sm"
                           onClick={() => handleConfirmReceived(claim.id)}
                         >
-                          ✓ ยืนยันได้รับของแล้ว
+                          <Check size={14} className="account-btn-icon" />
+                          <span>ยืนยันได้รับของแล้ว</span>
                         </Button>
                       ) : claim.status === 'COMPLETED' ? (
-                        <span className="account-table-done-badge">✓ ได้รับของเรียบร้อย</span>
+                        <span className="account-table-done-badge">
+                          <CheckCircle2 size={14} />
+                          <span>ได้รับของเรียบร้อย</span>
+                        </span>
                       ) : (
                         <Button
                           variant="secondary"

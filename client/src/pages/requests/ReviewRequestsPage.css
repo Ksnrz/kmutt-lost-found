@@ -68,11 +68,18 @@
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .review-post-reset-btn:hover {
   border-color: var(--color-orange);
   color: var(--color-orange);
+}
+
+.review-btn-icon {
+  flex-shrink: 0;
 }
 
 /* เลย์เอาต์แบ่ง 2 คอลัมน์ (ซ้าย: รายการคำขอ, ขวา: รายละเอียด) */
@@ -232,6 +239,14 @@
   font-size: var(--text-meta);
   line-height: 1.5;
   margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.review-alert-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .review-status-alert.is-blocked {
@@ -283,9 +298,20 @@
   margin-bottom: 6px;
 }
 
-.review-handover-header strong {
+.review-handover-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-handover-title-wrap strong {
   color: var(--color-gray-dark);
   font-size: var(--text-card-title);
+}
+
+.review-handover-icon {
+  color: var(--color-orange);
+  flex-shrink: 0;
 }
 
 .review-handover-badge {
@@ -367,6 +393,7 @@
 .handover-confirmed-tag {
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   font-size: var(--text-helper-status);
   font-weight: var(--fw-bold);
   color: #16a34a;
@@ -391,10 +418,17 @@
   padding: 4px 0;
   font-family: inherit;
   transition: color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .review-cancel-link:hover {
   color: #991b1b;
+}
+
+.review-cancel-icon {
+  flex-shrink: 0;
 }
 
 /* ส่วนหมายเหตุสำหรับผู้ส่ง */
