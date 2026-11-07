@@ -1,0 +1,514 @@
+@import '../../styles/tokens.css';
+
+.review-requests-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 40px) clamp(16px, 3.5vw, 48px);
+  box-sizing: border-box;
+  text-align: left;
+  font-family: var(--font-family-base);
+}
+
+/* ============================================================
+   แบนเนอร์ข้อมูลโพสต์ประกาศหลัก
+   ============================================================ */
+.review-post-banner {
+  background-color: var(--color-white);
+  border: 1.5px solid var(--color-gray-border);
+  border-radius: var(--radius-lg);
+  padding: 16px 22px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.review-post-banner-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.review-post-banner-label {
+  color: var(--color-gray);
+  font-size: var(--text-meta);
+}
+
+.review-post-banner-title {
+  color: var(--color-gray-dark);
+  font-size: var(--text-card-title);
+  font-weight: var(--fw-bold);
+}
+
+.review-post-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.review-post-banner-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-post-reset-btn {
+  background: transparent;
+  border: 1px solid var(--color-gray-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: var(--text-helper-status);
+  font-weight: var(--fw-medium);
+  color: var(--color-gray);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.review-post-reset-btn:hover {
+  border-color: var(--color-orange);
+  color: var(--color-orange);
+}
+
+.review-btn-icon {
+  flex-shrink: 0;
+}
+
+/* เลย์เอาต์แบ่ง 2 คอลัมน์ (ซ้าย: รายการคำขอ, ขวา: รายละเอียด) */
+.review-requests-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.95fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .review-requests-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   คอลัมน์ซ้าย: การ์ดรายการคำขอที่ได้รับ
+   ============================================================ */
+.review-list-card {
+  padding: 28px;
+}
+
+.review-list-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.review-list-title {
+  color: var(--color-gray-dark);
+  font-size: var(--text-h2-section);
+  font-weight: var(--fw-bold);
+  margin: 0;
+}
+
+.review-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* แถวคำขอแต่ละรายการ */
+.review-item-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--color-gray-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-white);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  user-select: none;
+}
+
+.review-item-card:hover {
+  border-color: var(--color-orange);
+  box-shadow: var(--shadow-sm);
+}
+
+.review-item-card.is-selected {
+  border-color: var(--color-orange);
+  background-color: #fffaf8;
+}
+
+.review-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.review-item-title {
+  color: var(--color-gray-dark);
+  font-size: var(--text-card-title);
+  font-weight: var(--fw-bold);
+  margin: 0;
+}
+
+.review-item-meta {
+  color: var(--color-gray);
+  font-size: var(--text-meta);
+  margin: 0;
+}
+
+.review-item-badge-wrap {
+  margin-top: 2px;
+}
+
+/* ============================================================
+   คอลัมน์ขวา: การ์ดรายละเอียดคำขอ
+   ============================================================ */
+.review-detail-card {
+  padding: 28px;
+}
+
+.review-detail-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.review-detail-header-row .review-detail-title {
+  margin: 0;
+}
+
+.review-detail-title {
+  color: var(--color-gray-dark);
+  font-size: var(--text-h2-section);
+  font-weight: var(--fw-bold);
+  margin: 0 0 12px 0;
+}
+
+.review-detail-description {
+  color: var(--color-gray-dark);
+  font-size: var(--text-meta);
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+}
+
+.review-description-label {
+  font-weight: var(--fw-bold);
+}
+
+/* แถวแสดงกล่องหลักฐาน */
+.review-evidences-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.review-evidence-box {
+  width: 105px;
+  height: 80px;
+  background-color: var(--color-gray-light);
+  border: 1.5px dashed var(--color-gray-border-dashed);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gray);
+  font-size: var(--text-meta);
+  user-select: none;
+}
+
+/* กล่องแจ้งเตือนสถานะต่างๆ */
+.review-status-alert {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-meta);
+  line-height: 1.5;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.review-alert-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.review-status-alert.is-blocked {
+  background-color: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.review-status-alert.is-completed {
+  background-color: #f0fdf4;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.review-status-alert.is-approved {
+  background-color: var(--color-status-success-bg);
+  color: var(--color-status-success);
+  border: 1px solid var(--color-status-success);
+}
+
+.review-status-alert.is-rejected {
+  background-color: var(--color-status-danger-bg);
+  color: var(--color-status-danger);
+  border: 1px solid var(--color-status-danger);
+}
+
+.review-status-alert.is-cancelled {
+  background-color: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+/* ============================================================
+   กล่องขั้นตอนการส่งมอบ (Dual Confirmation Handover Box)
+   ============================================================ */
+.review-handover-box {
+  background-color: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  margin-bottom: 24px;
+}
+
+.review-handover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.review-handover-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-handover-title-wrap strong {
+  color: var(--color-gray-dark);
+  font-size: var(--text-card-title);
+}
+
+.review-handover-icon {
+  color: var(--color-orange);
+  flex-shrink: 0;
+}
+
+.review-handover-badge {
+  font-size: var(--text-helper-status);
+  font-weight: var(--fw-bold);
+  color: var(--color-orange);
+  background-color: var(--color-orange-light);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.review-handover-sub {
+  color: var(--color-gray);
+  font-size: var(--text-helper-status);
+  line-height: 1.45;
+  margin: 0 0 16px 0;
+}
+
+.review-handover-steps-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.handover-step-card {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.handover-step-card.is-done {
+  border-color: #86efac;
+  background-color: #f0fdf4;
+}
+
+.handover-step-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--color-gray-light);
+  color: var(--color-gray-dark);
+  font-weight: var(--fw-bold);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.handover-step-card.is-done .step-num {
+  background-color: #16a34a;
+  color: #ffffff;
+}
+
+.step-label {
+  font-size: var(--text-meta);
+  font-weight: var(--fw-bold);
+  color: var(--color-gray-dark);
+}
+
+.step-status-text {
+  font-size: var(--text-helper-status);
+  color: var(--color-gray);
+  margin: 0;
+}
+
+.handover-confirmed-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-helper-status);
+  font-weight: var(--fw-bold);
+  color: #16a34a;
+  background-color: #dcfce7;
+  padding: 4px 8px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.review-handover-cancel-row {
+  margin-top: 10px;
+  text-align: right;
+}
+
+.review-cancel-link {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: var(--text-helper-status);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 0;
+  font-family: inherit;
+  transition: color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.review-cancel-link:hover {
+  color: #991b1b;
+}
+
+.review-cancel-icon {
+  flex-shrink: 0;
+}
+
+/* ส่วนหมายเหตุสำหรับผู้ส่ง */
+.review-note-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.review-note-title {
+  color: var(--color-gray-dark);
+  font-size: var(--text-card-title);
+  font-weight: var(--fw-bold);
+  margin: 0;
+}
+
+.review-note-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-gray-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-meta);
+  font-family: inherit;
+  color: var(--color-gray-dark);
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.review-note-input:focus {
+  border-color: var(--color-orange);
+}
+
+.review-note-helper {
+  color: var(--color-gray);
+  font-size: var(--text-helper-status);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ปุ่มควบคุมล่างสุด */
+.review-detail-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .review-post-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .review-post-banner-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .review-list-card,
+  .review-detail-card {
+    padding: 20px 16px;
+  }
+
+  .review-handover-steps-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-detail-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .review-detail-actions button,
+  .review-detail-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

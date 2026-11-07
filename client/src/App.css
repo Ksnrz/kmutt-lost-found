@@ -1,0 +1,21 @@
+@import './styles/tokens.css';
+
+.app-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg-page, #f8fafc);
+  box-sizing: border-box;
+}
+
+main {
+  flex: 1;
+  width: 100%;
+}
+
+/* พื้นที่หน้าแผนที่มหาวิทยาลัย (เว้นว่างไว้สำหรับโมดูลของเพื่อนร่วมทีม) */
+.map-view-empty {
+  width: 100%;
+  flex: 1;
+}
