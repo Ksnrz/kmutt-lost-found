@@ -1,49 +1,48 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Navbar from './components/navigation/Navbar';
+import Login from './pages/Login.jsx';
+import Register from './pages/Register.jsx';
+import Map from './pages/Map.jsx';
 import ClaimRequestPage from './pages/requests/ClaimRequestPage';
 import ReviewRequestsPage from './pages/requests/ReviewRequestsPage';
 import AccountPage from './pages/requests/AccountPage';
 import './App.css';
 
-/**
- * KMUTT Lost & Found — Root Application & Router
- */
+// หน้าที่มี Navbar ด้านบน (หน้า login / register ไม่มี)
+function WithNavbar() {
+  return (
+    <div className="app-container">
+      <Navbar
+        pendingCount={1}
+        onCreatePost={() => {
+          alert('เปิดหน้าต่างสร้างโพสต์ใหม่ (+ สร้างโพสต์)\n(เชื่อมต่อกับโมดูลโพสต์ของเพื่อนคนที่ 2)');
+        }}
+      />
+      <main>
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
-      <div className="app-container">
-        {/* แถบนำทางด้านบน Desktop Navbar */}
-        <Navbar
-          pendingCount={1}
-          onCreatePost={() => {
-            alert('เปิดหน้าต่างสร้างโพสต์ใหม่ (+ สร้างโพสต์)\n(เชื่อมต่อกับโมดูลโพสต์ของเพื่อนคนที่ 2)');
-          }}
-        />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-        {/* จุดกำหนด Route ของเว็บ */}
-        <main>
-          <Routes>
-            {/* 1. หน้าส่งคำขอตรวจสอบสิ่งของ (Verification Request) — รองรับทั้งเข้าตรง และเปิดต่อจากหน้ารายละเอียดโพสต์ของเพื่อน */}
-            <Route path="/claims/new" element={<ClaimRequestPage />} />
-            <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
+        <Route element={<WithNavbar />}>
+          <Route path="/map" element={<Map />} />
+          <Route path="/claims/new" element={<ClaimRequestPage />} />
+          <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
+          <Route path="/requests/review" element={<ReviewRequestsPage />} />
+          <Route path="/account" element={<AccountPage />} />
+        </Route>
 
-            {/* 2. หน้าตรวจสอบคำขอที่ส่งมา (Review Requests — เมนู "ขอรับคืน") */}
-            <Route path="/requests/review" element={<ReviewRequestsPage />} />
-
-            {/* 3. หน้าจัดการประกาศและบัญชีของฉัน (My Account — เมนู "ประกาศของฉัน") */}
-            <Route path="/account" element={<AccountPage />} />
-
-            {/* 4. หน้าแผนที่มหาวิทยาลัย (เว้นว่างไว้สำหรับโมดูลของเพื่อนร่วมทีม branch: auth-and-map) */}
-            <Route path="/map" element={<div className="map-view-empty" />} />
-
-            {/* หน้าแรก Redirect ไปที่ /claims/new ตามลำดับงานหลัก */}
-            <Route path="/" element={<Navigate to="/claims/new" replace />} />
-
-            {/* หากพิมพ์ URL อื่นๆ ให้เด้งกลับไปที่ /claims/new */}
-            <Route path="*" element={<Navigate to="/claims/new" replace />} />
-          </Routes>
-        </main>
-      </div>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
     </BrowserRouter>
   );
 }
