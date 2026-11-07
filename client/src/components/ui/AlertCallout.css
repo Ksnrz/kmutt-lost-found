@@ -1,0 +1,13 @@
+@import '../../styles/tokens.css';
+
+.ui-alert-callout {
+  background-color: var(--color-orange-subtle);
+  border-left: 3px solid var(--color-orange);
+  padding: 10px 14px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--color-gray-dark);
+  font-size: var(--text-helper-status);
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+

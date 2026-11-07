@@ -1,0 +1,26 @@
+@import '../../styles/tokens.css';
+
+.ui-thumbnail {
+  width: 100px;
+  height: 80px;
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.ui-thumbnail-placeholder {
+  background-color: var(--color-gray-light);
+  border: 1.5px dashed var(--color-gray-border-dashed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gray);
+  font-size: var(--text-meta);
+  user-select: none;
+}
+
+.ui-thumbnail-img {
+  object-fit: cover;
+  border: 1px solid var(--color-gray-border);
+}
+
