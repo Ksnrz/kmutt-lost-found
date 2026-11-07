@@ -2,7 +2,7 @@ import React from 'react';
 import arrowIcon from '../assets/icons_arrow-back.png';
 import './BackButton.css';
 
-function BackButton() {
+function BackButton({text}) {
   const handleBack = () => {
     window.history.back();
   };
@@ -10,7 +10,7 @@ function BackButton() {
   return (
     <button className="back-link-btn" onClick={handleBack}>
       <img src={arrowIcon} alt="ย้อนกลับ" className="back-icon" />
-      <span>กลับไปรายการโพสต์</span>
+      <span>{text}</span>
     </button>
   );
 }

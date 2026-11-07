@@ -1,0 +1,50 @@
+.container {
+  padding: 60px 50px;
+  background-color: #F7F7F7;
+  min-height: 100vh;
+  font-family: Noto Sans Thai;
+}
+
+h1 {
+    font-size: 30px;
+    font-weight: bold;
+    color: #000000;
+    margin-bottom: 30px;
+}
+
+h2 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #000000;
+    margin-bottom: 20px;
+}
+
+h3 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #000000;
+    margin-bottom: 10px;
+}
+
+p{
+  color: #7B8189;
+}
+
+.flex-image{
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.text-image{
+  display: flex;
+  flex-direction: column;
+}
+
+.tag_but{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+}

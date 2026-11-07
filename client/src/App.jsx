@@ -4,6 +4,9 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Map from './pages/Map.jsx';
 import Page4 from './pages/page4';
+import Page5 from './pages/page5';
+import Page6 from './pages/page6';
+import Page7 from './pages/page7';
 import ClaimRequestPage from './pages/requests/ClaimRequestPage';
 import ReviewRequestsPage from './pages/requests/ReviewRequestsPage';
 import AccountPage from './pages/requests/AccountPage';
@@ -36,6 +39,9 @@ function App() {
         <Route element={<WithNavbar />}>
           <Route path="/map" element={<Map />} />
           <Route path="/posts" element={<Page4 />} />
+          <Route path="/posts/new" element={<Page6 />} />
+          <Route path="/posts/:postId" element={<Page5 />} />
+          <Route path="/posts/:postId/edit" element={<Page7 />} />
           <Route path="/claims/new" element={<ClaimRequestPage />} />
           <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
           <Route path="/requests/review" element={<ReviewRequestsPage />} />

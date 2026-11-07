@@ -4,13 +4,14 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import ImageUpload from '../components/ImageUpload';
+import Line from '../components/Line';
 import './page4.css';
 
 function Page4() {
 	
 	return (
-		<div className="page4-container">
-			<BackButton />
+		<div className="container">
+			<BackButton text='กลับไปรายการโพสต์'/>
 			<h1>สร้างโพสต์</h1>
 			<div className='form-layout'>
 				<div className='form-left'>
@@ -30,7 +31,7 @@ function Page4() {
 						<h3>รายละเอียดสิ่งของ *</h3>
 						<Input type="text" placeholder="สี รูปทรง ตำหนิ หรือรายละเอียดที่ช่วยระบุสิ่งของ..." />
 						<h3>รูปภาพสิ่งของ</h3>
-						<ImageUpload />
+						<ImageUpload size="20px" text='รูปหลักของสิงของ'/>
 					</Card>
 				</div>
 
@@ -42,12 +43,14 @@ function Page4() {
 							<Button>ฝากไว้</Button>
 							<Button>เก็บไว้เอง</Button>
 						</div>
+                        <Line />
 						<h3>ช่องทางติดต่อ *</h3>
 						<Input type="text" placeholder="เบอร์โทร" />
 						<h3>สถานที่ฝาก</h3>
 						<Input type="text" placeholder="สถานที่ / ตึก" />
-						<p className='comment'>ข้อมูลติดต่อจะแสดงในหน้าโพสต์</p>
-						<p className='comment'>ตรวจสอบข้อมูลก่อนเผยแพร่</p>
+                        <br/>
+						<p>ข้อมูลติดต่อจะแสดงในหน้าโพสต์</p>
+						<p>ตรวจสอบข้อมูลก่อนเผยแพร่</p>
 						<div className='flex-button2'>
 							<Button>ฝากไว้</Button>
 							<Button>เก็บไว้เอง</Button>
