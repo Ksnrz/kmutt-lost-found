@@ -378,7 +378,7 @@ export default function AccountPage({
               <p className="account-empty-desc">ลองเลือกตัวกรองอื่น หรือสร้างประกาศใหม่</p>
             </div>
           ) : (
-            <div className="account-posts-grid">
+            <div className="account-posts-list">
               {filteredPosts.map((post) => (
                 <div key={post.id} className="account-post-card">
                   <div className="account-post-header">
