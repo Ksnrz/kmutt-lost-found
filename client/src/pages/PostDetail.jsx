@@ -5,9 +5,9 @@ import Button from '../components/Button';
 
 import ImageUpload from '../components/ImageUpload';
 import StatusBadge from '../components/StatusBadge';
-import './page5.css';
+import './PostDetail.css';
 
-function Page5() {
+function PostDetail() {
   const navigate = useNavigate();
   const { postId } = useParams();
 	
@@ -52,4 +52,4 @@ function Page5() {
 	);
 }
 
-export default Page5;
+export default PostDetail;

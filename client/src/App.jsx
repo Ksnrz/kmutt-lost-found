@@ -3,8 +3,8 @@ import Navbar from './components/navigation/Navbar';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Map from './pages/Map.jsx';
-import Page4 from './pages/page4';
-import Page5 from './pages/page5';
+import CreatePost from './pages/CreatePost';
+import PostDetail from './pages/PostDetail';
 import Listpost from './pages/Listpost';
 import ClaimRequestPage from './pages/requests/ClaimRequestPage';
 import ReviewRequestsPage from './pages/requests/ReviewRequestsPage';
@@ -38,10 +38,10 @@ function App() {
 
         <Route element={<WithNavbar />}>
           <Route path="/map" element={<Map />} />
-          <Route path="/posts" element={<Navigate to="/map" replace />} />
-          <Route path="/posts/new" element={<Page4 />} />
-          <Route path="/posts/:postId" element={<Page5 />} />
-          <Route path="/listpost" element={<Listpost />} />
+          <Route path="/posts" element={<Listpost />} />
+          <Route path="/posts/new" element={<CreatePost />} />
+          <Route path="/posts/:postId" element={<PostDetail />} />
+          <Route path="/listpost" element={<Navigate to="/posts" replace />} />
           <Route path="/claims/new" element={<ClaimRequestPage />} />
           <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
           <Route path="/requests/review" element={<ReviewRequestsPage />} />
