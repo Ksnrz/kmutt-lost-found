@@ -6,6 +6,7 @@ import Map from './pages/Map.jsx';
 import CreatePost from './pages/CreatePost';
 import PostDetail from './pages/PostDetail';
 import Listpost from './pages/Listpost';
+import Editpost from './pages/Editpost';
 import ClaimRequestPage from './pages/requests/ClaimRequestPage';
 import ReviewRequestsPage from './pages/requests/ReviewRequestsPage';
 import AccountPage from './pages/requests/AccountPage';
