@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+
+/**
+ * KMUTT Lost & Found — Design Tokens
+ * ซิงค์สีและฟอนต์ให้สอดคล้องกับ Figma และหน้า Login / Map 
+ */
+
+:root {
+   /* ============================================================
+     Color Palette 
+     ============================================================ */
+   /* สีส้มหลัก (KMUTT Orange / Primary Accent #fa4616) */
+   --color-primary: #fa4616;
+   --color-orange: #fa4616;
+   --color-orange-hover: #e03b0f;
+   --color-orange-active: #c5320c;
+   --color-orange-light: #ffebe3;
+   /* พื้นหลัง badge/pill ส้มอ่อน */
+   --color-orange-subtle: #fff5f2;
+
+   /* สีเทา (Gray / Neutral) */
+   --color-gray: #7b8189;
+   /* ตัวหนังสือรอง / ไอคอน (#7b8189 ของเพื่อน) */
+   --color-gray-dark: #1e2022;
+   /* หัวข้อ / ตัวหนังสือหลัก */
+   --color-gray-muted: #5e646a;
+   /* คำอธิบายรอง */
+   --color-gray-light: #f7f7f7;
+   /* พื้นหลังกล่อง placeholder / dashed box */
+   --color-gray-border: #d9d9d9;
+   /* เส้นขอบการ์ดและอินพุตมาตรฐาน (#d9d9d9 ของเพื่อน) */
+   --color-gray-border-dashed: #cbd5e1;
+   /* เส้นขอบประรูปภาพ/หลักฐาน */
+
+   /* สีขาวและพื้นหลังหน้าเว็บ (White & Page Backgrounds) */
+   --color-white: #ffffff;
+   --color-bg-page: #f8fafc;
+   /* พื้นหลังหน้าเว็บ */
+   --color-bg-card: #ffffff;
+
+   /* สีสถานะอื่นๆ (Status Colors) */
+   --color-status-success: #16a34a;
+   --color-status-success-bg: #ecfdf5;
+   --color-status-danger: #dc2626;
+   --color-status-danger-bg: #fef2f2;
+
+   /* ============================================================
+     (ใช้ฟอนต์ Noto Sans Thai )
+     ============================================================ */
+   --font-family-base: 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+   /* Font Weights */
+   --fw-regular: 400;
+   --fw-medium: 500;
+   --fw-semibold: 600;
+   --fw-bold: 700;
+
+   /* Font Sizes - เรียงลำดับขนาดตามลำดับความสำคัญ (Heading & Typography Hierarchy) */
+   --text-h1-login: 36px;
+   /* หัวข้อใหญ่หน้า Login (36px Bold) */
+   --text-h1-page: 28px;
+   /* H1: หัวข้อหลักสูงสุดของแต่ละหน้า (28px Bold) */
+   --text-h2-section: 20px;
+   /* H2: หัวข้อส่วนสำคัญ / คอลัมน์ / ฟอร์ม (20px Bold) */
+   --text-h3-card: 18px;
+   /* H3: ชื่อการ์ดสิ่งของ / รายการคำขอ (18px Bold) */
+   --text-card-title: 18px;
+   /* H3: Alias สำหรับชื่อการ์ด (18px Bold) */
+   --text-body: 16px;
+   /* เนื้อหาและรายละเอียดสิ่งของ (16px Regular) */
+   --text-btn-primary: 16px;
+   /* ข้อความบนปุ่มหลัก (16px Bold) */
+   --text-input-label: 14px;
+   /* ชื่อช่องกรอกข้อมูล (14px Bold) */
+   --text-meta: 14px;
+   /* เมนู วันที่ สถานที่ และข้อมูลรอง (14px Regular) */
+   --text-helper-status: 12px;
+   /* ข้อความช่วยเหลือ / สถานะสั้น ๆ (12px Regular) */
+
+   /* ============================================================
+     SPACING & BORDER RADIUS 
+     ============================================================ */
+   --radius-sm: 8px;
+   --radius-md: 12px;
+   /* โค้งมนมาตรฐานของปุ่มและช่องกรอก */
+   --radius-lg: 16px;
+   /* โค้งมนของการ์ดคอนเทนเนอร์ */
+   --radius-xl: 20px;
+   --radius-full: 9999px;
+   /* ทรงแคปซูลสำหรับ pill badge */
+
+   /* Shadows */
+   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+   --shadow-button: 0 2px 4px rgba(250, 70, 22, 0.22);
+}
+
+
+.sr-only {
+   position: absolute;
+   width: 1px;
+   height: 1px;
+   padding: 0;
+   margin: -1px;
+   overflow: hidden;
+   clip: rect(0, 0, 0, 0);
+   white-space: nowrap;
+   border: 0;
+}
