@@ -4,7 +4,6 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import ImageUpload from '../components/ImageUpload';
-import Line from '../components/Line';
 import './page7.css';
 import StatusBadge from '../components/StatusBadge';
 
