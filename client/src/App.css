@@ -9,103 +9,50 @@
   box-sizing: border-box;
 }
 
-/* แถบเมนูด้านบนสำหรับสลับดูหน้าที่ทำ (Responsive Desktop & Mobile) */
-.app-nav-bar {
-  background-color: var(--color-white);
-  border-bottom: 1px solid var(--color-gray-border);
-  padding: 12px clamp(16px, 3.5vw, 48px);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+main {
+  flex: 1;
   width: 100%;
+}
+
+.map-placeholder-view {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 40px) clamp(16px, 3.5vw, 48px);
   box-sizing: border-box;
 }
 
-.app-brand {
+.map-placeholder-card {
+  height: 420px;
+  background-color: var(--color-white, #ffffff);
+  border: 1.5px dashed var(--color-gray-border, #e5e7eb);
+  border-radius: var(--radius-lg, 16px);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 12px;
+  color: var(--color-gray, #64748b);
+  text-align: center;
+  padding: 24px;
+  box-sizing: border-box;
 }
 
-.app-brand-title {
-  color: var(--color-orange);
-  font-weight: var(--fw-bold);
-  font-size: 16px;
-  white-space: nowrap;
+.map-placeholder-icon {
+  color: var(--color-orange, #FA4616);
 }
 
-.app-brand-sub {
-  color: var(--color-gray);
-  font-size: 13px;
-  white-space: nowrap;
+.map-placeholder-title {
+  color: var(--color-gray-dark, #1e293b);
+  font-size: 18px;
+  font-weight: var(--fw-bold, 700);
+  margin: 0;
 }
 
-.app-nav-links {
-  display: flex;
-  gap: 8px;
-}
-
-.app-nav-btn {
-  padding: 6px 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-gray-border);
-  background-color: var(--color-white);
-  color: var(--color-gray);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.app-nav-btn:hover {
-  border-color: var(--color-orange);
-  color: var(--color-orange);
-}
-
-.app-nav-btn.is-active,
-.app-nav-btn.active {
-  background-color: var(--color-orange-light);
-  border-color: var(--color-orange);
-  color: var(--color-orange);
-  font-weight: var(--fw-bold);
-}
-
-@media (max-width: 768px) {
-  .app-nav-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 12px 16px;
-  }
-
-  .app-brand {
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .app-nav-links {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 4px;
-    width: 100%;
-  }
-
-  .app-nav-links::-webkit-scrollbar {
-    display: none;
-  }
-
-  .app-nav-btn {
-    padding: 6px 12px;
-    font-size: 12px;
-  }
+.map-placeholder-desc {
+  color: var(--color-gray, #64748b);
+  font-size: 14px;
+  margin: 0;
+  max-width: 480px;
+  line-height: 1.5;
 }
