@@ -12,32 +12,22 @@ import './ClaimRequestPage.css';
  * ClaimRequestPage Component — หน้าส่งคำขอตรวจสอบ (VERIFICATION REQUEST)
  * Route URL: /claims/new
  * 
- * 🌟 สอดคล้องกับ ER Diagram:
+ * 🌟 สอดคล้องกับ Figma & ER Diagram:
  * - Entity: VERIFY_ITEMS (ความสัมพันธ์ USERS (0,N) submit (1,1) VERIFY_ITEMS)
  *   - verify_id (PK): สร้างอัตโนมัติเมื่อ submit
  *   - verify_status: กำหนดค่าเริ่มต้นเป็น 'PENDING'
  *   - proof_description: ข้อความตำหนิหรือเอกสารยืนยันสิทธิ์
  *   - created_at: เวลาที่ส่งคำขอ
  * - Entity: VERIFY_IMAGES (VERIFY_ITEMS (0,N) contain (1,1) VERIFY_IMAGES)
- *   - verify_image_id (PK) / verify_image_url
- * - Entity: POSTS (VERIFY_ITEMS (1,1) receives (0,N) POSTS)
- *   - post_id, post_type, custody_type, contact_text
- * - Entity: LOCATION (POSTS (1,1) HAS (0,N) LOCATION)
- *   - building_name, pickup_detail
- * 
- * 🌟 ZERO Inline Styles: ควบคุมสไตล์ผ่าน Class ใน CSS ทั้งหมด
+ * - ZERO Inline Styles: ควบคุมสไตล์ผ่าน Class ใน CSS ทั้งหมด
  */
 export default function ClaimRequestPage({
-  // ข้อมูลโพสต์ที่ส่งคำขอ (ดึงมาจาก Entity POSTS + LOCATION ตาม ER Diagram)
+  // ข้อมูลโพสต์ที่ส่งคำขอ
   item = {
     id: 'p-101',
     title: 'พบกระเป๋าสตางค์สีดำ',
-    post_type: 'ประกาศเจอของ (FOUND)',
-    custody_type: 'ผู้พบเก็บรักษาเอง',
-    contact_text: 'ติดต่อผ่านระบบคำขอรับของ',
-    building_name: 'อาคาร S4 ชั้น 1',
     category: 'ประกาศเจอของ',
-    location: 'S4 ชั้น 1',
+    location: 'S4',
     imageUrl: null,
   },
   onBack,
@@ -46,10 +36,10 @@ export default function ClaimRequestPage({
 }) {
   const navigate = useNavigate();
 
-  // State 1: ข้อความรายละเอียดตำหนิ (ตรงกับ proof_description ใน VERIFY_ITEMS)
+  // State 1: ข้อความรายละเอียดตำหนิ
   const [defectDetail, setDefectDetail] = useState('');
   
-  // State 2: รายการรูปภาพหลักฐาน (ตรงกับ Entity VERIFY_IMAGES)
+  // State 2: รายการรูปภาพหลักฐาน
   const [evidenceImages, setEvidenceImages] = useState([]);
   
   // State 3: ข้อความ Error เมื่อกรอกข้อมูลไม่ครบ
@@ -108,11 +98,9 @@ export default function ClaimRequestPage({
 
     try {
       // 2. โครงสร้าง Payload ส่งข้อมูลตาม ER Diagram
-      // - ตาราง VERIFY_ITEMS: verify_id, post_id, user_id, verify_status, proof_description, created_at
-      // - ตาราง VERIFY_IMAGES: verify_image_id, verify_image_url
       const payload = {
         post_id: item.id || 'p-101',
-        user_id: 'u-101', // ผู้ใช้ปัจจุบัน
+        user_id: 'u-101',
         verify_status: 'PENDING',
         proof_description: defectDetail.trim(),
         created_at: new Date().toISOString(),
@@ -125,7 +113,7 @@ export default function ClaimRequestPage({
         evidenceCount: evidenceImages.length,
       };
 
-      console.log('ส่งคำขอยืนยันสิทธิ์ตาม ER Diagram (VERIFY_ITEMS):', payload);
+      console.log('ส่งคำขอยืนยันสิทธิ์:', payload);
 
       // จำลอง network delay สั้นๆ
       await new Promise((resolve) => setTimeout(resolve, 600));
@@ -166,7 +154,7 @@ export default function ClaimRequestPage({
 
       {/* 2. การ์ดฟอร์มหลัก */}
       <Card className="claim-request-card">
-        {/* กล่องสรุปโพสต์ที่กำลังทำเรื่องขอคืน (ดึงจาก POSTS + LOCATION) */}
+        {/* กล่องสรุปโพสต์ที่กำลังทำเรื่องขอคืน */}
         <div className="claim-post-summary">
           <Thumbnail
             text="รูปโพสต์"
@@ -177,7 +165,7 @@ export default function ClaimRequestPage({
               {item.title}
             </p>
             <p className="claim-post-meta">
-              {item.category || item.post_type} · {item.location || item.building_name}
+              {item.category || 'ประกาศเจอของ'} · {item.location || 'S4'}
             </p>
           </div>
         </div>
@@ -188,7 +176,7 @@ export default function ClaimRequestPage({
         <form onSubmit={handleSubmit} className="claim-form" noValidate>
           <h2 className="claim-section-title">ข้อมูลเพื่อยืนยันสิทธิ์</h2>
 
-          {/* ช่องกรอกที่ 1: รายละเอียดตำหนิ (proof_description) */}
+          {/* ช่องกรอกที่ 1: รายละเอียดตำหนิ */}
           <div className="claim-form-group">
             <label className="claim-label" htmlFor="defectDetail">
               รายละเอียดตำหนิหรือข้อมูลเฉพาะ
@@ -212,7 +200,7 @@ export default function ClaimRequestPage({
             )}
           </div>
 
-          {/* ช่องกรอกที่ 2: แนบรูปหลักฐาน (VERIFY_IMAGES) */}
+          {/* ช่องกรอกที่ 2: แนบรูปหลักฐาน */}
           <div className="claim-form-group">
             <label className="claim-label">
               รูปหลักฐาน (หลายรูป)
@@ -269,32 +257,34 @@ export default function ClaimRequestPage({
             )}
           </div>
 
-          {/* Alert คำเตือนเรื่องความเป็นส่วนตัว */}
-          <AlertCallout
-            variant="warning"
-            text="หลักฐานจะแสดงเฉพาะผู้ส่งคำขอ เจ้าของโพสต์ และผู้ดูแลระบบ"
-          />
+          {/* แถบล่างสุด: กล่องข้อความเตือน + ปุ่มควบคุม */}
+          <div className="claim-bottom-bar">
+            <div className="claim-alert">
+              <AlertCallout>
+                หลักฐานจะแสดงเฉพาะผู้ส่งคำขอ เจ้าของโพสต์ และผู้ดูแลระบบ
+              </AlertCallout>
+            </div>
 
-          {/* ปุ่มควบคุมท้ายฟอร์ม (Form Actions) */}
-          <div className="claim-actions">
-            <Button
-              variant="secondary"
-              type="button"
-              onClick={() => {
-                if (onCancel) onCancel();
-                else navigate('/account');
-              }}
-              disabled={isSubmitting}
-            >
-              ยกเลิก
-            </Button>
-            <Button
-              variant="primary"
-              type="submit"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'กำลังส่งข้อมูล...' : 'ส่งคำขอ'}
-            </Button>
+            <div className="claim-actions">
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => {
+                  if (onCancel) onCancel();
+                  else navigate('/account');
+                }}
+                disabled={isSubmitting}
+              >
+                ยกเลิก
+              </Button>
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'กำลังส่งข้อมูล...' : 'ส่งคำขอ'}
+              </Button>
+            </div>
           </div>
         </form>
       </Card>
