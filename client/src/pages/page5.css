@@ -1,0 +1,66 @@
+.container {
+  padding: 60px 50px;
+  background-color: #F7F7F7;
+  min-height: 100vh;
+  font-family: Noto Sans Thai;
+}
+
+h1 {
+    font-size: 30px;
+    font-weight: bold;
+    color: #000000;
+    margin-bottom: 30px;
+}
+
+h2 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #000000;
+    margin-bottom: 20px;
+}
+
+h3 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #000000;
+    margin-bottom: 10px;
+}
+
+p{
+  color: #7B8189;
+}
+
+.Date {
+  text-align: right;
+  width: 100%;
+  margin-bottom: 98px;
+}
+
+.form-layout{
+  display: flex;
+  gap: 20px;
+}
+
+.form-left {
+  flex: 2;
+}
+
+.form-right {
+  flex: 1;
+}
+
+.comment:first-of-type{
+  margin-top: 20px;
+}
+.comment:last-of-type{
+  margin-bottom: 175px;
+}
+
+.flex-image{
+  display: flex;
+  gap: 8px;
+}
+
+.pos-but{
+  margin: 30px 0 30px 5px;
+}
