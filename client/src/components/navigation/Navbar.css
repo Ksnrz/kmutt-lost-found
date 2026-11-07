@@ -22,8 +22,7 @@
   padding: 6px 24px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  gap: clamp(20px, 3vw, 40px);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
   box-sizing: border-box;
   position: relative;
@@ -39,6 +38,7 @@
   text-decoration: none;
   cursor: pointer;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .navbar-brand-badge {
@@ -82,7 +82,7 @@
 .navbar-menu {
   display: flex;
   align-items: center;
-  gap: 36px;
+  gap: 28px;
 }
 
 .navbar-link {
@@ -145,6 +145,8 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 /* ปุ่ม + สร้างโพสต์ */
@@ -293,9 +295,14 @@
 
   .navbar-card {
     flex-wrap: wrap;
+    justify-content: space-between;
     padding: 10px 16px;
     gap: 10px;
     border-radius: 14px;
+  }
+
+  .navbar-actions {
+    margin-left: 0;
   }
 
   .navbar-menu {
