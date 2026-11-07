@@ -388,7 +388,15 @@ export default function AccountPage({
                       <p className="account-post-meta">
                         {post.location} · {post.date}
                       </p>
-                      <div>
+                      <div className="account-post-badges">
+                        {/* 1. ประเภทโพสต์ตาม ER Diagram (post_type: FOUND / LOST) */}
+                        {post.post_type === 'LOST' || (post.post_type && post.post_type.includes('LOST')) ? (
+                          <Badge variant="lost">ของหาย</Badge>
+                        ) : (
+                          <Badge variant="found">พบของ</Badge>
+                        )}
+
+                        {/* 2. สถานะโพสต์ (post_status: OPEN, CLOSED, CANCELLED) */}
                         {post.status === 'OPEN' && (
                           <Badge variant="success">OPEN · เปิดรับคำขอ</Badge>
                         )}

@@ -262,6 +262,14 @@
   margin: 0;
 }
 
+.account-post-badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
 .account-post-actions {
   display: flex;
   align-items: center;
