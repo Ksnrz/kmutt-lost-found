@@ -37,3 +37,10 @@ Desktop.ini
 # Local agent configuration
 .codex/
 .agents/
+
+# Documentation & Requirements (Ignore all folders)
+*README*.md
+*REQUIREMENTS*.md
+*requirements*.md
+**/README.md
+**/REQUIREMENTS.md
