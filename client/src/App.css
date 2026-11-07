@@ -14,45 +14,8 @@ main {
   width: 100%;
 }
 
-.map-placeholder-view {
+/* พื้นที่หน้าแผนที่มหาวิทยาลัย (เว้นว่างไว้สำหรับโมดูลของเพื่อนร่วมทีม) */
+.map-view-empty {
   width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: clamp(20px, 3vw, 40px) clamp(16px, 3.5vw, 48px);
-  box-sizing: border-box;
-}
-
-.map-placeholder-card {
-  height: 420px;
-  background-color: var(--color-white, #ffffff);
-  border: 1.5px dashed var(--color-gray-border, #e5e7eb);
-  border-radius: var(--radius-lg, 16px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: var(--color-gray, #64748b);
-  text-align: center;
-  padding: 24px;
-  box-sizing: border-box;
-}
-
-.map-placeholder-icon {
-  color: var(--color-orange, #FA4616);
-}
-
-.map-placeholder-title {
-  color: var(--color-gray-dark, #1e293b);
-  font-size: 18px;
-  font-weight: var(--fw-bold, 700);
-  margin: 0;
-}
-
-.map-placeholder-desc {
-  color: var(--color-gray, #64748b);
-  font-size: 14px;
-  margin: 0;
-  max-width: 480px;
-  line-height: 1.5;
+  flex: 1;
 }

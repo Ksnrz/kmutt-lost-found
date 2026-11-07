@@ -3,8 +3,6 @@ import Navbar from './components/navigation/Navbar';
 import ClaimRequestPage from './pages/requests/ClaimRequestPage';
 import ReviewRequestsPage from './pages/requests/ReviewRequestsPage';
 import AccountPage from './pages/requests/AccountPage';
-import PageHeader from './components/ui/PageHeader';
-import { MapPin } from 'lucide-react';
 import './App.css';
 
 /**
@@ -40,26 +38,8 @@ function App() {
             {/* 3. หน้าจัดการประกาศและบัญชีของฉัน (My Account — เมนู "ประกาศของฉัน") */}
             <Route path="/account" element={<AccountPage />} />
 
-            {/* 4. หน้าแผนที่มหาวิทยาลัย (จำลองเมื่อคลิกเมนู "แผนที่มหาวิทยาลัย") */}
-            <Route
-              path="/map"
-              element={
-                <div className="map-placeholder-view">
-                  <PageHeader
-                    tag="CAMPUS MAP"
-                    title="แผนที่มหาวิทยาลัย"
-                    subtitle="ค้นหาตำแหน่งสิ่งของและจุดรับแจ้งของหายในมหาวิทยาลัย"
-                  />
-                  <div className="map-placeholder-card">
-                    <MapPin size={40} className="map-placeholder-icon" />
-                    <p className="map-placeholder-title">KMUTT Campus Map</p>
-                    <p className="map-placeholder-desc">
-                      หน้านี้เป็นส่วนโมดูลแผนที่ของเพื่อนร่วมทีม (Branch: auth-and-map) ซึ่งจะเชื่อมต่อสมบูรณ์เมื่อนำโค้ดมารวมกัน
-                    </p>
-                  </div>
-                </div>
-              }
-            />
+            {/* 4. หน้าแผนที่มหาวิทยาลัย (เว้นว่างไว้สำหรับโมดูลของเพื่อนร่วมทีม branch: auth-and-map) */}
+            <Route path="/map" element={<div className="map-view-empty" />} />
 
             {/* หน้าแรก Redirect ไปที่ /claims/new ตามลำดับงานหลัก */}
             <Route path="/" element={<Navigate to="/claims/new" replace />} />
