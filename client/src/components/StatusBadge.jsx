@@ -1,4 +1,4 @@
-import React from "react";
+
 import "./StatusBadge.css";
 
 const STATUS_CONFIG = {

@@ -1,7 +1,9 @@
+import { useNavigate } from 'react-router-dom'
 import mascot from '../assets/login/mascot.png'
 import './Login.css'
 
 export default function Login() {
+  const navigate = useNavigate()
   return (
     <main className="login-page">
       <div className="login-layout">
@@ -24,7 +26,7 @@ export default function Login() {
             <h1>เข้าสู่ระบบ</h1>
             <p>กรอกข้อมูลบัญชีเพื่อเข้าใช้งาน</p>
           </header>
-          <form className="login-form" onSubmit={(event) => event.preventDefault()}>
+          <form className="login-form" onSubmit={(event) => { event.preventDefault(); navigate('/map') }}>
             <div className="login-field">
               <label htmlFor="studentId">รหัสนักศึกษา / อีเมล</label>
               <input id="studentId" name="studentId" type="text" placeholder="กรอกรหัสนักศึกษาหรืออีเมล" required />

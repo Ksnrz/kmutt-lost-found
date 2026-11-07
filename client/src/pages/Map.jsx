@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import campusMap from '../assets/map/map_kmutt.jpg'
 import searchIcon from '../assets/map/search.svg'
 import locationIcon from '../assets/map/location.svg'
@@ -8,6 +9,7 @@ const southBuildings = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S
 const northBuildings = ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'N8', 'N9', 'N10', 'N11', 'N12', 'N14', 'N15', 'N16', 'N17', 'N18', 'N19', 'N20']
 
 export default function Map() {
+  const navigate = useNavigate()
   return (
     <main className="map-page">
       <div className="map-container">
@@ -22,7 +24,7 @@ export default function Map() {
               <span>เจอของ</span>
             </label>
           </div>
-          <button className="map-create" type="button">+ สร้างโพสต์</button>
+          <button className="map-create" type="button" onClick={() => navigate('/posts/new')}>+ สร้างโพสต์</button>
         </div>
 
         <div className="map-content">

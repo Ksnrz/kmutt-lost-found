@@ -1,8 +1,10 @@
+import { useNavigate } from 'react-router-dom'
 import mascot from '../assets/login/mascot.png'
 import './Login.css'
 import './Register.css'
 
 export default function Register() {
+  const navigate = useNavigate()
   return (
     <main className="login-page">
       <div className="login-layout">
@@ -25,7 +27,7 @@ export default function Register() {
             <h1>สมัครสมาชิก</h1>
             <p>สร้างบัญชีเพื่อเริ่มใช้งาน</p>
           </header>
-          <form className="register-form" onSubmit={(event) => event.preventDefault()}>
+          <form className="register-form" onSubmit={(event) => { event.preventDefault(); navigate('/login') }}>
             <div className="register-fields">
               <div className="login-field">
                 <label htmlFor="register-student-id">รหัสนักศึกษา</label>
