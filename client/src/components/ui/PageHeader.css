@@ -23,7 +23,7 @@
   padding: 0;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   transition: color 0.2s;
 }
 
@@ -32,8 +32,8 @@
 }
 
 .page-header-back-icon {
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
   object-fit: contain;
   display: inline-block;
   opacity: 0.75;
