@@ -1,10 +1,10 @@
 import './App.css'
-import Page6 from './pages/page6';
+import Page7 from './pages/page7';
 
 function App() {
   return (
     <main>
-      <Page6 />
+      <Page7 />
     </main>
   );
 }
