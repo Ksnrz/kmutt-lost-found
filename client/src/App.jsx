@@ -42,6 +42,7 @@ function App() {
           <Route path="/posts" element={<Listpost />} />
           <Route path="/posts/new" element={<CreatePost />} />
           <Route path="/posts/:postId" element={<PostDetail />} />
+          <Route path="/posts/:postId/edit" element={<Editpost />} />
           <Route path="/listpost" element={<Navigate to="/posts" replace />} />
           <Route path="/claims/new" element={<ClaimRequestPage />} />
           <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
