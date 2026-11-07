@@ -7,6 +7,7 @@ import Page4 from './pages/page4';
 import Page5 from './pages/page5';
 import Page6 from './pages/page6';
 import Page7 from './pages/page7';
+import Listpost from './pages/Listpost';
 import ClaimRequestPage from './pages/requests/ClaimRequestPage';
 import ReviewRequestsPage from './pages/requests/ReviewRequestsPage';
 import AccountPage from './pages/requests/AccountPage';
@@ -42,6 +43,7 @@ function App() {
           <Route path="/posts/new" element={<Page6 />} />
           <Route path="/posts/:postId" element={<Page5 />} />
           <Route path="/posts/:postId/edit" element={<Page7 />} />
+          <Route path="/listpost" element={<Listpost />} />
           <Route path="/claims/new" element={<ClaimRequestPage />} />
           <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
           <Route path="/requests/review" element={<ReviewRequestsPage />} />
