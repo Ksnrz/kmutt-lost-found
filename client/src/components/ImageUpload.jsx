@@ -1,4 +1,3 @@
-import React from 'react';
 import './ImageUpload.css';
 
 function ImageUpload({ text, size, onChange, multiple = true }) {

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams, useParams } from 'react-router-dom';
 import { ImagePlus, X } from 'lucide-react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -26,13 +26,14 @@ export default function ClaimRequestPage({
   onSubmitSuccess,
 }) {
   const navigate = useNavigate();
+  const { postId } = useParams();
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
   // รองรับข้อมูลที่ส่งต่อมาจากหน้ารายละเอียดโพสต์ (state, query params หรือ fallback mock)
   const incomingPost = location.state?.post || location.state?.item;
   const currentItem = incomingPost || {
-    id: searchParams.get('postId') || item.id || 'p-101',
+    id: postId || searchParams.get('postId') || item.id || 'p-101',
     title: item.title || 'พบกระเป๋าสตางค์สีดำ',
     category: item.category || 'ประกาศเจอของ',
     location: item.location || 'S4 ชั้น 1',

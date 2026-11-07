@@ -1,4 +1,3 @@
-import React from 'react';
 import arrowIcon from '../assets/icons_arrow-back.png';
 import './BackButton.css';
 

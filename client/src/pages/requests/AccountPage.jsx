@@ -405,7 +405,7 @@ export default function AccountPage({
                       size="sm"
                       onClick={() => {
                         if (onNavigatePostDetail) onNavigatePostDetail(post.id);
-                        else alert(`เปิดดูประกาศ: ${post.title}`);
+                        else navigate(`/posts/${post.id}`);
                       }}
                     >
                       ดูประกาศ

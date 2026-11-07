@@ -1,13 +1,15 @@
-import React from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import BackButton from '../components/BackButton';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import Input from '../components/Input';
+
 import ImageUpload from '../components/ImageUpload';
 import StatusBadge from '../components/StatusBadge';
 import './page5.css';
 
 function Page5() {
+  const navigate = useNavigate();
+  const { postId } = useParams();
 	
 	return (
 		<div className="container">
@@ -39,7 +41,7 @@ function Page5() {
 						<p>ช่องทางติดต่อ *</p>
 						<h3>08X-XXX-XXXX</h3>
 						<div className='pos-but'>
-							<Button>นี่อาจเป็นของฉัน</Button>
+							<Button onClick={() => navigate(`/posts/${postId}/claim`)}>นี่อาจเป็นของฉัน</Button>
 						</div>
 						<p className='comment'>หากเป็นสิ่งของของคุณส่งคำขอ</p>
 						<p className='comment'>พร้อมรายละเอียดเฉพาะเพื่อยืนยัน</p>

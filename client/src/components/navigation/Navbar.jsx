@@ -51,7 +51,7 @@ export default function Navbar({
     const confirmLogout = window.confirm('คุณต้องการออกจากระบบใช่หรือไม่?');
     if (confirmLogout) {
       alert('ออกจากระบบเรียบร้อยแล้ว');
-      navigate('/claims/new');
+      navigate('/login');
     }
   };
 
@@ -61,7 +61,7 @@ export default function Navbar({
         {/* ============================================================
             1. ซ้าย: โลโก้ KMUTT Lost & Found
             ============================================================ */}
-        <NavLink to="/claims/new" className="navbar-brand">
+        <NavLink to="/map" className="navbar-brand">
           <div className="navbar-brand-badge" aria-hidden="true">
             {/* ไอคอนแว่นขยายที่มีเครื่องหมาย ? ด้านในตรงตามดีไซน์ */}
             <svg
