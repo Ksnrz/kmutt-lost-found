@@ -147,7 +147,7 @@ export default function ClaimRequestPage({
             src={item.imageUrl}
           />
           <div className="claim-post-info">
-            <h2 className="claim-post-title">{item.title}</h2>
+            <p className="claim-post-title">{item.title}</p>
             <p className="claim-post-meta">
               {item.category} · {item.location}
             </p>
@@ -158,7 +158,7 @@ export default function ClaimRequestPage({
 
         {/* ฟอร์มข้อมูลยืนยันสิทธิ์ */}
         <form onSubmit={handleSubmit} className="claim-form" noValidate>
-          <h3 className="claim-section-title">ข้อมูลเพื่อยืนยันสิทธิ์</h3>
+          <h2 className="claim-section-title">ข้อมูลเพื่อยืนยันสิทธิ์</h2>
 
           {/* ช่องกรอกที่ 1: รายละเอียดตำหนิหรือข้อมูลเฉพาะ */}
           <div className="claim-form-group">

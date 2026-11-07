@@ -1,11 +1,13 @@
 @import '../../styles/tokens.css';
 
 .review-requests-container {
-  max-width: 1040px;
+  width: 100%;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 40px 24px;
+  padding: clamp(20px, 3vw, 40px) clamp(16px, 3.5vw, 48px);
   box-sizing: border-box;
   text-align: left;
+  font-family: var(--font-family-base);
 }
 
 /* เลย์เอาต์แบ่ง 2 คอลัมน์ (ซ้าย: รายการคำขอ, ขวา: รายละเอียด) */
@@ -212,3 +214,22 @@
   border: 1px solid var(--color-status-danger);
 }
 
+
+@media (max-width: 640px) {
+  .review-list-card,
+  .review-detail-card {
+    padding: 20px 16px;
+  }
+
+  .review-detail-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .review-detail-actions button,
+  .review-detail-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

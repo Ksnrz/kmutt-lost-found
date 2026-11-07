@@ -132,7 +132,7 @@ export default function AccountPage({
         >
           <div className="account-stat-info">
             <span className="account-stat-label">ประกาศที่ฉันสร้าง</span>
-            <h3 className="account-stat-number">{myPosts.length} รายการ</h3>
+            <p className="account-stat-number">{myPosts.length} รายการ</p>
           </div>
           <span className="account-stat-badge">จัดการ</span>
         </div>
@@ -145,7 +145,7 @@ export default function AccountPage({
         >
           <div className="account-stat-info">
             <span className="account-stat-label">คำขอที่ฉันส่ง</span>
-            <h3 className="account-stat-number">{sentClaims.length} รายการ</h3>
+            <p className="account-stat-number">{sentClaims.length} รายการ</p>
           </div>
           <span className="account-stat-badge">ตารางสถานะ</span>
         </div>
@@ -158,7 +158,7 @@ export default function AccountPage({
         >
           <div className="account-stat-info">
             <span className="account-stat-label">คำขอที่ฉันได้รับ</span>
-            <h3 className="account-stat-number">1 รายการรอตรวจ</h3>
+            <p className="account-stat-number">1 รายการรอตรวจ</p>
           </div>
           <span className="account-stat-badge">ไปหน้าตรวจ</span>
         </div>
@@ -167,7 +167,8 @@ export default function AccountPage({
       {/* ============================================================
           2. แถบสลับแท็บเมนู (Tab Navigation)
           ============================================================ */}
-      <div className="account-tabs-header">
+      <div className="account-tabs-wrapper">
+        <div className="account-tabs-header" role="tablist">
         <button
           type="button"
           className={`account-tab-btn ${activeTab === 'my_posts' ? 'is-active' : ''}`}
@@ -189,13 +190,17 @@ export default function AccountPage({
         >
           📥 คำขอที่ฉันได้รับ ({receivedClaims.length})
         </button>
+        </div>
       </div>
 
       {/* ============================================================
           3. แท็บที่ 1: ประกาศที่ฉันสร้าง (รองรับหลายโพสต์)
           ============================================================ */}
       {activeTab === 'my_posts' && (
-        <section>
+        <section aria-labelledby="my-posts-heading">
+          <h2 id="my-posts-heading" className="sr-only">
+            รายการประกาศที่ฉันสร้าง
+          </h2>
           {/* แถบตัวกรองสถานะ */}
           <div className="account-filter-bar">
             <div className="account-pill-filters">
@@ -230,7 +235,7 @@ export default function AccountPage({
                 <div className="account-post-header">
                   <Thumbnail text="รูปโพสต์" />
                   <div className="account-post-details">
-                    <h4 className="account-post-title">{post.title}</h4>
+                    <h3 className="account-post-title">{post.title}</h3>
                     <p className="account-post-meta">
                       {post.location} · {post.date}
                     </p>
@@ -280,9 +285,13 @@ export default function AccountPage({
           4. แท็บที่ 2: ตารางคำขอที่ฉันส่ง (ตารางแยก + สถานะ + หมายเหตุ)
           ============================================================ */}
       {activeTab === 'my_sent_claims' && (
-        <section>
+        <section aria-labelledby="sent-claims-heading">
+          <h2 id="sent-claims-heading" className="sr-only">
+            รายการคำขอที่ฉันส่ง
+          </h2>
           <div className="account-table-wrapper">
             <table className="account-data-table">
+              <caption className="sr-only">ตารางรายการคำขอที่ฉันส่งและสถานะ</caption>
               <thead>
                 <tr>
                   <th>สิ่งของที่ส่งคำขอรับคืน</th>
@@ -341,13 +350,16 @@ export default function AccountPage({
           5. แท็บที่ 3: คำขอที่ฉันได้รับ (มีปุ่มไปหน้าตรวจ)
           ============================================================ */}
       {activeTab === 'my_received_claims' && (
-        <section className="account-received-list">
+        <section aria-labelledby="received-claims-heading" className="account-received-list">
+          <h2 id="received-claims-heading" className="sr-only">
+            รายการคำขอตรวจสอบที่ฉันได้รับ
+          </h2>
           {receivedClaims.map((item) => (
             <Card key={item.id} className="account-received-card">
               <div className="account-received-left">
                 <Thumbnail text="รูปโพสต์" />
                 <div className="account-received-info">
-                  <h4 className="account-received-title">{item.postTitle}</h4>
+                  <h3 className="account-received-title">{item.postTitle}</h3>
                   <p className="account-received-meta">
                     สถานที่: {item.location} · คำขอล่าสุดจาก {item.latestClaimant} ({item.date})
                   </p>

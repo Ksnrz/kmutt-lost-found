@@ -1,11 +1,13 @@
 @import '../../styles/tokens.css';
 
 .claim-request-container {
-  max-width: 900px;
+  width: 100%;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 40px 24px;
+  padding: clamp(20px, 3vw, 40px) clamp(16px, 3.5vw, 48px);
   text-align: left;
   box-sizing: border-box;
+  font-family: var(--font-family-base);
 }
 
 .claim-request-card {
@@ -195,3 +197,48 @@
   gap: 12px;
 }
 
+
+@media (max-width: 640px) {
+  .claim-request-card {
+    padding: 20px 16px;
+  }
+
+  .claim-post-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .claim-bottom-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .claim-alert {
+    min-width: 0;
+  }
+
+  .claim-actions {
+    flex-direction: column-reverse;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .claim-actions button,
+  .claim-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .claim-upload-grid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 10px;
+  }
+
+  .claim-upload-box,
+  .claim-preview-box {
+    width: 100%;
+    height: 90px;
+  }
+}
