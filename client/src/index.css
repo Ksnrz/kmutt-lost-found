@@ -1,10 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
 @import './styles/tokens.css';
 
-/* ============================================================
-   KMUTT Lost & Found — Global Reset & Layout
-   ซิงค์ให้เหมือนเพื่อน (auth-and-map): ขยายเต็มจอ 100% ไร้ขอบบีบ
-   ============================================================ */
 *,
 *::before,
 *::after {

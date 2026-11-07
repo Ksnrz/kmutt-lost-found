@@ -19,15 +19,9 @@ import './ReviewRequestsPage.css';
 /**
  * ReviewRequestsPage Component — หน้าตรวจคำขอที่ส่งมายังประกาศของฉัน (RECEIVED REQUESTS)
  * Route URL: /requests/review
- * 
- * 🌟 ดีไซน์ตรงตาม Figma:
- * - ข้อความและเลย์เอาต์แสดงผลตามดีไซน์ใน Figma สะอาดตา ไม่แสดงชื่อแอตทริบิวต์เทคนิคบน UI
- * - การประมวลผลภายในสอดคล้องกับ ER Diagram (VERIFY_ITEMS, POSTS, USERS, VERIFY_IMAGES)
- * - รองรับกฎธุรกิจ: ตอบรับได้ 1 คนต่อโพสต์ และการส่งมอบแบบ Dual Confirmation
- * - ZERO Inline Styles: 100% ควบคุมผ่าน CSS Classes
  */
 export default function ReviewRequestsPage({
-  // ข้อมูลเริ่มต้นตรงตาม Figma
+  // ข้อมูลเริ่มต้นตาม Figma
   initialRequests = [
     {
       verify_id: '102',
@@ -102,13 +96,13 @@ export default function ReviewRequestsPage({
       prev.map((r) =>
         r.id === activeRequest.id
           ? {
-              ...r,
-              status: 'ACCEPTED',
-              verify_status: 'ACCEPTED',
-              note: noteText,
-              finderConfirmed: false,
-              receiverConfirmed: false,
-            }
+            ...r,
+            status: 'ACCEPTED',
+            verify_status: 'ACCEPTED',
+            note: noteText,
+            finderConfirmed: false,
+            receiverConfirmed: false,
+          }
           : r
       )
     );
@@ -209,32 +203,32 @@ export default function ReviewRequestsPage({
       prev.map((r) =>
         r.id === id
           ? {
-              ...r,
-              status: 'CANCELLED',
-              verify_status: 'CANCELLED',
-              note: 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ',
-              finderConfirmed: false,
-              receiverConfirmed: false,
-            }
+            ...r,
+            status: 'CANCELLED',
+            verify_status: 'CANCELLED',
+            note: 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ',
+            finderConfirmed: false,
+            receiverConfirmed: false,
+          }
           : r
       )
     );
   };
 
-  // 6. รีเซ็ตสถานะกลับมาเป็น PENDING (เพื่อให้อาจารย์หรือทีมงานทดสอบฟังก์ชันได้สะดวก)
+  // 6. รีเซ็ตสถานะกลับมาเป็น PENDING 
   const handleResetStatus = (id) => {
     setPostStatus('OPEN');
     setRequests((prev) =>
       prev.map((r) =>
         r.id === id
           ? {
-              ...r,
-              status: 'PENDING',
-              verify_status: 'PENDING',
-              note: '',
-              finderConfirmed: false,
-              receiverConfirmed: false,
-            }
+            ...r,
+            status: 'PENDING',
+            verify_status: 'PENDING',
+            note: '',
+            finderConfirmed: false,
+            receiverConfirmed: false,
+          }
           : r
       )
     );
@@ -303,7 +297,7 @@ export default function ReviewRequestsPage({
       {/* เลย์เอาต์แบ่ง 2 คอลัมน์ตาม Figma */}
       <div className="review-requests-grid">
         {/* ========================================================
-            คอลัมน์ซ้าย: การ์ดรายการคำขอที่ได้รับ (ตาม Figma)
+            คอลัมน์ซ้าย: การ์ดรายการคำขอที่ได้รับ 
             ======================================================== */}
         <Card className="review-list-card">
           <div className="review-list-header">
@@ -510,7 +504,7 @@ export default function ReviewRequestsPage({
               </div>
             )}
 
-            {/* ช่องกรอกหมายเหตุ (ตาม Figma เป๊ะ) */}
+            {/* ช่องกรอกหมายเหตุ */}
             <div className="review-note-section">
               <label htmlFor="reviewNoteInput" className="review-note-title">
                 หมายเหตุสำหรับผู้ส่ง
@@ -529,7 +523,7 @@ export default function ReviewRequestsPage({
               </p>
             </div>
 
-            {/* ปุ่มกดปฏิเสธ / อนุมัติคำขอ (ตาม Figma เป๊ะ) */}
+            {/* ปุ่มกดปฏิเสธ / อนุมัติคำขอ*/}
             <div className="review-detail-actions">
               {activeRequest.status !== 'PENDING' && (
                 <Button

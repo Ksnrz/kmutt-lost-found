@@ -7,12 +7,6 @@ import './App.css';
 
 /**
  * KMUTT Lost & Found — Root Application & Router
- * 
- * 🌟 Desktop Navbar สไตล์ตาม Figma:
- * - ซ้าย: โลโก้ KMUTT Lost & Found พร้อมไอคอนแว่นขยาย ?
- * - ตรงกลาง: แผนที่มหาวิทยาลัย, ประกาศของฉัน, ขอรับคืน (มี Badge 1)
- * - ขวา: ปุ่ม + สร้างโพสต์ และ Avatar ผู้ใช้ (คลิกเปิด Dropdown บัญชีของฉัน / ออกจากระบบ)
- * - ZERO Inline Styles: ควบคุมสไตล์ผ่าน CSS ทั้งหมด
  */
 function App() {
   return (
