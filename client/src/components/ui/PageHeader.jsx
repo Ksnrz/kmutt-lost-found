@@ -1,3 +1,4 @@
+import arrowBackIcon from '../../assets/icons_arrow-back.png';
 import './PageHeader.css';
 
 /**
@@ -21,7 +22,8 @@ export default function PageHeader({
       <div className="page-header-top-row">
         {backText && (
           <button type="button" className="page-header-back-btn" onClick={onBack}>
-            <span className="back-arrow">←</span> {backText}
+            <img src={arrowBackIcon} alt="" className="page-header-back-icon" aria-hidden="true" />
+            <span>{backText}</span>
           </button>
         )}
         {tag && <div className="page-header-tag">{tag}</div>}
@@ -31,4 +33,3 @@ export default function PageHeader({
     </header>
   );
 }
-

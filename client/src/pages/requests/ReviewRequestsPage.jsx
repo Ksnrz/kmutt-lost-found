@@ -99,7 +99,7 @@ export default function ReviewRequestsPage({
         tag="RECEIVED REQUESTS"
         title="คำขอที่ส่งมายังประกาศของฉัน"
         subtitle="ดูข้อมูลและรูปหลักฐานก่อนตัดสินใจ"
-        backText="กลับไปหน้าบัญชีของฉัน"
+        backText="กลับไปรายการประกาศ"
         onBack={handleGoBack}
       />
 

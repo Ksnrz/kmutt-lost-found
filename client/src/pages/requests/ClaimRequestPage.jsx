@@ -132,7 +132,7 @@ export default function ClaimRequestPage({
     <div className="claim-request-container">
       {/* 1. ส่วนหัวหน้าเว็บ (ย้อนกลับ + แท็กส้ม + ชื่อหน้า) */}
       <PageHeader
-        backText="กลับไปหน้าบัญชีของฉัน"
+        backText="กลับไปรายการประกาศ"
         onBack={handleGoBack}
         tag="VERIFICATION REQUEST"
         title="ส่งคำขอตรวจสอบ"
