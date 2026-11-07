@@ -13,28 +13,34 @@
   white-space: nowrap;
 }
 
-/* Pending (Orange) */
+/* Pending (Orange/Peach) - รอตรวจ / รอส่งมอบ */
 .badge-pending {
   background-color: var(--color-orange-light);
   color: var(--color-orange);
 }
 
-/* Success (Green) */
+/* Success (Green) - กำลังเปิดรับคำขอ (OPEN) / ตอบรับแล้ว (ACCEPTED) */
 .badge-success {
   background-color: var(--color-status-success-bg);
   color: var(--color-status-success);
 }
 
-/* Danger (Red) */
+/* Danger (Red) - ปฏิเสธ (REJECTED) / ยกเลิกโพสต์ (CANCELLED) */
 .badge-danger {
   background-color: var(--color-status-danger-bg);
   color: var(--color-status-danger);
 }
 
-/* Neutral */
+/* Neutral (Gray) - ปิดประกาศแล้ว (CLOSED) / ยกเลิก (CANCELLED) */
 .badge-neutral {
   background-color: var(--color-gray-light);
   color: var(--color-gray-muted);
+}
+
+/* Completed (Dark slate) - ส่งมอบสำเร็จแล้ว (COMPLETED) */
+.badge-completed {
+  background-color: #1e293b;
+  color: #ffffff;
 }
 
 /* Count badge */
@@ -44,4 +50,3 @@
   font-weight: 500;
   padding: 4px 12px;
 }
-

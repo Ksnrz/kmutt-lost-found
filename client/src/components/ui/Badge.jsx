@@ -2,7 +2,7 @@ import './Badge.css';
 
 /**
  * Shared Badge Component
- * @param {'pending' | 'success' | 'danger' | 'neutral' | 'count'} variant
+ * @param {'pending' | 'success' | 'danger' | 'neutral' | 'completed' | 'count'} variant
  */
 export default function Badge({
   children,
@@ -15,4 +15,3 @@ export default function Badge({
     </span>
   );
 }
-

@@ -332,6 +332,18 @@
   color: var(--color-gray-muted);
 }
 
+.account-table-done-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--text-helper-status);
+  font-weight: var(--fw-bold);
+  color: #16a34a;
+  background-color: #dcfce7;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
 .account-table-note.has-note {
   color: var(--color-gray-dark);
   background-color: var(--color-orange-subtle);
