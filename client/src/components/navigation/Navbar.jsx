@@ -4,20 +4,7 @@ import { Plus, User, UserCircle, LogOut } from 'lucide-react';
 import './Navbar.css';
 
 /**
- * Navbar Component — แถบนำทางด้านบน Desktop ตรงตามดีไซน์
- * 
- * 1. ฝั่งซ้าย: โลโก้ KMUTT Lost & Found + เมนูนำทาง 3 รายการ (ชิดซ้ายต่อจากโลโก้ เพื่อการกวาดสายตาที่รวดเร็ว)
- *    - แผนที่มหาวิทยาลัย
- *    - ประกาศของฉัน
- *    - ขอรับคืน (มี Badge 1 สีส้ม)
- *    (เมนูที่ Active จะเป็นสีส้มพร้อมมีเส้นใต้สีส้ม)
- * 2. ฝั่งขวา:
- *    - ปุ่ม "+ สร้างโพสต์" (สีส้ม)
- *    - Avatar ผู้ใช้ (ทรงกลม)
- * 3. Dropdown เมื่อกด Avatar:
- *    - บัญชีของฉัน
- *    - เส้นคั่น
- *    - ออกจากระบบ
+ * Navbar Component 
  */
 export default function Navbar({
   pendingCount = 1,

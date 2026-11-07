@@ -11,15 +11,6 @@ import './ClaimRequestPage.css';
 /**
  * ClaimRequestPage Component — หน้าส่งคำขอตรวจสอบ (VERIFICATION REQUEST)
  * Route URL: /claims/new
- * 
- * 🌟 สอดคล้องกับ Figma & ER Diagram:
- * - Entity: VERIFY_ITEMS (ความสัมพันธ์ USERS (0,N) submit (1,1) VERIFY_ITEMS)
- *   - verify_id (PK): สร้างอัตโนมัติเมื่อ submit
- *   - verify_status: กำหนดค่าเริ่มต้นเป็น 'PENDING'
- *   - proof_description: ข้อความตำหนิหรือเอกสารยืนยันสิทธิ์
- *   - created_at: เวลาที่ส่งคำขอ
- * - Entity: VERIFY_IMAGES (VERIFY_ITEMS (0,N) contain (1,1) VERIFY_IMAGES)
- * - ZERO Inline Styles: ควบคุมสไตล์ผ่าน Class ใน CSS ทั้งหมด
  */
 export default function ClaimRequestPage({
   // ข้อมูลโพสต์ที่ส่งคำขอ
@@ -38,7 +29,7 @@ export default function ClaimRequestPage({
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  // รองรับข้อมูลที่ส่งต่อมาจากหน้ารายละเอียดโพสต์ของเพื่อน (state, query params หรือ fallback mock)
+  // รองรับข้อมูลที่ส่งต่อมาจากหน้ารายละเอียดโพสต์ (state, query params หรือ fallback mock)
   const incomingPost = location.state?.post || location.state?.item;
   const currentItem = incomingPost || {
     id: searchParams.get('postId') || item.id || 'p-101',
@@ -50,13 +41,13 @@ export default function ClaimRequestPage({
 
   // State 1: ข้อความรายละเอียดตำหนิ
   const [defectDetail, setDefectDetail] = useState('');
-  
+
   // State 2: รายการรูปภาพหลักฐาน
   const [evidenceImages, setEvidenceImages] = useState([]);
-  
+
   // State 3: ข้อความ Error เมื่อกรอกข้อมูลไม่ครบ
   const [errorMessage, setErrorMessage] = useState('');
-  
+
   // State 4: สถานะระหว่างกำลังส่งข้อมูล
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -127,7 +118,7 @@ export default function ClaimRequestPage({
 
       console.log('ส่งคำขอยืนยันสิทธิ์:', payload);
 
-      // จำลอง network delay สั้นๆ
+      // จำลอง network delay 
       await new Promise((resolve) => setTimeout(resolve, 600));
 
       if (onSubmitSuccess) {
