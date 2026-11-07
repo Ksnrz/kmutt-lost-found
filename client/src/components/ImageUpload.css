@@ -1,0 +1,26 @@
+.image-upload-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 16px 24px;
+  background-color: #F7F7F7; /* พื้นหลังสีเทาอ่อนสะอาดตา */
+  border: 1px dashed #D9D9D9; /* ขอบเส้นประ หรือเปลี่ยนเป็น solid ถ้าชอบเส้นทึบ */
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+/* ตอนเอาเมาส์ไปชี้ที่กล่อง */
+.image-upload-box:hover {
+  background-color: #f1f3f5;
+  border-color: #ff4500;
+}
+
+.image-upload-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #667085;
+  font-family: inherit;
+}
