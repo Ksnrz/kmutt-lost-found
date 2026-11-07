@@ -106,11 +106,12 @@ export default function ClaimRequestPage({
       // จำลอง network delay สั้นๆ
       await new Promise((resolve) => setTimeout(resolve, 600));
 
-      alert('ส่งคำขอตรวจสอบเรียบร้อยแล้ว!');
       if (onSubmitSuccess) {
         onSubmitSuccess(payload);
       } else {
-        navigate('/account');
+        navigate('/account', {
+          state: { successMessage: `ส่งคำขอตรวจสอบสำหรับ "${item.title}" เรียบร้อยแล้ว!` }
+        });
       }
     } catch (err) {
       console.error(err);

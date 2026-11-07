@@ -84,6 +84,16 @@ export default function ReviewRequestsPage({
     setNoteText('');
   };
 
+  // ฟังก์ชันรีเซ็ตสถานะกลับมาเป็น PENDING (เผื่อเปลี่ยนใจ หรืออาจารย์ทดสอบกดซ้ำ)
+  const handleResetStatus = (id) => {
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === id ? { ...r, status: 'PENDING', note: '' } : r
+      )
+    );
+    setNoteText('');
+  };
+
   const handleGoBack = () => {
     if (onBack) {
       onBack();
@@ -204,8 +214,9 @@ export default function ReviewRequestsPage({
                 type="text"
                 className="review-note-input"
                 placeholder="ระบุเหตุผลหรือขั้นตอนนัดรับ"
-                value={noteText}
+                value={noteText || activeRequest.note || ''}
                 onChange={(e) => setNoteText(e.target.value)}
+                disabled={activeRequest.status !== 'PENDING'}
               />
               <p className="review-note-helper">
                 เมื่อส่งของคืนจริงแล้ว จึงกดยืนยันการส่งคืนและปิดสถานะ
@@ -214,19 +225,31 @@ export default function ReviewRequestsPage({
 
             {/* ปุ่มกดปฏิเสธ / อนุมัติคำขอ */}
             <div className="review-detail-actions">
+              {activeRequest.status !== 'PENDING' && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  type="button"
+                  onClick={() => handleResetStatus(activeRequest.id)}
+                >
+                  ↺ ตรวจสอบใหม่
+                </Button>
+              )}
               <Button
                 variant="secondary"
                 type="button"
                 onClick={handleReject}
+                disabled={activeRequest.status !== 'PENDING'}
               >
-                ปฏิเสธ
+                {activeRequest.status === 'REJECTED' ? '✕ ปฏิเสธแล้ว' : 'ปฏิเสธ'}
               </Button>
               <Button
                 variant="primary"
                 type="button"
                 onClick={handleApprove}
+                disabled={activeRequest.status !== 'PENDING'}
               >
-                อนุมัติคำขอ
+                {activeRequest.status === 'APPROVED' ? '✓ อนุมัติแล้ว' : 'อนุมัติคำขอ'}
               </Button>
             </div>
           </Card>

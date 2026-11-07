@@ -461,3 +461,86 @@
     font-size: 14px;
   }
 }
+
+/* ============================================================
+   แบนเนอร์แจ้งเตือนสำเร็จ (Success Banner)
+   ============================================================ */
+.account-success-banner {
+  background-color: var(--color-status-success-bg, #ecfdf5);
+  border: 1.5px solid var(--color-status-success, #16a34a);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #15803d;
+  font-size: var(--text-meta);
+  font-weight: var(--fw-medium);
+  box-shadow: var(--shadow-sm);
+}
+
+.account-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-banner-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background-color: var(--color-status-success, #16a34a);
+  color: #ffffff;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: var(--fw-bold);
+}
+
+.account-banner-close {
+  background: transparent;
+  border: none;
+  color: #15803d;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: opacity 0.2s;
+}
+
+.account-banner-close:hover {
+  opacity: 0.7;
+}
+
+/* ============================================================
+   กล่องแสดงเมื่อไม่มีข้อมูล (Empty State)
+   ============================================================ */
+.account-empty-state {
+  padding: 56px 24px;
+  text-align: center;
+  background-color: var(--color-white);
+  border: 2px dashed var(--color-gray-border);
+  border-radius: var(--radius-lg);
+  margin-top: 8px;
+}
+
+.account-empty-icon {
+  font-size: 38px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.account-empty-title {
+  color: var(--color-gray-dark);
+  font-size: 17px;
+  font-weight: var(--fw-bold);
+  margin: 0 0 6px 0;
+}
+
+.account-empty-desc {
+  color: var(--color-gray);
+  font-size: var(--text-meta);
+  margin: 0;
+}

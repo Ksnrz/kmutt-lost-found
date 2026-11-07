@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
@@ -22,6 +22,8 @@ export default function AccountPage({
   onNavigatePostDetail,
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [bannerMessage, setBannerMessage] = useState(location.state?.successMessage || null);
 
   // State 1: แท็บที่กำลังเปิด ('my_posts' | 'my_sent_claims' | 'my_received_claims')
   const [activeTab, setActiveTab] = useState('my_posts');
@@ -119,6 +121,24 @@ export default function AccountPage({
         title="ประกาศและคำขอของฉัน"
         subtitle="ติดตามประกาศที่สร้าง คำขอรับของ และจัดการคำขอตรวจสอบสิ่งของ"
       />
+
+      {/* แบนเนอร์แจ้งเตือนสำเร็จ (ถ้ามีข้อความส่งต่อมาจากหน้าอื่น) */}
+      {bannerMessage && (
+        <div className="account-success-banner" role="status">
+          <div className="account-banner-content">
+            <span className="account-banner-icon">✓</span>
+            <span>{bannerMessage}</span>
+          </div>
+          <button
+            type="button"
+            className="account-banner-close"
+            onClick={() => setBannerMessage(null)}
+            aria-label="ปิดการแจ้งเตือน"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* ============================================================
           1. การ์ดสรุปภาพรวมด้านบน (Dashboard Overview Cards)
@@ -229,6 +249,13 @@ export default function AccountPage({
           </div>
 
           {/* รายการการ์ดโพสต์ */}
+          {filteredPosts.length === 0 ? (
+            <div className="account-empty-state">
+              <span className="account-empty-icon">📭</span>
+              <p className="account-empty-title">ไม่พบรายการประกาศในหมวดหมู่นี้</p>
+              <p className="account-empty-desc">ลองเลือกตัวกรองอื่น หรือสร้างประกาศใหม่</p>
+            </div>
+          ) : (
           <div className="account-posts-grid">
             {filteredPosts.map((post) => (
               <div key={post.id} className="account-post-card">
@@ -278,6 +305,7 @@ export default function AccountPage({
               </div>
             ))}
           </div>
+          )}
         </section>
       )}
 
