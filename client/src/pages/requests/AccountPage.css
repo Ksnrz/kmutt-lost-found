@@ -41,7 +41,7 @@
 }
 
 .account-stat-card {
-  padding: 22px 24px;
+  padding: 18px 22px;
   border-radius: var(--radius-lg);
   border: 1.5px solid var(--color-gray-border);
   background-color: var(--color-white);
@@ -51,6 +51,9 @@
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+  text-align: left;
+  font-family: inherit;
+  user-select: none;
 }
 
 .account-stat-card:hover {
@@ -62,13 +65,46 @@
 .account-stat-card.is-active {
   border: 2px solid var(--color-orange);
   background-color: #fff9f6;
-  box-shadow: 0 4px 14px rgba(250, 70, 22, 0.1);
+  box-shadow: 0 4px 16px rgba(250, 70, 22, 0.12);
+}
+
+.account-stat-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.account-stat-icon-badge {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background-color: #ffedd5;
+  color: var(--color-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.account-stat-card:hover .account-stat-icon-badge {
+  transform: scale(1.06);
+}
+
+.account-stat-card.is-active .account-stat-icon-badge {
+  background-color: var(--color-orange);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(250, 70, 22, 0.25);
+}
+
+.account-stat-icon {
+  flex-shrink: 0;
 }
 
 .account-stat-info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .account-stat-label {
@@ -76,12 +112,17 @@
   font-size: var(--text-meta);
   font-weight: var(--fw-medium);
   margin: 0;
+  transition: color 0.15s ease;
+}
+
+.account-stat-card.is-active .account-stat-label {
+  color: #1e293b;
+  font-weight: 600;
 }
 
 .account-stat-number {
   color: var(--color-gray-dark);
   font-size: 20px;
-  /* ปรับให้พอดีสายตา ไม่ใหญ่ข่ม H1 (28px) */
   font-weight: var(--fw-bold);
   margin: 0;
   line-height: 1.2;
@@ -96,66 +137,12 @@
   color: var(--color-orange);
   letter-spacing: 0.02em;
   white-space: nowrap;
+  transition: all 0.2s ease;
 }
 
-/* ============================================================
-   2. แถบแท็บสลับหมวดหมู่ (Figma Segmented Control Capsule)
-   สไตล์เดียวกับ map-tabs ในหน้า Map ของเพื่อน
-   รองรับ Responsive: บน Phone ใช้นิ้วปาดเลื่อนได้นุ่มนวล
-   ============================================================ */
-.account-tabs-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  margin-top: 8px;
-  margin-bottom: 32px;
-  padding-bottom: 4px;
-}
-
-.account-tabs-wrapper::-webkit-scrollbar {
-  display: none;
-}
-
-.account-tabs-header {
-  display: inline-flex;
-  width: max-content;
-  align-items: center;
-  gap: 12px;
-  padding: 6px;
-  border: 2px solid var(--color-gray-border);
-  border-radius: 16px;
-  background-color: var(--color-white);
-  box-shadow: var(--shadow-sm);
-}
-
-.account-tab-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: none;
-  padding: 10px 22px;
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: var(--fw-medium);
-  color: var(--color-gray);
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.account-tab-btn:hover {
-  color: var(--color-orange);
-  background-color: var(--color-orange-subtle);
-}
-
-.account-tab-btn.is-active {
+.account-stat-card.is-active .account-stat-badge {
   background-color: var(--color-orange);
-  color: var(--color-white);
-  font-weight: var(--fw-bold);
-  box-shadow: var(--shadow-button);
+  color: #ffffff;
 }
 
 /* ============================================================

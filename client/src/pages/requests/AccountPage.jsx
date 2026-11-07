@@ -253,79 +253,68 @@ export default function AccountPage({
       )}
 
       {/* ============================================================
-          1. การ์ดสรุปภาพรวมด้านบน (Dashboard Overview Cards)
+          1. การ์ดแท็บเลือกหมวดหมู่ข้อมูลบัญชี (Interactive Tab Cards พร้อมไอคอนและเอฟเฟกต์)
           ============================================================ */}
-      <div className="account-stats-grid">
-        <div
+      <div className="account-stats-grid" role="tablist" aria-label="หมวดหมู่ข้อมูลบัญชี">
+        {/* แท็บที่ 1: ประกาศที่ฉันสร้าง */}
+        <button
+          type="button"
           className={`account-stat-card ${activeTab === 'my_posts' ? 'is-active' : ''}`}
           onClick={() => setActiveTab('my_posts')}
-          role="button"
-          tabIndex={0}
+          role="tab"
+          aria-selected={activeTab === 'my_posts'}
         >
-          <div className="account-stat-info">
-            <span className="account-stat-label">ประกาศที่ฉันสร้าง</span>
-            <p className="account-stat-number">{myPosts.length} รายการ</p>
+          <div className="account-stat-main">
+            <div className="account-stat-icon-badge" aria-hidden="true">
+              <Megaphone size={22} className="account-stat-icon" />
+            </div>
+            <div className="account-stat-info">
+              <span className="account-stat-label">ประกาศที่ฉันสร้าง</span>
+              <p className="account-stat-number">{myPosts.length} รายการ</p>
+            </div>
           </div>
           <span className="account-stat-badge">จัดการ</span>
-        </div>
+        </button>
 
-        <div
+        {/* แท็บที่ 2: คำขอที่ฉันส่ง (My Requests) */}
+        <button
+          type="button"
           className={`account-stat-card ${activeTab === 'my_sent_claims' ? 'is-active' : ''}`}
           onClick={() => setActiveTab('my_sent_claims')}
-          role="button"
-          tabIndex={0}
+          role="tab"
+          aria-selected={activeTab === 'my_sent_claims'}
         >
-          <div className="account-stat-info">
-            <span className="account-stat-label">คำขอที่ฉันส่ง (My Requests)</span>
-            <p className="account-stat-number">{sentClaims.length} รายการ</p>
+          <div className="account-stat-main">
+            <div className="account-stat-icon-badge" aria-hidden="true">
+              <Send size={22} className="account-stat-icon" />
+            </div>
+            <div className="account-stat-info">
+              <span className="account-stat-label">คำขอที่ฉันส่ง (My Requests)</span>
+              <p className="account-stat-number">{sentClaims.length} รายการ</p>
+            </div>
           </div>
           <span className="account-stat-badge">ตารางสถานะ</span>
-        </div>
+        </button>
 
-        <div
+        {/* แท็บที่ 3: คำขอที่ฉันได้รับ */}
+        <button
+          type="button"
           className={`account-stat-card ${activeTab === 'my_received_claims' ? 'is-active' : ''}`}
           onClick={() => setActiveTab('my_received_claims')}
-          role="button"
-          tabIndex={0}
+          role="tab"
+          aria-selected={activeTab === 'my_received_claims'}
         >
-          <div className="account-stat-info">
-            <span className="account-stat-label">คำขอที่ฉันได้รับ</span>
-            <p className="account-stat-number">2 รายการ</p>
+          <div className="account-stat-main">
+            <div className="account-stat-icon-badge" aria-hidden="true">
+              <Inbox size={22} className="account-stat-icon" />
+            </div>
+            <div className="account-stat-info">
+              <span className="account-stat-label">คำขอที่ฉันได้รับ</span>
+              <p className="account-stat-number">{receivedClaims.length} รายการ</p>
+            </div>
           </div>
           <span className="account-stat-badge">ไปหน้าตรวจ</span>
-        </div>
-      </div>
-
-      {/* ============================================================
-          2. แถบสลับแท็บเมนู (Tab Navigation พร้อม Lucide Icons)
-          ============================================================ */}
-      <div className="account-tabs-wrapper">
-        <div className="account-tabs-header" role="tablist">
-          <button
-            type="button"
-            className={`account-tab-btn ${activeTab === 'my_posts' ? 'is-active' : ''}`}
-            onClick={() => setActiveTab('my_posts')}
-          >
-            <Megaphone size={16} className="account-tab-icon" />
-            <span>ประกาศที่ฉันสร้าง ({myPosts.length})</span>
-          </button>
-          <button
-            type="button"
-            className={`account-tab-btn ${activeTab === 'my_sent_claims' ? 'is-active' : ''}`}
-            onClick={() => setActiveTab('my_sent_claims')}
-          >
-            <Send size={16} className="account-tab-icon" />
-            <span>คำขอที่ฉันส่ง (My Requests) ({sentClaims.length})</span>
-          </button>
-          <button
-            type="button"
-            className={`account-tab-btn ${activeTab === 'my_received_claims' ? 'is-active' : ''}`}
-            onClick={() => setActiveTab('my_received_claims')}
-          >
-            <Inbox size={16} className="account-tab-icon" />
-            <span>คำขอที่ฉันได้รับ ({receivedClaims.length})</span>
-          </button>
-        </div>
+        </button>
       </div>
 
       {/* ============================================================
