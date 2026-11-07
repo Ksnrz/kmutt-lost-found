@@ -5,6 +5,7 @@ import Register from './pages/Register.jsx';
 import Map from './pages/Map.jsx';
 import Page4 from './pages/page4';
 import Page5 from './pages/page5';
+import Listpost from './pages/Listpost';
 import ClaimRequestPage from './pages/requests/ClaimRequestPage';
 import ReviewRequestsPage from './pages/requests/ReviewRequestsPage';
 import AccountPage from './pages/requests/AccountPage';
@@ -40,6 +41,7 @@ function App() {
           <Route path="/posts" element={<Navigate to="/map" replace />} />
           <Route path="/posts/new" element={<Page4 />} />
           <Route path="/posts/:postId" element={<Page5 />} />
+          <Route path="/listpost" element={<Listpost />} />
           <Route path="/claims/new" element={<ClaimRequestPage />} />
           <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
           <Route path="/requests/review" element={<ReviewRequestsPage />} />
