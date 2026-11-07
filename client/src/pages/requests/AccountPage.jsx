@@ -208,12 +208,12 @@ export default function AccountPage({
       prev.map((claim) =>
         claim.id === claimId
           ? {
-              ...claim,
-              receiverConfirmed: true,
-              status: 'COMPLETED',
-              verify_status: 'COMPLETED',
-              ownerNote: 'คุณยืนยันได้รับของแล้ว — การส่งมอบสำเร็จเรียบร้อย',
-            }
+            ...claim,
+            receiverConfirmed: true,
+            status: 'COMPLETED',
+            verify_status: 'COMPLETED',
+            ownerNote: 'คุณยืนยันได้รับของแล้ว — การส่งมอบสำเร็จเรียบร้อย',
+          }
           : claim
       )
     );
@@ -229,7 +229,7 @@ export default function AccountPage({
     <div className="account-page-container">
       {/* ส่วนหัวหน้าเว็บ */}
       <PageHeader
-        tag="MY ACCOUNT"
+        tag="My Activities"
         title="ประกาศและคำขอของฉัน"
         subtitle="ติดตามประกาศที่สร้าง คำขอรับของ (My Requests) และจัดการส่งมอบสิ่งของ"
       />

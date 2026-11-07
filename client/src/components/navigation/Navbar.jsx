@@ -131,7 +131,7 @@ export default function Navbar({
               `navbar-link ${isActive || isClaimsSection ? 'is-active' : ''}`
             }
           >
-            <span>ขอรับคืน</span>
+            <span>รออนุมัติ</span>
             {pendingCount > 0 && (
               <span className="navbar-badge" aria-label={`มีคำขอรอตรวจ ${pendingCount} รายการ`}>
                 {pendingCount}

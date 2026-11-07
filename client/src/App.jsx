@@ -29,8 +29,9 @@ function App() {
         {/* จุดกำหนด Route ของเว็บ */}
         <main>
           <Routes>
-            {/* 1. หน้าส่งคำขอตรวจสอบสิ่งของ (Verification Request) */}
+            {/* 1. หน้าส่งคำขอตรวจสอบสิ่งของ (Verification Request) — รองรับทั้งเข้าตรง และเปิดต่อจากหน้ารายละเอียดโพสต์ของเพื่อน */}
             <Route path="/claims/new" element={<ClaimRequestPage />} />
+            <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
 
             {/* 2. หน้าตรวจสอบคำขอที่ส่งมา (Review Requests — เมนู "ขอรับคืน") */}
             <Route path="/requests/review" element={<ReviewRequestsPage />} />

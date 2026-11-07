@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { ImagePlus, X } from 'lucide-react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -35,6 +35,18 @@ export default function ClaimRequestPage({
   onSubmitSuccess,
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  // รองรับข้อมูลที่ส่งต่อมาจากหน้ารายละเอียดโพสต์ของเพื่อน (state, query params หรือ fallback mock)
+  const incomingPost = location.state?.post || location.state?.item;
+  const currentItem = incomingPost || {
+    id: searchParams.get('postId') || item.id || 'p-101',
+    title: item.title || 'พบกระเป๋าสตางค์สีดำ',
+    category: item.category || 'ประกาศเจอของ',
+    location: item.location || 'S4 ชั้น 1',
+    imageUrl: item.imageUrl || null,
+  };
 
   // State 1: ข้อความรายละเอียดตำหนิ
   const [defectDetail, setDefectDetail] = useState('');
@@ -99,7 +111,7 @@ export default function ClaimRequestPage({
     try {
       // 2. โครงสร้าง Payload ส่งข้อมูลตาม ER Diagram
       const payload = {
-        post_id: item.id || 'p-101',
+        post_id: currentItem.id || 'p-101',
         user_id: 'u-101',
         verify_status: 'PENDING',
         proof_description: defectDetail.trim(),
@@ -109,7 +121,7 @@ export default function ClaimRequestPage({
           verify_image_url: img.previewUrl,
           file_name: img.name,
         })),
-        itemTitle: item.title,
+        itemTitle: currentItem.title,
         evidenceCount: evidenceImages.length,
       };
 
@@ -122,7 +134,7 @@ export default function ClaimRequestPage({
         onSubmitSuccess(payload);
       } else {
         navigate('/account', {
-          state: { successMessage: `ส่งคำขอตรวจสอบสำหรับ "${item.title}" เรียบร้อยแล้ว!` }
+          state: { successMessage: `ส่งคำขอตรวจสอบสำหรับ "${currentItem.title}" เรียบร้อยแล้ว!` }
         });
       }
     } catch (err) {
@@ -136,6 +148,10 @@ export default function ClaimRequestPage({
   const handleGoBack = () => {
     if (onBack) {
       onBack();
+    } else if (location.state?.from) {
+      navigate(location.state.from);
+    } else if (window.history.length > 1) {
+      navigate(-1); // กลับไปยังหน้ารายละเอียดโพสต์ของเพื่อนที่เปิดมาก่อนหน้า
     } else {
       navigate('/account');
     }
@@ -158,14 +174,14 @@ export default function ClaimRequestPage({
         <div className="claim-post-summary">
           <Thumbnail
             text="รูปโพสต์"
-            src={item.imageUrl}
+            src={currentItem.imageUrl}
           />
           <div className="claim-post-info">
             <p className="claim-post-title">
-              {item.title}
+              {currentItem.title}
             </p>
             <p className="claim-post-meta">
-              {item.category || 'ประกาศเจอของ'} · {item.location || 'S4'}
+              {currentItem.category || 'ประกาศเจอของ'} · {currentItem.location || 'S4 ชั้น 1'}
             </p>
           </div>
         </div>
