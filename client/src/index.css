@@ -1,12 +1,60 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
-@import './styles/tokens.css';
 
-/* Colors and text sizes from the Figma Color Palette (compatible with teammates) */
+/**
+ * KMUTT Lost & Found — Global Styles & Design Tokens
+ */
 :root {
+  /* ============================================================
+     🎨 Colors (KMUTT Lost & Found Palette)
+     ============================================================ */
   --color-primary: #fa4616;
-  --color-gray: #7b8189;
-  --color-white: #ffffff;
+  --color-orange: #fa4616;
+  --color-orange-hover: #e03b0f;
+  --color-orange-active: #c5320c;
+  --color-orange-light: #ffebe3;
+  --color-orange-subtle: #fff5f2;
 
+  --color-gray: #7b8189;
+  --color-gray-dark: #1e2022;
+  --color-gray-muted: #5e646a;
+  --color-gray-light: #f7f7f7;
+  --color-gray-border: #d9d9d9;
+  --color-gray-border-dashed: #cbd5e1;
+
+  --color-white: #ffffff;
+  --color-bg-page: #f8fafc;
+  --color-bg-card: #ffffff;
+
+  --color-status-success: #16a34a;
+  --color-status-success-bg: #ecfdf5;
+  --color-status-danger: #dc2626;
+  --color-status-danger-bg: #fef2f2;
+
+  /* ============================================================
+     🔤 Typography & Hierarchy
+     ============================================================ */
+  font-family: 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-base: 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Font Weights */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* Font Sizes (Pixel-based) */
+  --text-h1-login: 36px;
+  --text-h1-page: 28px;
+  --text-h2-section: 20px;
+  --text-h3-card: 18px;
+  --text-card-title: 18px;
+  --text-body: 16px;
+  --text-btn-primary: 16px;
+  --text-input-label: 14px;
+  --text-meta: 14px;
+  --text-helper-status: 12px;
+
+  /* Font Sizes (Rem-based aliases for compatibility) */
   --font-size-hero: 2.25rem;    /* 36px */
   --font-size-page: 1.75rem;    /* 28px */
   --font-size-section: 1.25rem; /* 20px */
@@ -15,11 +63,26 @@
   --font-size-small: 0.875rem;  /* 14px */
   --font-size-caption: 0.75rem; /* 12px */
 
-  font-family: 'Noto Sans Thai', sans-serif;
+  /* ============================================================
+     📐 Spacing, Radii & Shadows
+     ============================================================ */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-button: 0 2px 4px rgba(250, 70, 22, 0.22);
+
   line-height: 1.5;
   color-scheme: light;
 }
 
+/* ============================================================
+   Global Reset & Base Styles
+   ============================================================ */
 *,
 *::before,
 *::after {
@@ -69,4 +132,16 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
