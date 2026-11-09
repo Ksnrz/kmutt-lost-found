@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Megaphone,
@@ -13,7 +13,6 @@ import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
 import Thumbnail from '../../components/ui/Thumbnail';
 import Badge from '../../components/ui/Badge';
-import { api } from '../../api';
 import './AccountPage.css';
 
 /**
@@ -37,34 +36,6 @@ export default function AccountPage({
   const navigate = useNavigate();
   const location = useLocation();
   const [bannerMessage, setBannerMessage] = useState(location.state?.successMessage || null);
-
-  // โปรไฟล์ผู้ใช้จาก GET/PATCH /api/me
-  const [profile, setProfile] = useState(null);
-  const [profileMessage, setProfileMessage] = useState('');
-
-  useEffect(() => {
-    api('/api/me')
-      .then(setProfile)
-      .catch((err) => (err.status === 401 ? navigate('/login') : setProfileMessage(err.message)));
-  }, [navigate]);
-
-  async function handleSaveProfile(event) {
-    event.preventDefault();
-    const form = new FormData(event.target);
-    try {
-      setProfile(await api('/api/me', {
-        method: 'PATCH',
-        body: {
-          first_name: form.get('first_name'),
-          last_name: form.get('last_name'),
-          phone_number: form.get('phone_number'),
-        },
-      }));
-      setProfileMessage('บันทึกแล้ว');
-    } catch (err) {
-      setProfileMessage(err.message);
-    }
-  }
 
   // State 1: แท็บที่กำลังเปิด ('my_posts' | 'my_sent_claims' | 'my_received_claims')
   const [activeTab, setActiveTab] = useState('my_posts');
@@ -279,20 +250,6 @@ export default function AccountPage({
             <X size={16} />
           </button>
         </div>
-      )}
-
-      {/* ข้อมูลส่วนตัว (GET/PATCH /api/me) */}
-      {profile && (
-        <form className="account-profile" onSubmit={handleSaveProfile}>
-          <p className="account-profile-id">รหัสนักศึกษา {profile.student_id} · {profile.email}</p>
-          <div className="account-profile-fields">
-            <label>ชื่อ<input name="first_name" defaultValue={profile.first_name ?? ''} maxLength={100} /></label>
-            <label>นามสกุล<input name="last_name" defaultValue={profile.last_name ?? ''} maxLength={100} /></label>
-            <label>เบอร์โทร<input name="phone_number" defaultValue={profile.phone_number ?? ''} maxLength={20} /></label>
-          </div>
-          <Button type="submit" variant="secondary" size="sm">บันทึก</Button>
-          {profileMessage && <span className="account-profile-message" role="status">{profileMessage}</span>}
-        </form>
       )}
 
       {/* ============================================================
