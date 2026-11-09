@@ -13,9 +13,13 @@ router.get('/', async (req, res) => {
   res.json(rows[0]);
 });
 
-// shortcut: a field that is omitted (or null) keeps its old value, so a name can't be cleared back to empty; upgrade if the Account page needs "remove phone".
+// A field that is omitted (or null) keeps its old value; send '' to clear it.
 router.patch('/', async (req, res) => {
   const { first_name, last_name, phone_number } = req.body ?? {};
+  // Thai mobile, digits only (the client strips the dashes); '' clears the number
+  if (phone_number && !/^0[689]\d{8}$/.test(phone_number)) {
+    return res.status(400).json({ error: 'เบอร์โทรไม่ถูกต้อง' });
+  }
   const { rows } = await pool.query(
     `UPDATE users SET first_name = COALESCE($1, first_name), last_name = COALESCE($2, last_name),
        phone_number = COALESCE($3, phone_number) WHERE user_id = $4 RETURNING ${COLUMNS}`,

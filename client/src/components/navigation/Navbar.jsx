@@ -163,7 +163,7 @@ export default function Navbar({
                   className="navbar-dropdown-item"
                   onClick={() => {
                     setIsDropdownOpen(false);
-                    navigate('/account');
+                    navigate('/profile');
                   }}
                   role="menuitem"
                 >
