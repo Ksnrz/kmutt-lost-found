@@ -1,6 +1,7 @@
 import express from 'express';
 import { pool } from './db.js';
 import authRouter from './routes/auth.js';
+import meRouter from './routes/me.js';
 
 const app = express();
 app.use(express.json());
@@ -11,6 +12,7 @@ app.get('/api/health', async (req, res) => {
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api/me', meRouter);
 
 // Mount each resource here, one file per person, e.g.
 // import postsRouter from './routes/posts.js';
@@ -25,6 +27,7 @@ const PG_ERRORS = {
   '23503': [400, 'Referenced row not found'], // foreign key
   '23514': [400, 'Invalid value'],          // check constraint
   '22P02': [400, 'Invalid input'],          // bad number/uuid syntax
+  '22001': [400, 'Value too long'],        // varchar length exceeded
 };
 app.use((err, req, res, next) => {
   const [status, message] = PG_ERRORS[err.code] ?? [err.status ?? 500, err.status ? err.message : 'Internal server error'];
