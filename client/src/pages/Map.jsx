@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import campusMap from '../assets/map/map_kmutt.jpg'
 import searchIcon from '../assets/map/search.svg'
@@ -10,6 +11,21 @@ const northBuildings = ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'N8', 'N9', 'N
 
 export default function Map() {
   const navigate = useNavigate()
+  const [open, setOpen] = useState(true)
+  const [selected, setSelected] = useState('S1')
+  const [query, setQuery] = useState('')
+
+  const matches = (building) => building.toLowerCase().includes(query.trim().toLowerCase())
+  const south = southBuildings.filter(matches)
+  const north = northBuildings.filter(matches)
+
+  // เลือกตึกแล้วปิด dropdown และล้างคำค้นหา
+  function selectBuilding(building) {
+    setSelected(building)
+    setQuery('')
+    setOpen(false)
+  }
+
   return (
     <main className="map-page">
       <div className="map-container">
@@ -31,33 +47,38 @@ export default function Map() {
           <aside className="map-sidebar">
             <div className="map-filter">
               <h1>สถานที่ <span>*</span></h1>
-              <details className="map-location" open>
+              <details className="map-location" open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
                 <summary>
                   <img src={locationIcon} alt="" />
-                  <span>เลือกสถานที่ / ค้นหาตึก...</span>
+                  <span className={selected ? 'is-selected' : ''}>{selected || 'เลือกสถานที่ / ค้นหาตึก...'}</span>
                   <img className="map-chevron" src={chevronIcon} alt="" />
                 </summary>
                 <div className="map-dropdown">
-                  <input className="map-building-search" type="search" placeholder="ค้นหาตึก เช่น S1, N2, โรงอาหาร..." />
+                  <input className="map-building-search" type="search" placeholder="ค้นหาตึก เช่น S1, N2..." value={query} onChange={(event) => setQuery(event.target.value)} />
                   <div className="map-building-list">
-                    <div className="map-zone map-zone-south">
-                      <h2>โซน S (อาคารเรียน)</h2>
-                      {southBuildings.map((building) => (
-                        <label className="map-building" key={building}>
-                          <input type="radio" name="building" value={building} defaultChecked={building === 'S1'} />
-                          <span>{building}</span>
-                        </label>
-                      ))}
-                    </div>
-                    <div className="map-zone map-zone-north">
-                      <h2>โซน N (อาคารและคณะต่าง ๆ)</h2>
-                      {northBuildings.map((building) => (
-                        <label className="map-building" key={building}>
-                          <input type="radio" name="building" value={building} />
-                          <span>{building}</span>
-                        </label>
-                      ))}
-                    </div>
+                    {south.length > 0 && (
+                      <div className="map-zone map-zone-south">
+                        <h2>โซน S (อาคารเรียน)</h2>
+                        {south.map((building) => (
+                          <label className="map-building" key={building}>
+                            <input type="radio" name="building" value={building} checked={selected === building} onChange={() => selectBuilding(building)} />
+                            <span>{building}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {north.length > 0 && (
+                      <div className="map-zone map-zone-north">
+                        <h2>โซน N (อาคารและคณะต่าง ๆ)</h2>
+                        {north.map((building) => (
+                          <label className="map-building" key={building}>
+                            <input type="radio" name="building" value={building} checked={selected === building} onChange={() => selectBuilding(building)} />
+                            <span>{building}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {south.length + north.length === 0 && <p className="map-empty">ไม่พบตึกที่ค้นหา</p>}
                   </div>
                 </div>
               </details>
