@@ -1,5 +1,6 @@
 import express from 'express';
 import { pool } from './db.js';
+import authRouter from './routes/auth.js';
 
 const app = express();
 app.use(express.json());
@@ -8,6 +9,8 @@ app.get('/api/health', async (req, res) => {
   await pool.query('SELECT 1');
   res.json({ ok: true });
 });
+
+app.use('/api/auth', authRouter);
 
 // Mount each resource here, one file per person, e.g.
 // import postsRouter from './routes/posts.js';
