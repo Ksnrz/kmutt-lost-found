@@ -6,7 +6,7 @@ import Button from '../components/ui/Button';
 import { api } from '../api';
 import './Profile.css';
 
-const PHONE_HELP = 'เบอร์มือถือ 10 หลัก ขึ้นต้นด้วย 06, 08 หรือ 09';
+const PHONE_HELP = 'เบอร์มือถือ 10 หลัก ขึ้นต้นด้วย 0';
 
 const onlyDigits = (value) => value.replace(/\D/g, '').slice(0, 10);
 
@@ -20,7 +20,7 @@ function formatPhone(d) {
 // Same rule as the server (routes/me.js). Empty is fine: the phone is optional.
 function phoneError(d) {
   if (d === '') return '';
-  if (!/^0[689]/.test(d)) return 'เบอร์ต้องขึ้นต้นด้วย 06, 08 หรือ 09';
+  if (!/^0[689]/.test(d)) return 'เบอร์ต้องขึ้นต้นด้วย 0';
   if (d.length < 10) return `เบอร์โทรต้องมี 10 หลัก (ตอนนี้ ${d.length} หลัก)`;
   return '';
 }
