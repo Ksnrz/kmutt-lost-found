@@ -1,11 +1,3 @@
-import './Card.css';
-
-function Card({ children, className = '' }) {
-  return (
-    <div className={`custom-card ${className}`}>
-      {children}
-    </div>
-  );
-}
+import Card from './ui/Card';
 
 export default Card;
