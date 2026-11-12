@@ -2,6 +2,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import BackButton from '../components/BackButton';
 import Card from '../components/Card';
 import StatusBadge from '../components/StatusBadge';
+import Badge from '../components/ui/Badge';
 import './PostDetail.css';
 
 function PostDetail() {
@@ -10,6 +11,7 @@ function PostDetail() {
   const locationState = useLocation();
   const navPost = locationState?.state?.post;
   const claim = locationState?.state?.claim;
+  const isOwner = locationState?.state?.isOwner;
 
   // ข้อมูลโพสต์เริ่มต้น (ตรงตามรูปภาพต้นแบบ หรือดึงจาก state หากมีส่งต่อมา)
   const post = {
@@ -126,25 +128,45 @@ function PostDetail() {
                 <div className="custody-phone">{post.contact}</div>
               </div>
 
-              {/* ด้านล่างของการ์ด: ถ้าเปิดมาจากตารางคำขอที่ฉันส่ง ให้แสดงแถบสถานะแทนปุ่มส้ม */}
-              {claim ? (
+              {/* ด้านล่างของการ์ด: ตรวจสอบที่มาของโพสต์ */}
+              {isOwner ? (
+                <div className="postdetail-owner-block">
+                  <div className="owner-badge-wrap">
+                    <Badge variant="found">📌 ประกาศของคุณ</Badge>
+                  </div>
+                  <p className="owner-hint-text">
+                    คุณเป็นเจ้าของประกาศนี้ จึงไม่สามารถส่งคำขอขอรับของตนเองได้
+                  </p>
+                  <button
+                    type="button"
+                    className="btn-owner-edit"
+                    onClick={() =>
+                      navigate(`/posts/${postId || 1}/edit`, {
+                        state: { post, from: 'account' },
+                      })
+                    }
+                  >
+                    แก้ไขประกาศนี้
+                  </button>
+                </div>
+              ) : claim ? (
                 <div className="postdetail-claim-status-block">
                   <div className="claim-status-header">
                     <span className="claim-status-label">สถานะคำขอของคุณ:</span>
                     {claim.status === 'PENDING' && (
-                      <span className="badge badge-pending">PENDING · รอตรวจ</span>
+                      <Badge variant="pending">PENDING · รอตรวจ</Badge>
                     )}
                     {claim.status === 'ACCEPTED' && (
-                      <span className="badge badge-success">ACCEPTED · ตอบรับแล้ว</span>
+                      <Badge variant="success">ACCEPTED · ตอบรับแล้ว</Badge>
                     )}
                     {claim.status === 'REJECTED' && (
-                      <span className="badge badge-danger">REJECTED · ปฏิเสธ</span>
+                      <Badge variant="danger">REJECTED · ปฏิเสธ</Badge>
                     )}
                     {claim.status === 'CANCELLED' && (
-                      <span className="badge badge-neutral">CANCELLED · ยกเลิก</span>
+                      <Badge variant="neutral">CANCELLED · ยกเลิก</Badge>
                     )}
                     {claim.status === 'COMPLETED' && (
-                      <span className="badge badge-completed">COMPLETED · สำเร็จ</span>
+                      <Badge variant="completed">COMPLETED · สำเร็จ</Badge>
                     )}
                   </div>
 

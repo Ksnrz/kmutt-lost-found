@@ -376,7 +376,33 @@ export default function AccountPage({
             <div className="account-posts-list">
               {filteredPosts.map((post) => (
                 <div key={post.id} className="account-post-card">
-                  <div className="account-post-header">
+                  <div
+                    className="account-post-header account-clickable"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      const targetId = post.id || post.post_id;
+                      navigate(`/posts/${targetId}`, {
+                        state: {
+                          from: 'account',
+                          isOwner: true,
+                          post: post,
+                        },
+                      });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        const targetId = post.id || post.post_id;
+                        navigate(`/posts/${targetId}`, {
+                          state: {
+                            from: 'account',
+                            isOwner: true,
+                            post: post,
+                          },
+                        });
+                      }
+                    }}
+                  >
                     <Thumbnail text="รูปโพสต์" />
                     <div className="account-post-details">
                       <h3 className="account-post-title">{post.title}</h3>
@@ -455,7 +481,47 @@ export default function AccountPage({
                 {sentClaims.map((claim) => (
                   <tr key={claim.id}>
                     <td>
-                      <div className="account-table-item">
+                      <div
+                        className="account-table-item account-clickable"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          const targetPostId = claim.post_id || claim.postId || 1;
+                          navigate(`/posts/${targetPostId}`, {
+                            state: {
+                              from: 'account',
+                              claim: claim,
+                              post: {
+                                id: targetPostId,
+                                title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
+                                finderName: claim.postOwner,
+                                date: claim.date || claim.created_at,
+                                eventDate: claim.date || claim.created_at,
+                                description: claim.proof_description || `สิ่งของที่ถูกประกาศโดย ${claim.postOwner}`,
+                              },
+                            },
+                          });
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            const targetPostId = claim.post_id || claim.postId || 1;
+                            navigate(`/posts/${targetPostId}`, {
+                              state: {
+                                from: 'account',
+                                claim: claim,
+                                post: {
+                                  id: targetPostId,
+                                  title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
+                                  finderName: claim.postOwner,
+                                  date: claim.date || claim.created_at,
+                                  eventDate: claim.date || claim.created_at,
+                                  description: claim.proof_description || `สิ่งของที่ถูกประกาศโดย ${claim.postOwner}`,
+                                },
+                              },
+                            });
+                          }
+                        }}
+                      >
                         <Thumbnail text="รูป" />
                         <span className="account-table-item-title">
                           {claim.itemTitle}
@@ -511,6 +577,7 @@ export default function AccountPage({
                             navigate(`/posts/${targetPostId}`, {
                               state: {
                                 from: 'account',
+                                claim: claim,
                                 post: {
                                   id: targetPostId,
                                   title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
