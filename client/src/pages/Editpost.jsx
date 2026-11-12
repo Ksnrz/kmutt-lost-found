@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -9,32 +9,58 @@ import './Editpost.css';
 function Editpost() {
   const navigate = useNavigate();
   const { postId } = useParams();
+  const routerLocation = useLocation();
+  const postData = routerLocation.state?.post;
 
-  // State สำหรับจัดการฟอร์มแก้ไขโพสต์
-  const [type, setType] = useState('found'); // 'found' | 'lost'
-  const [storageStatus, setStorageStatus] = useState('ฝากไว้'); // 'ฝากไว้' | 'เก็บไว้เอง'
-  const [itemName, setItemName] = useState('กระเป๋าสตางค์สีดำ');
-  const [location, setLocation] = useState('เลือกตึก / จุดที่พบ');
-  const [eventDate, setEventDate] = useState('23 / 09 / 2026');
-  const [itemDetail, setItemDetail] = useState('');
-  const [contact, setContact] = useState('08X-XXX-XXXX');
-  const [depositLocation, setDepositLocation] = useState('');
+  // State สำหรับจัดการฟอร์มแก้ไขโพสต์ (ดึงค่าเริ่มต้นจาก postData หากมีส่งต่อมา)
+  const [type, setType] = useState(() => {
+    if (postData?.post_type?.includes('LOST') || postData?.type === 'lost') return 'lost';
+    return 'found';
+  });
+  const [storageStatus, setStorageStatus] = useState(() => {
+    if (postData?.custody_type?.includes('เก็บ')) return 'เก็บไว้เอง';
+    return 'ฝากไว้';
+  });
+  const [itemName, setItemName] = useState(() => postData?.title || 'กระเป๋าสตางค์สีดำ');
+  const [location, setLocation] = useState(
+    () => postData?.location || postData?.building_name || 'เลือกตึก / จุดที่พบ'
+  );
+  const [eventDate, setEventDate] = useState(
+    () => postData?.date || postData?.created_at || '23 / 09 / 2026'
+  );
+  const [itemDetail, setItemDetail] = useState(() => postData?.description || postData?.itemDetail || '');
+  const [contact, setContact] = useState(() => postData?.contact || '08X-XXX-XXXX');
+  const [depositLocation, setDepositLocation] = useState(
+    () => postData?.custody_location || postData?.depositLocation || ''
+  );
 
   const handleCancel = () => {
-    navigate(`/posts/${postId || 1}`);
+    if (routerLocation.state?.from === 'account') {
+      navigate('/account');
+    } else {
+      navigate(`/posts/${postId || 1}`);
+    }
   };
 
   const handleDelete = () => {
     if (window.confirm('คุณต้องการลบโพสต์นี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
       alert('ลบโพสต์สำเร็จเรียบร้อยแล้ว');
-      navigate('/posts');
+      if (routerLocation.state?.from === 'account') {
+        navigate('/account', { state: { successMessage: 'ลบโพสต์สำเร็จเรียบร้อยแล้ว' } });
+      } else {
+        navigate('/posts');
+      }
     }
   };
 
   const handleSave = (e) => {
     e.preventDefault();
     alert('บันทึกการแก้ไขโพสต์เรียบร้อยแล้ว');
-    navigate(`/posts/${postId || 1}`);
+    if (routerLocation.state?.from === 'account') {
+      navigate('/account', { state: { successMessage: 'แก้ไขโพสต์เรียบร้อยแล้ว' } });
+    } else {
+      navigate(`/posts/${postId || 1}`);
+    }
   };
 
   return (
@@ -43,7 +69,13 @@ function Editpost() {
         {/* Header พร้อม Tag ส้มภาษาอังกฤษตามดีไซน์ และปุ่มย้อนกลับ */}
         <PageHeader
           backText="กลับไปรายการโพสต์"
-          onBack={() => navigate('/posts')}
+          onBack={() => {
+            if (routerLocation.state?.from === 'account') {
+              navigate('/account');
+            } else {
+              navigate('/posts');
+            }
+          }}
           tag="EDIT POST"
           title="แก้ไขโพสต์"
           subtitle="ปรับปรุงรายละเอียดข้อมูลสิ่งของหรือสถานะการเก็บรักษา"

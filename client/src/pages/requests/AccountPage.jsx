@@ -31,7 +31,7 @@ import './AccountPage.css';
  */
 export default function AccountPage({
   onNavigateReview,
-  onNavigatePostDetail,
+  onNavigateEditPost,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -404,8 +404,14 @@ export default function AccountPage({
                       variant="secondary"
                       size="sm"
                       onClick={() => {
-                        if (onNavigatePostDetail) onNavigatePostDetail(post.id);
-                        else navigate(`/posts/${post.id}`);
+                        const targetId = post.id || post.post_id;
+                        if (onNavigateEditPost) {
+                          onNavigateEditPost(targetId, post);
+                        } else {
+                          navigate(`/posts/${targetId}/edit`, {
+                            state: { post, from: 'account' },
+                          });
+                        }
                       }}
                     >
                       ดูประกาศ
