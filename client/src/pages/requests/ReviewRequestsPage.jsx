@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   Handshake,
   Check,
@@ -66,6 +66,9 @@ export default function ReviewRequestsPage({
   onBack,
 }) {
   const navigate = useNavigate();
+  const { postId: routePostId } = useParams();
+  const location = useLocation();
+  const targetPostId = routePostId || location.state?.postId || 'p-101';
 
   // State 1: สถานะของโพสต์ประกาศหลัก ('OPEN' | 'CLOSED' | 'CANCELLED')
   const [postStatus, setPostStatus] = useState('OPEN');
@@ -73,18 +76,27 @@ export default function ReviewRequestsPage({
   // State 2: รายการคำขอทั้งหมด
   const [requests, setRequests] = useState(initialRequests);
 
+  // State 3: รหัสคำขอที่กำลังเลือกดูรายละเอียดอยู่
+  const [selectedId, setSelectedId] = useState('102');
+
+  // State 4: ข้อความในช่อง "หมายเหตุสำหรับผู้ส่ง"
+  const [noteText, setNoteText] = useState('');
+
   // เชื่อมต่อ State กลางและรับข้อมูลแบบ Real-time จาก claimService
   useEffect(() => {
     let isMounted = true;
-    claimService.getClaimsByPost('p-101').then((data) => {
+    claimService.getClaimsByPost(targetPostId).then((data) => {
       if (isMounted && data && data.length > 0) {
         setRequests(data);
+        if (data[0]?.id || data[0]?.verify_id) {
+          setSelectedId(String(data[0].id || data[0].verify_id));
+        }
       }
     });
 
     // ซิงก์ข้อมูลทันทีเมื่อมีการส่งคำขอใหม่จากหน้า 6 หรือมีการอัปเดตจากหน้าอื่น
     const unsubscribe = claimService.subscribe((updatedClaims) => {
-      const forPost = updatedClaims.filter(c => String(c.post_id) === 'p-101' || String(c.postId) === 'p-101');
+      const forPost = updatedClaims.filter(c => String(c.post_id) === String(targetPostId) || String(c.postId) === String(targetPostId));
       if (forPost.length > 0) {
         setRequests(forPost);
       }
@@ -94,13 +106,7 @@ export default function ReviewRequestsPage({
       isMounted = false;
       unsubscribe();
     };
-  }, []);
-
-  // State 3: รหัสคำขอที่กำลังเลือกดูรายละเอียดอยู่
-  const [selectedId, setSelectedId] = useState('102');
-
-  // State 4: ข้อความในช่อง "หมายเหตุสำหรับผู้ส่ง"
-  const [noteText, setNoteText] = useState('');
+  }, [targetPostId]);
 
   // ค้นหาข้อมูลคำขอที่กำลังถูกเลือก
   const activeRequest = requests.find((r) => r.id === selectedId) || requests[0];
@@ -165,6 +171,10 @@ export default function ReviewRequestsPage({
   const handleGoBack = () => {
     if (onBack) {
       onBack();
+    } else if (location.state?.from) {
+      navigate(location.state.from);
+    } else if (targetPostId && targetPostId !== 'p-101') {
+      navigate(`/posts/${targetPostId}`);
     } else {
       navigate('/account');
     }
@@ -177,7 +187,7 @@ export default function ReviewRequestsPage({
         tag="RECEIVED REQUESTS"
         title="คำขอที่ส่งมายังประกาศของฉัน"
         subtitle="ตรวจหลักฐานและยืนยันการส่งมอบสิ่งของคืนเจ้าของตามกฎระบบ"
-        backText="กลับไปรายการประกาศ"
+        backText={location.state?.from === 'detail' ? 'กลับไปหน้ารายละเอียดโพสต์' : 'กลับไปหน้าประกาศของฉัน'}
         onBack={handleGoBack}
       />
 
@@ -186,7 +196,7 @@ export default function ReviewRequestsPage({
         <div className="review-post-banner-info">
           <span className="review-post-banner-label">โพสต์ที่จัดการ:</span>
           <strong className="review-post-banner-title">
-            พบกระเป๋าสตางค์สีดำ (#p-101 · S4 ชั้น 1)
+            {location.state?.post?.title || activeRequest?.itemTitle || 'พบกระเป๋าสตางค์สีดำ'} (#{targetPostId})
           </strong>
         </div>
         <div className="review-post-banner-right">

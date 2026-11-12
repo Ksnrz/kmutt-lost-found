@@ -133,17 +133,30 @@ function PostDetail() {
 
               {/* ด้านล่างของการ์ด: ตรวจสอบที่มาของโพสต์ */}
               {isOwner ? (
-                <button
-                  type="button"
-                  className="btn-claim"
-                  onClick={() =>
-                    navigate(`/posts/${postId || 1}/edit`, {
-                      state: { post, from: 'account' },
-                    })
-                  }
-                >
-                  แก้ไขประกาศ
-                </button>
+                <div className="postdetail-owner-actions">
+                  <button
+                    type="button"
+                    className="btn-claim"
+                    onClick={() =>
+                      navigate(`/posts/${postId || 1}/review`, {
+                        state: { postId: postId || 1, post, from: 'detail' },
+                      })
+                    }
+                  >
+                    ตรวจคำขอตรวจสอบสิทธิ์
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-claim btn-claim-secondary"
+                    onClick={() =>
+                      navigate(`/posts/${postId || 1}/edit`, {
+                        state: { post, from: 'account' },
+                      })
+                    }
+                  >
+                    แก้ไขประกาศ
+                  </button>
+                </div>
               ) : claim ? (
                 claim.status === 'ACCEPTED' || claim.status === 'COMPLETED' ? (
                   /* ขั้นตอนการส่งมอบสิ่งของ (Dual Confirmation) สไตล์เดียวกับ ReviewRequestsPage */

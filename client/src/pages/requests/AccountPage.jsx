@@ -661,9 +661,11 @@ export default function AccountPage({
                   variant="primary"
                   onClick={() => {
                     if (onNavigateReview) {
-                      onNavigateReview();
+                      onNavigateReview(item);
                     } else {
-                      navigate('/requests/review');
+                      navigate(`/posts/${item.post_id || item.id}/review`, {
+                        state: { postId: item.post_id || item.id, postTitle: item.postTitle, from: '/account' },
+                      });
                     }
                   }}
                 >

@@ -275,6 +275,26 @@
   transform: translateY(1px);
 }
 
+.postdetail-owner-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-claim.btn-claim-secondary {
+  background-color: #f8fafc;
+  color: #334155;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: none;
+}
+
+.btn-claim.btn-claim-secondary:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
 .custody-helper-text {
   margin-top: 16px;
   text-align: center;

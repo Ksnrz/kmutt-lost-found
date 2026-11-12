@@ -3,6 +3,26 @@ import { pool } from './db.js';
 import claimRoutes from './routes/claimRoutes.js';
 
 const app = express();
+
+// CORS configuration
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+  res.header(
+    'Access-Control-Allow-Methods',
+    'GET, POST, PATCH, PUT, DELETE, OPTIONS'
+  );
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Content-Type, x-test-user'
+  );
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+
 app.use(express.json());
 
 app.get('/api/health', async (req, res) => {
@@ -13,9 +33,8 @@ app.get('/api/health', async (req, res) => {
 // ระบบ VERIFY (ตรวจสอบสิทธิ์และส่งมอบสิ่งของ)
 app.use('/api/claims', claimRoutes);
 
-// Mount each resource here, one file per person, e.g.
-// import postsRouter from './routes/posts.js';
-// app.use('/api/posts', postsRouter);
+// Access uploaded images
+app.use('/uploads', express.static('uploads'));
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 
