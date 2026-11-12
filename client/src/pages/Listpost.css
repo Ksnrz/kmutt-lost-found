@@ -155,12 +155,15 @@
   flex: 1;
 }
 
+.post-card .badge,
 .status-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: fit-content;
-  padding: 4px 12px;
+  max-width: fit-content;
+  align-self: flex-start;
+  padding: 2.5px 10px;
   border-radius: var(--radius-full, 9999px);
   font-size: var(--text-helper-status, 12px);
   font-weight: var(--fw-bold, 700);
@@ -168,12 +171,14 @@
   white-space: nowrap;
 }
 
+.post-card .badge.badge-found,
 .status-badge.found {
   background-color: #eff6ff;
   color: #1d4ed8;
   border: 1px solid #bfdbfe;
 }
 
+.post-card .badge.badge-lost,
 .status-badge.lost {
   background-color: #fff7ed;
   color: #c2410c;

@@ -3,11 +3,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: fit-content;
+  max-width: fit-content;
+  align-self: flex-start;
   font-family: inherit;
-  font-size: var(--text-helper-status);
-  font-weight: var(--fw-bold);
-  border-radius: var(--radius-full);
-  padding: 4px 12px;
+  font-size: var(--text-helper-status, 12px);
+  font-weight: var(--fw-bold, 700);
+  border-radius: var(--radius-full, 9999px);
+  padding: 2.5px 10px;
   line-height: 1.2;
   white-space: nowrap;
 }
