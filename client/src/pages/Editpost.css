@@ -73,11 +73,24 @@
     flex: 1;
 }
 
+.form-left .flex-button .btn:not(.active),
+.form-right .flex-button1 .btn:not(.active),
+.form-left .flex-button .custom-btn:not(.active),
+.form-right .flex-button1 .custom-btn:not(.active) {
+    background-color: #fff !important;
+    color: #7B8189 !important;
+    border: 1.5px solid #d9d9d9 !important;
+    box-shadow: none !important;
+}
+
+.form-left .flex-button .btn.active,
+.form-right .flex-button1 .btn.active,
 .form-left .flex-button .custom-btn.active,
 .form-right .flex-button1 .custom-btn.active {
-    background-color: #ff4500;
-    color: #fff;
-    border-color: #ff4500;
+    background-color: var(--color-primary, #fa4616) !important;
+    color: #fff !important;
+    border: 1.5px solid var(--color-primary, #fa4616) !important;
+    box-shadow: var(--shadow-button);
 }
 
 .form-left .flex-button .custom-btn.active:hover,

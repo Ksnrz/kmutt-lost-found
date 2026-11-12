@@ -60,7 +60,51 @@
 }
 
 /* ============================================================
-   Toggle Buttons (Category & Storage)
+   Segmented Pill Toggle (Matching Image 3)
+   ============================================================ */
+.segmented-toggle {
+  display: flex;
+  padding: 4px;
+  background-color: var(--color-white, #ffffff);
+  border: 1.5px solid var(--color-gray-border, #d9d9d9);
+  border-radius: var(--radius-lg, 14px);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.toggle-option {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--color-gray, #7b8189);
+  font-family: inherit;
+  font-size: var(--text-btn-primary, 16px);
+  font-weight: var(--fw-semibold, 600);
+  border-radius: var(--radius-md, 10px);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.toggle-option:hover:not(.is-active) {
+  color: var(--color-gray-dark, #1e2022);
+  background-color: var(--color-gray-light, #f8fafc);
+}
+
+.toggle-option.is-active {
+  background-color: var(--color-primary, #fa4616);
+  color: var(--color-white, #ffffff);
+  font-weight: var(--fw-bold, 700);
+  box-shadow: var(--shadow-button);
+}
+
+/* ============================================================
+   Toggle Buttons (Category & Storage Legacy Fallback)
    ============================================================ */
 .createpost-container .flex-button,
 .createpost-container .flex-button1 {
@@ -69,33 +113,42 @@
   margin-bottom: 24px;
 }
 
-.createpost-container .flex-button .custom-btn,
-.createpost-container .flex-button1 .custom-btn {
+.createpost-container .flex-button .btn:not(.active),
+.createpost-container .flex-button1 .btn:not(.active),
+.createpost-container .flex-button .custom-btn:not(.active),
+.createpost-container .flex-button1 .custom-btn:not(.active) {
   flex: 1;
   min-height: 44px;
   padding: 10px 16px;
-  background-color: var(--color-white, #ffffff);
-  color: var(--color-gray-dark, #1e2022);
-  border: 1.5px solid var(--color-gray-border, #d9d9d9);
+  background-color: var(--color-white, #ffffff) !important;
+  color: var(--color-gray, #7b8189) !important;
+  border: 1.5px solid var(--color-gray-border, #d9d9d9) !important;
   border-radius: var(--radius-md, 12px);
   font-size: var(--text-btn-primary, 16px);
   font-weight: var(--fw-semibold, 600);
   cursor: pointer;
+  box-shadow: none !important;
   transition: all 0.15s ease;
 }
 
-.createpost-container .flex-button .custom-btn:hover,
-.createpost-container .flex-button1 .custom-btn:hover {
-  border-color: var(--color-primary, #fa4616);
-  color: var(--color-primary, #fa4616);
+.createpost-container .flex-button .btn:hover:not(.active),
+.createpost-container .flex-button1 .btn:hover:not(.active) {
+  border-color: var(--color-primary, #fa4616) !important;
+  color: var(--color-primary, #fa4616) !important;
 }
 
+.createpost-container .flex-button .btn.active,
+.createpost-container .flex-button1 .btn.active,
 .createpost-container .flex-button .custom-btn.active,
 .createpost-container .flex-button1 .custom-btn.active {
-  background-color: var(--color-primary, #fa4616);
-  color: var(--color-white, #ffffff);
-  border-color: var(--color-primary, #fa4616);
-  box-shadow: var(--shadow-button);
+  flex: 1;
+  min-height: 44px;
+  padding: 10px 16px;
+  background-color: var(--color-primary, #fa4616) !important;
+  color: var(--color-white, #ffffff) !important;
+  border: 1.5px solid var(--color-primary, #fa4616) !important;
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow-button) !important;
 }
 
 /* ============================================================

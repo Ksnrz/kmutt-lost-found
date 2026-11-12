@@ -44,21 +44,21 @@ function CreatePost() {
           <div className="form-left">
             <Card>
               <h2>ประเภท</h2>
-              <div className="flex-button">
-                <Button
+              <div className="segmented-toggle">
+                <button
                   type="button"
-                  className={postType === 'lost' ? 'active' : ''}
+                  className={`toggle-option ${postType === 'lost' ? 'is-active' : ''}`}
                   onClick={() => setPostType('lost')}
                 >
                   ของหาย
-                </Button>
-                <Button
+                </button>
+                <button
                   type="button"
-                  className={postType === 'found' ? 'active' : ''}
+                  className={`toggle-option ${postType === 'found' ? 'is-active' : ''}`}
                   onClick={() => setPostType('found')}
                 >
                   พบของ
-                </Button>
+                </button>
               </div>
 
               <h2>ข้อมูลสิ่งของ</h2>
@@ -114,21 +114,21 @@ function CreatePost() {
               <h3>
                 สถานะสิ่งของ <span className="req-star">*</span>
               </h3>
-              <div className="flex-button1">
-                <Button
+              <div className="segmented-toggle">
+                <button
                   type="button"
-                  className={storageStatus === 'ฝากไว้' ? 'active' : ''}
+                  className={`toggle-option ${storageStatus === 'ฝากไว้' ? 'is-active' : ''}`}
                   onClick={() => setStorageStatus('ฝากไว้')}
                 >
                   ฝากไว้
-                </Button>
-                <Button
+                </button>
+                <button
                   type="button"
-                  className={storageStatus === 'เก็บไว้เอง' ? 'active' : ''}
+                  className={`toggle-option ${storageStatus === 'เก็บไว้เอง' ? 'is-active' : ''}`}
                   onClick={() => setStorageStatus('เก็บไว้เอง')}
                 >
                   เก็บไว้เอง
-                </Button>
+                </button>
               </div>
 
               <Line />
