@@ -599,29 +599,49 @@ export default function AccountPage({
                       </div>
                     </td>
                     <td>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          const targetPostId = claim.post_id || claim.postId || 1;
-                          navigate(`/posts/${targetPostId}`, {
-                            state: {
-                              from: 'account',
-                              claim: claim,
-                              post: {
-                                id: targetPostId,
-                                title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
-                                finderName: claim.postOwner,
-                                date: claim.date || claim.created_at,
-                                eventDate: claim.date || claim.created_at,
-                                description: claim.proof_description || `สิ่งของที่ถูกประกาศโดย ${claim.postOwner}`,
+                      <div className="account-table-actions">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            const targetPostId = claim.post_id || claim.postId || 1;
+                            navigate(`/posts/${targetPostId}`, {
+                              state: {
+                                from: 'account',
+                                claim: claim,
+                                post: {
+                                  id: targetPostId,
+                                  title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
+                                  finderName: claim.postOwner,
+                                  date: claim.date || claim.created_at,
+                                  eventDate: claim.date || claim.created_at,
+                                  description: claim.proof_description || `สิ่งของที่ถูกประกาศโดย ${claim.postOwner}`,
+                                },
                               },
-                            },
-                          });
-                        }}
-                      >
-                        ดูรายละเอียด
-                      </Button>
+                            });
+                          }}
+                        >
+                          ดูรายละเอียด
+                        </Button>
+                        {claim.status === 'PENDING' && (
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={async () => {
+                              if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำขอ #${claim.verify_id || claim.id}?`)) {
+                                try {
+                                  await claimService.cancelClaim(claim.verify_id || claim.id);
+                                  setBannerMessage('ยกเลิกคำขอของคุณเรียบร้อยแล้ว');
+                                } catch (err) {
+                                  alert(err.message || 'ไม่สามารถยกเลิกคำขอได้');
+                                }
+                              }
+                            }}
+                          >
+                            ยกเลิก
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

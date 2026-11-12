@@ -1,7 +1,12 @@
 /**
  * claimService.js — Central Service สำหรับระบบตรวจสอบสิทธิ์สิ่งของ (VERIFY System)
- * รองรับสถาปัตยกรรม Hybrid: เชื่อมต่อ Backend API (/api/claims) จริง 
- * และมี Fallback ผ่าน LocalStorage เพื่อให้ทดสอบหน้าบ้านได้ลื่นไหลแบบ Real-time
+ * สอดคล้องกับข้อตกลงทีมและ Tasks ของ Member C:
+ * - C2: POST /api/posts/:id/verify (ส่งคำขอ, แนบรูป, ปฏิเสธ DEPOSITED และโพสต์ของตัวเอง)
+ * - C3: GET /api/posts/:id/verify (ให้เจ้าของโพสต์ดูคำขอ)
+ * - C4: PUT /api/verify/:id/status (accept / reject)
+ * - C5: PATCH /api/verify/:id/cancel (ยกเลิกคำขอตัวเอง เฉพาะ PENDING)
+ * - C6: PUT /api/verify/:id/confirm (dual confirm ใน transaction เดียว)
+ * พร้อมระบบ LocalStorage Fallback เพื่อให้ทดสอบหน้าบ้านได้เสมอ
  */
 
 const STORAGE_KEY_CLAIMS = 'kmutt_lostfound_claims';
@@ -12,8 +17,8 @@ const DEFAULT_CLAIMS = [
   {
     verify_id: '102',
     id: '102',
-    post_id: 'p-101',
-    postId: 'p-101',
+    post_id: '1',
+    postId: '1',
     itemTitle: 'กระเป๋าสตางค์สีดำ',
     postTitle: 'กระเป๋าสตางค์สีดำ',
     requester: 'นักศึกษา B',
@@ -34,8 +39,8 @@ const DEFAULT_CLAIMS = [
   {
     verify_id: '103',
     id: '103',
-    post_id: 'p-101',
-    postId: 'p-101',
+    post_id: '1',
+    postId: '1',
     itemTitle: 'กระเป๋าสตางค์สีดำ',
     postTitle: 'กระเป๋าสตางค์สีดำ',
     requester: 'นักศึกษา D',
@@ -55,7 +60,6 @@ const DEFAULT_CLAIMS = [
   },
 ];
 
-// Helper: ดึงข้อมูลจาก LocalStorage
 function getStoredClaims() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_CLAIMS);
@@ -70,7 +74,6 @@ function getStoredClaims() {
   }
 }
 
-// Helper: บันทึกข้อมูลลง LocalStorage และกระจาย Event ให้ component อื่นทราบ
 function saveClaims(claims) {
   try {
     localStorage.setItem(STORAGE_KEY_CLAIMS, JSON.stringify(claims));
@@ -82,50 +85,80 @@ function saveClaims(claims) {
 
 export const claimService = {
   /**
-   * 1. ส่งคำขอตรวจสอบสิทธิ์ (หน้า 6: ClaimRequestPage)
-   * เมื่อผู้ใช้กด "ส่งคำขอ" ➔ คำขอจะถูกบันทึกและวิ่งไปหน้า 7 ทันที!
+   * C2: ส่งคำขอตรวจสอบสิทธิ์ (POST /api/posts/:id/verify)
    */
   async submitClaim(payload) {
-    // พยายามส่งไปยัง Backend API ก่อน
-    try {
-      const res = await fetch('/api/claims', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-test-user': '1',
-        },
-        body: JSON.stringify({
-          post_id: payload.post_id || payload.postId || 1,
-          proof_description: payload.proof_description || payload.description,
-          images: payload.images || payload.evidences || [],
-        }),
-      });
+    const postId = payload.post_id || payload.postId || 1;
+    let backendSuccess = false;
+    let backendData = null;
 
-      if (res.ok) {
-        const json = await res.json();
-        // ซิงก์ลง Storage ด้วยเพื่อให้ UI หน้าบ้านอัปเดตทันที
-        this.addClaimLocal(payload);
-        return json.data;
+    try {
+      let res;
+      // กรณีมีไฟล์จริง ให้ส่งแบบ FormData
+      if (payload.files && payload.files.length > 0) {
+        const formData = new FormData();
+        formData.append('proof_description', payload.proof_description || payload.description || '');
+        payload.files.forEach((file) => {
+          formData.append('images', file);
+        });
+
+        res = await fetch(`/api/posts/${postId}/verify`, {
+          method: 'POST',
+          headers: {
+            'x-test-user': '2', // ผู้ส่งคำขอ (เช่น นักศึกษา B)
+          },
+          body: formData,
+        });
+      } else {
+        res = await fetch(`/api/posts/${postId}/verify`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-test-user': '2',
+          },
+          body: JSON.stringify({
+            proof_description: payload.proof_description || payload.description,
+            images: payload.images || payload.evidences || [],
+          }),
+        });
       }
-    } catch {
-      // หากเซิร์ฟเวอร์ยังไม่เปิด ให้ทำงานผ่าน LocalStorage ทันที
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || 'เกิดข้อผิดพลาดในการส่งคำขอ');
+      }
+
+      backendSuccess = true;
+      backendData = json.data || json.verify;
+    } catch (err) {
+      // หากเป็นข้อผิดพลาดจาก business logic (400, 403, 404) ให้ throw ออกไปแจ้งเตือนผู้ใช้ทันที
+      if (err.message && !err.message.includes('Failed to fetch')) {
+        throw err;
+      }
+      // เซิร์ฟเวอร์ออฟไลน์ -> ใช้ Local fallback
     }
 
-    return this.addClaimLocal(payload);
+    const localClaim = this.addClaimLocal({
+      ...payload,
+      id: backendData?.verify_id || payload.id,
+      verify_id: backendData?.verify_id || payload.verify_id,
+    });
+
+    return backendSuccess ? backendData : localClaim;
   },
 
   /**
-   * บันทึกคำขอลง LocalStorage (Fallback / Immediate UI sync)
+   * บันทึกคำขอลง LocalStorage (Fallback / Real-time sync)
    */
   addClaimLocal(payload) {
     const currentClaims = getStoredClaims();
-    const newId = payload.id || payload.verify_id || `v-${Date.now()}`;
+    const newId = String(payload.id || payload.verify_id || `v-${Date.now()}`);
     const newClaim = {
       ...payload,
       id: newId,
       verify_id: newId,
-      post_id: String(payload.post_id || payload.postId || 'p-101'),
-      postId: String(payload.post_id || payload.postId || 'p-101'),
+      post_id: String(payload.post_id || payload.postId || '1'),
+      postId: String(payload.post_id || payload.postId || '1'),
       status: 'PENDING',
       verify_status: 'PENDING',
       finderConfirmed: false,
@@ -145,21 +178,22 @@ export const claimService = {
   },
 
   /**
-   * 2. ดึงรายการคำขอทั้งหมดของโพสต์นั้นๆ (หน้า 7: ReviewRequestsPage)
+   * C3: ดึงรายการคำขอทั้งหมดของโพสต์นั้นๆ (GET /api/posts/:id/verify)
    */
-  async getClaimsByPost(postId = 'p-101') {
+  async getClaimsByPost(postId = '1') {
     try {
-      const res = await fetch(`/api/claims/post/${postId}`, {
-        headers: { 'x-test-user': '1' },
+      const res = await fetch(`/api/posts/${postId}/verify`, {
+        headers: { 'x-test-user': '1' }, // เจ้าของโพสต์
       });
       if (res.ok) {
         const json = await res.json();
-        if (json.data && json.data.length > 0) {
-          return json.data;
+        const claims = json.requests || json.data;
+        if (Array.isArray(claims) && claims.length > 0) {
+          return claims;
         }
       }
     } catch {
-      // Backend not running -> fallback
+      // Backend offline -> fallback
     }
 
     const all = getStoredClaims();
@@ -167,22 +201,24 @@ export const claimService = {
   },
 
   /**
-   * 3. อัปเดตสถานะคำขอ (อนุมัติ ACCEPTED / ปฏิเสธ REJECTED / ยกเลิก CANCELLED)
-   * กฎ Business Logic:
-   * เมื่อผู้พบกด "อนุมัติ" (ACCEPTED) คำขอของคนอื่นในโพสต์เดียวกันจะถูกเปลี่ยนเป็น CANCELLED อัตโนมัติ!
+   * C4: accept / reject คำขอ (PUT /api/verify/:id/status)
    */
   async updateClaimStatus(claimId, newStatus, note = '') {
     try {
-      await fetch(`/api/claims/${claimId}/status`, {
+      const res = await fetch(`/api/verify/${claimId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-test-user': '1',
+          'x-test-user': '1', // เจ้าของโพสต์
         },
         body: JSON.stringify({ status: newStatus, note }),
       });
+      if (!res.ok) {
+        const errJson = await res.json();
+        console.warn('API updateClaimStatus warning:', errJson.error);
+      }
     } catch {
-      // fallback to local logic
+      // fallback
     }
 
     const currentClaims = getStoredClaims();
@@ -192,7 +228,6 @@ export const claimService = {
     const targetPostId = target.post_id || target.postId;
 
     const updated = currentClaims.map(c => {
-      // คำขอที่ถูกคลิก
       if (String(c.id) === String(claimId)) {
         return {
           ...c,
@@ -205,7 +240,7 @@ export const claimService = {
         };
       }
 
-      // กฎ 1 คำขอต่อ 1 โพสต์: คำขออื่นในโพสต์เดียวกันที่ยังรออยู่ (PENDING) ให้เป็น CANCELLED อัตโนมัติเมื่อมีการตอบรับ
+      // กฎข้อ 1: 1 คำขอต่อ 1 โพสต์ (คำขออื่นที่รออยู่ให้เป็น CANCELLED เมื่อมีการตอบรับ)
       if (newStatus === 'ACCEPTED' && (String(c.post_id) === String(targetPostId) || String(c.postId) === String(targetPostId))) {
         if (c.status === 'PENDING' || c.verify_status === 'PENDING') {
           return {
@@ -226,26 +261,73 @@ export const claimService = {
   },
 
   /**
-   * 4. ยืนยันการส่งมอบ (Dual Confirmation)
-   * กฎ Business Logic:
-   * เมื่อทั้งผู้พบและผู้รับกดยืนยันครบทั้ง 2 ฝ่าย ➔ สั่งปิดโพสต์เป็น 'CLOSED' และคำขอเป็น 'COMPLETED'
+   * C5: ยกเลิกคำขอตัวเอง (PATCH /api/verify/:id/cancel)
+   * เฉพาะคำขอที่ยังอยู่ในสถานะ PENDING เท่านั้น
+   */
+  async cancelClaim(claimId, note = 'ผู้ส่งขอยกเลิกคำขอด้วยตนเอง') {
+    try {
+      const res = await fetch(`/api/verify/${claimId}/cancel`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-test-user': '2', // ผู้ส่งคำขอ
+        },
+        body: JSON.stringify({ note }),
+      });
+      if (!res.ok) {
+        const errJson = await res.json();
+        throw new Error(errJson.error || 'ไม่สามารถยกเลิกคำขอได้');
+      }
+    } catch (err) {
+      if (err.message && !err.message.includes('Failed to fetch')) {
+        throw err;
+      }
+    }
+
+    const currentClaims = getStoredClaims();
+    const updated = currentClaims.map((c) => {
+      if (String(c.id) === String(claimId)) {
+        return {
+          ...c,
+          status: 'CANCELLED',
+          verify_status: 'CANCELLED',
+          note: note || c.note,
+          ownerNote: note || c.ownerNote,
+        };
+      }
+      return c;
+    });
+
+    saveClaims(updated);
+    return updated;
+  },
+
+  /**
+   * C6: Dual Confirmation (PUT /api/verify/:id/confirm)
+   * ยืนยันครบทั้ง 2 ฝ่ายใน Transaction เดียว -> ปิดโพสต์ และยกเลิกคำขออื่นที่ค้าง
    */
   async confirmHandover(claimId, party = 'finder') {
+    let apiPostClosed = false;
+
     try {
-      await fetch(`/api/claims/${claimId}/confirm`, {
+      const res = await fetch(`/api/verify/${claimId}/confirm`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-test-user': '1',
+          'x-test-user': party === 'finder' ? '1' : '2',
         },
         body: JSON.stringify({ party }),
       });
+      if (res.ok) {
+        const json = await res.json();
+        apiPostClosed = json.postClosed;
+      }
     } catch {
       // fallback
     }
 
     const currentClaims = getStoredClaims();
-    let willClosePost = false;
+    let willClosePost = apiPostClosed;
     let targetPostId = null;
 
     const updated = currentClaims.map(c => {
@@ -270,6 +352,7 @@ export const claimService = {
       return c;
     });
 
+    // หากยืนยันครบทั้ง 2 ฝ่าย ให้ปิดโพสต์และยกเลิกคำขออื่นที่ค้าง
     if (willClosePost && targetPostId) {
       try {
         localStorage.setItem(`${STORAGE_KEY_POST_STATUS}_${targetPostId}`, 'CLOSED');
@@ -283,17 +366,18 @@ export const claimService = {
   },
 
   /**
-   * 5. ดึงประวัติคำขอที่ฉันส่ง (สำหรับหน้า Account: แท็บ "คำขอที่ฉันส่ง")
+   * ดึงประวัติคำขอที่ฉันส่ง (GET /api/verify/my-claims)
    */
   async getMyClaims() {
     try {
-      const res = await fetch('/api/claims/my-claims', {
-        headers: { 'x-test-user': '1' },
+      const res = await fetch('/api/verify/my-claims', {
+        headers: { 'x-test-user': '2' },
       });
       if (res.ok) {
         const json = await res.json();
-        if (json.data && json.data.length > 0) {
-          return json.data;
+        const claims = json.requests || json.data;
+        if (Array.isArray(claims) && claims.length > 0) {
+          return claims;
         }
       }
     } catch {
@@ -304,11 +388,12 @@ export const claimService = {
   },
 
   /**
-   * 6. รีเซ็ตข้อมูลกลับสู่ค่าเริ่มต้นสำหรับการทดสอบเดโม
+   * รีเซ็ตข้อมูลกลับสู่ค่าเริ่มต้นสำหรับการทดสอบ
    */
   resetAll() {
     try {
       localStorage.setItem(STORAGE_KEY_CLAIMS, JSON.stringify(DEFAULT_CLAIMS));
+      localStorage.removeItem(`${STORAGE_KEY_POST_STATUS}_1`);
       localStorage.removeItem(`${STORAGE_KEY_POST_STATUS}_p-101`);
       localStorage.removeItem('receiver_confirmed_102');
       localStorage.removeItem('receiver_confirmed_103');
@@ -319,9 +404,6 @@ export const claimService = {
     return DEFAULT_CLAIMS;
   },
 
-  /**
-   * Subscribe เพื่อรับการแจ้งเตือนแบบ Real-time เมื่อมีการเปลี่ยนแปลงคำขอ
-   */
   subscribe(callback) {
     const handler = (event) => callback(event.detail);
     window.addEventListener('kmutt_claims_updated', handler);

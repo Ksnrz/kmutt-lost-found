@@ -381,6 +381,13 @@
   border-left: 3px solid var(--color-orange);
 }
 
+.account-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 /* ============================================================
    5. แท็บที่ 3: คำขอที่ฉันได้รับ (Received Claims List)
    ============================================================ */

@@ -5,10 +5,12 @@
   "scripts": {
     "dev": "node --watch --env-file=.env src/index.js",
     "start": "node --env-file=.env src/index.js",
-    "db:reset": "psql -U postgres -d lostfound -f db/schema.sql"
+    "db:reset": "psql -U postgres -d lostfound -f db/schema.sql",
+    "db:seed": "psql -U postgres -d lostfound -f db/seed.sql"
   },
   "dependencies": {
     "express": "^5.3.0",
+    "multer": "^2.5.0",
     "pg": "^8.23.1"
   }
 }

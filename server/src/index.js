@@ -1,6 +1,8 @@
 import express from 'express';
 import { pool } from './db.js';
+import verifyRouter from './routes/verify.js';
 import claimRoutes from './routes/claimRoutes.js';
+import locationsRouter from './routes/locations.js';
 
 const app = express();
 
@@ -30,7 +32,11 @@ app.get('/api/health', async (req, res) => {
   res.json({ ok: true });
 });
 
-// ระบบ VERIFY (ตรวจสอบสิทธิ์และส่งมอบสิ่งของ)
+// Locations
+app.use('/api/locations', locationsRouter);
+
+// ระบบ VERIFY (C2 - C6: /api/posts/:id/verify, /api/verify/...)
+app.use('/api', verifyRouter);
 app.use('/api/claims', claimRoutes);
 
 // Access uploaded images
