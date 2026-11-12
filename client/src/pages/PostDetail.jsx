@@ -1,55 +1,139 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import BackButton from '../components/BackButton';
 import Card from '../components/Card';
-import Button from '../components/Button';
-
-import ImageUpload from '../components/ImageUpload';
 import StatusBadge from '../components/StatusBadge';
 import './PostDetail.css';
 
 function PostDetail() {
   const navigate = useNavigate();
   const { postId } = useParams();
-	
-	return (
-		<div className="container">
-			<BackButton text='กลับไปรายการประกาศ'/>
-			<div className='form-layout'>
-				<div className='form-left'>
-					<h1>พบกระเป๋าสตางค์สีดำ</h1>
-					<StatusBadge status="open" />
-					<ImageUpload size="150px" text='รูปหลักของสิงของ'/>
-					<div className='flex-image'>
-						<ImageUpload size="16px 24px" text='รูป 1'/>
-						<ImageUpload size="16px 24px" text='รูป 2'/>
-						<ImageUpload size="16px 24px" text='+ รูปเพิ่มเติม'/>
-					</div>
-					<Card>
-						<h2>พบกระเป๋าสตางค์สีดำ</h2>
-						<p>กระเป๋าสตางค์สีดำขนาดเล็ก พบวางอยู่บริเวณชั้น 1 ของอาคาร S4</p>
-						<p>สถานที่พบ: อาคาร S4 ชั้น 1 | วันที่: 23 ก.ย. 2026</p>
-					</Card>
-				</div>
 
-				<div className='form-right'>
-					<p className='Date'>โพสต์เมื่อ 23 ก.ย. 2026</p>
-					<Card>
-						<h2>ข้อมูลการรับของ</h2>
-						<p>ผู้พบ: นักศึกษา มจธ.</p>
-						<p>สถานะการเก็บ: ผู้พบเก็บไว้เอง</p>
-						<br/>
-						<p>ช่องทางติดต่อ *</p>
-						<h3>08X-XXX-XXXX</h3>
-						<div className='pos-but'>
-							<Button onClick={() => navigate(`/posts/${postId}/claim`)}>นี่อาจเป็นของฉัน</Button>
-						</div>
-						<p className='comment'>หากเป็นสิ่งของของคุณส่งคำขอ</p>
-						<p className='comment'>พร้อมรายละเอียดเฉพาะเพื่อยืนยัน</p>
-					</Card>
-				</div>
-			</div>
-		</div>
-	);
+  // ข้อมูลโพสต์เริ่มต้น (ตรงตามรูปภาพต้นแบบ)
+  const post = {
+    id: postId || '1',
+    title: 'พบกระเป๋าสตางค์สีดำ',
+    type: 'พบของ',
+    typeEn: 'FOUND',
+    building: 'S4',
+    status: 'open',
+    date: '23 ก.ย. 2026',
+    description: 'กระเป๋าสตางค์สีดำขนาดเล็ก พบวางอยู่บริเวณชั้น 1 ของอาคาร S4',
+    location: 'อาคาร S4 ชั้น 1',
+    eventDate: '23 ก.ย. 2026',
+    finderName: 'นักศึกษา มจธ.',
+    custodyType: 'ผู้พบเก็บไว้เอง',
+    contact: '08X-XXX-XXXX',
+    imageUrl: null,
+  };
+
+  return (
+    <div className="postdetail-page">
+      <div className="postdetail-container">
+        {/* 1. ปุ่มย้อนกลับ */}
+        <div className="postdetail-back-row">
+          <BackButton text="กลับไปรายการประกาศ" onClick={() => navigate('/posts')} />
+        </div>
+
+        {/* 2. Header: Breadcrumb/Tag + Title + StatusBadge (ฝั่งซ้าย) และ วันที่โพสต์ (ฝั่งขวา) */}
+        <div className="postdetail-header-row">
+          <div className="postdetail-header-left">
+            <div className="postdetail-tag">
+              POST / {post.typeEn} / {post.building}
+            </div>
+            <h1 className="postdetail-title">{post.title}</h1>
+            <div className="postdetail-badge-wrap">
+              <StatusBadge status={post.status} />
+            </div>
+          </div>
+
+          <div className="postdetail-header-right">
+            <span className="postdetail-date-text">
+              โพสต์เมื่อ {post.date}
+            </span>
+          </div>
+        </div>
+
+        {/* 3. Main Layout: ฝั่งซ้ายรูปภาพ + รายละเอียดโพสต์, ฝั่งขวาข้อมูลการรับของ */}
+        <div className="postdetail-layout">
+          {/* ฝั่งซ้าย */}
+          <div className="postdetail-main">
+            {/* กล่องรูปภาพหลัก */}
+            <div className="postdetail-main-image">
+              {post.imageUrl ? (
+                <img src={post.imageUrl} alt={post.title} />
+              ) : (
+                <span>รูปหลักของสิ่งของ</span>
+              )}
+            </div>
+
+            {/* แถบรูปภาพย่อย */}
+            <div className="postdetail-thumbnails">
+              <div className="postdetail-thumb">
+                <span>รูป 2</span>
+              </div>
+              <div className="postdetail-thumb">
+                <span>รูป 3</span>
+              </div>
+              <div className="postdetail-thumb">
+                <span>+ รูปเพิ่มเติม</span>
+              </div>
+            </div>
+
+            {/* การ์ดรายละเอียดโพสต์ */}
+            <Card className="postdetail-desc-card">
+              <h2 className="postdetail-desc-title">{post.title}</h2>
+              <p className="postdetail-desc-text">{post.description}</p>
+              <div className="postdetail-desc-meta">
+                <span>สถานที่พบ: {post.location}</span>
+                <span className="postdetail-meta-sep">|</span>
+                <span>วันที่: {post.eventDate}</span>
+              </div>
+            </Card>
+          </div>
+
+          {/* ฝั่งขวา: การ์ดข้อมูลการรับของ */}
+          <div className="postdetail-sidebar">
+            <Card className="postdetail-sidebar-card">
+              <h2 className="custody-title">ข้อมูลการรับของ</h2>
+
+              <div className="custody-info-list">
+                <div className="custody-info-row">
+                  <span className="custody-label">ผู้พบ:</span>
+                  <span className="custody-value">{post.finderName}</span>
+                </div>
+                <div className="custody-info-row">
+                  <span className="custody-label">สถานะการเก็บ:</span>
+                  <span className="custody-value">{post.custodyType}</span>
+                </div>
+              </div>
+
+              <hr className="custody-divider" />
+
+              <div className="custody-contact-block">
+                <span className="custody-label">ช่องทางติดต่อ</span>
+                <div className="custody-phone">{post.contact}</div>
+              </div>
+
+              <button
+                type="button"
+                className="btn-claim"
+                onClick={() =>
+                  navigate(`/posts/${postId || 1}/claim`, { state: { post } })
+                }
+              >
+                นี่อาจเป็นของฉัน
+              </button>
+
+              <div className="custody-helper-text">
+                <p>หากเป็นสิ่งของของคุณส่งคำขอ</p>
+                <p>พร้อมรายละเอียดเฉพาะเพื่อยืนยัน</p>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default PostDetail;
