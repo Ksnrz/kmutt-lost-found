@@ -4,7 +4,6 @@ import {
   Megaphone,
   Send,
   Inbox,
-  Check,
   CheckCircle2,
   X,
 } from 'lucide-react';
@@ -119,78 +118,91 @@ export default function AccountPage({
   });
 
   // State 4: ข้อมูลคำขอที่ฉันส่ง (Entity VERIFY_ITEMS ที่ current user เป็นผู้ submit)
-  const [sentClaims, setSentClaims] = useState([
-    {
-      id: 'c-01',
-      verify_id: 'c-01',
-      post_id: 'p-101',
-      itemTitle: 'ขอรับกระเป๋าสตางค์สีดำ',
-      postOwner: 'นายสมเกียรติ มั่นคง (ผู้พบ)',
-      date: '25 ก.ย. 2026',
-      created_at: '25 ก.ย. 2026',
-      status: 'ACCEPTED', // verify_status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED'
-      verify_status: 'ACCEPTED',
-      proof_description: 'กระเป๋าสตางค์สีดำ Guy Laroche มีบัตรสีฟ้า',
-      ownerNote: 'ตอบรับแล้ว! นัดรับของที่โถง CB4 วันนี้เวลา 16:30 น.',
-      receiverConfirmed: false,
-    },
-    {
-      id: 'c-02',
-      verify_id: 'c-02',
-      post_id: 'p-089',
-      itemTitle: 'ขอรับบัตรนักศึกษาที่ทำหาย',
-      postOwner: 'เจ้าหน้าที่ห้องทะเบียน',
-      date: '20 ก.ย. 2026',
-      created_at: '20 ก.ย. 2026',
-      status: 'COMPLETED',
-      verify_status: 'COMPLETED',
-      proof_description: 'บัตรนักศึกษาคณะวิศวกรรมศาสตร์ ภาควิชา CPE',
-      ownerNote: 'ทั้งสองฝ่ายยืนยันการส่งมอบเสร็จสิ้นแล้ว ขอบคุณครับ',
-      receiverConfirmed: true,
-    },
-    {
-      id: 'c-03',
-      verify_id: 'c-03',
-      post_id: 'p-075',
-      itemTitle: 'ขอรับหูฟังไร้สาย AirPods',
-      postOwner: 'นายชินวัฒน์ อักษร (ผู้พบ)',
-      date: '24 ก.ย. 2026',
-      created_at: '24 ก.ย. 2026',
-      status: 'PENDING',
-      verify_status: 'PENDING',
-      proof_description: 'เคสหูฟังมีสติกเกอร์รูปแมวสีส้มติดอยู่ที่ฝา',
-      ownerNote: 'กำลังตรวจสอบรูปภาพและรายละเอียดตำหนิที่ส่งมา',
-      receiverConfirmed: false,
-    },
-    {
-      id: 'c-04',
-      verify_id: 'c-04',
-      post_id: 'p-064',
-      itemTitle: 'ขอรับกระติกน้ำเก็บความเย็น',
-      postOwner: 'นายธนาคาร เจริญสุข (ผู้พบ)',
-      date: '15 ก.ย. 2026',
-      created_at: '15 ก.ย. 2026',
-      status: 'REJECTED',
-      verify_status: 'REJECTED',
-      proof_description: 'กระติกน้ำสีดำด้าน ขนาด 500ml',
-      ownerNote: 'ตำหนิตรงฝาไม่ตรงกับของจริงที่เก็บได้ ขออภัยด้วยครับ',
-      receiverConfirmed: false,
-    },
-    {
-      id: 'c-05',
-      verify_id: 'c-05',
-      post_id: 'p-055',
-      itemTitle: 'ขอรับสายชาร์จไอโฟน',
-      postOwner: 'นางสาวพิมพ์มาดา รักษ์ดี (ผู้พบ)',
-      date: '10 ก.ย. 2026',
-      created_at: '10 ก.ย. 2026',
-      status: 'CANCELLED',
-      verify_status: 'CANCELLED',
-      proof_description: 'สายชาร์จ Type-C to Lightning สีขาว มีปลอกพันสายไฟสีฟ้า',
-      ownerNote: 'โพสต์ถูกปิดเนื่องจากส่งมอบให้แก่เจ้าของท่านอื่นเรียบร้อยแล้ว',
-      receiverConfirmed: false,
-    },
-  ]);
+  const [sentClaims] = useState(() => {
+    let claims = [
+      {
+        id: 'c-01',
+        verify_id: 'c-01',
+        post_id: 'p-101',
+        itemTitle: 'ขอรับกระเป๋าสตางค์สีดำ',
+        postOwner: 'นายสมเกียรติ มั่นคง (ผู้พบ)',
+        date: '25 ก.ย. 2026',
+        created_at: '25 ก.ย. 2026',
+        status: 'ACCEPTED', // verify_status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED'
+        verify_status: 'ACCEPTED',
+        proof_description: 'กระเป๋าสตางค์สีดำ Guy Laroche มีบัตรสีฟ้า',
+        ownerNote: 'ตอบรับแล้ว! นัดรับของที่โถง CB4 วันนี้เวลา 16:30 น.',
+        receiverConfirmed: false,
+      },
+      {
+        id: 'c-02',
+        verify_id: 'c-02',
+        post_id: 'p-089',
+        itemTitle: 'ขอรับบัตรนักศึกษาที่ทำหาย',
+        postOwner: 'เจ้าหน้าที่ห้องทะเบียน',
+        date: '20 ก.ย. 2026',
+        created_at: '20 ก.ย. 2026',
+        status: 'COMPLETED',
+        verify_status: 'COMPLETED',
+        proof_description: 'บัตรนักศึกษาคณะวิศวกรรมศาสตร์ ภาควิชา CPE',
+        ownerNote: 'ทั้งสองฝ่ายยืนยันการส่งมอบเสร็จสิ้นแล้ว ขอบคุณครับ',
+        receiverConfirmed: true,
+      },
+      {
+        id: 'c-03',
+        verify_id: 'c-03',
+        post_id: 'p-075',
+        itemTitle: 'ขอรับหูฟังไร้สาย AirPods',
+        postOwner: 'นายชินวัฒน์ อักษร (ผู้พบ)',
+        date: '24 ก.ย. 2026',
+        created_at: '24 ก.ย. 2026',
+        status: 'PENDING',
+        verify_status: 'PENDING',
+        proof_description: 'เคสหูฟังมีสติกเกอร์รูปแมวสีส้มติดอยู่ที่ฝา',
+        ownerNote: 'กำลังตรวจสอบรูปภาพและรายละเอียดตำหนิที่ส่งมา',
+        receiverConfirmed: false,
+      },
+      {
+        id: 'c-04',
+        verify_id: 'c-04',
+        post_id: 'p-064',
+        itemTitle: 'ขอรับกระติกน้ำเก็บความเย็น',
+        postOwner: 'นายธนาคาร เจริญสุข (ผู้พบ)',
+        date: '15 ก.ย. 2026',
+        created_at: '15 ก.ย. 2026',
+        status: 'REJECTED',
+        verify_status: 'REJECTED',
+        proof_description: 'กระติกน้ำสีดำด้าน ขนาด 500ml',
+        ownerNote: 'ตำหนิตรงฝาไม่ตรงกับของจริงที่เก็บได้ ขออภัยด้วยครับ',
+        receiverConfirmed: false,
+      },
+      {
+        id: 'c-05',
+        verify_id: 'c-05',
+        post_id: 'p-055',
+        itemTitle: 'ขอรับสายชาร์จไอโฟน',
+        postOwner: 'นางสาวพิมพ์มาดา รักษ์ดี (ผู้พบ)',
+        date: '10 ก.ย. 2026',
+        created_at: '10 ก.ย. 2026',
+        status: 'CANCELLED',
+        verify_status: 'CANCELLED',
+        proof_description: 'สายชาร์จ Type-C to Lightning สีขาว มีปลอกพันสายไฟสีฟ้า',
+        ownerNote: 'โพสต์ถูกปิดเนื่องจากส่งมอบให้แก่เจ้าของท่านอื่นเรียบร้อยแล้ว',
+        receiverConfirmed: false,
+      },
+    ];
+
+    if (location.state?.confirmedClaimId) {
+      const cid = location.state.confirmedClaimId;
+      claims = claims.map((c) =>
+        c.id === cid || c.verify_id === cid
+          ? { ...c, receiverConfirmed: true, status: 'COMPLETED', verify_status: 'COMPLETED' }
+          : c
+      );
+    }
+
+    return claims;
+  });
 
   // State 5: รายการประกาศของฉันที่มีคนส่งคำขอเข้ามา (POSTS ที่ receives VERIFY_ITEMS)
   const [receivedClaims] = useState([
@@ -208,22 +220,7 @@ export default function AccountPage({
 
 
 
-  // ฝ่ายผู้รับกดยืนยันว่าได้รับของแล้ว (Dual Confirmation ฝั่งผู้ส่งคำขอใน My Requests)
-  const handleConfirmReceived = (claimId) => {
-    setSentClaims((prev) =>
-      prev.map((claim) =>
-        claim.id === claimId
-          ? {
-            ...claim,
-            receiverConfirmed: true,
-            status: 'COMPLETED',
-            verify_status: 'COMPLETED',
-            ownerNote: 'คุณยืนยันได้รับของแล้ว — การส่งมอบสำเร็จเรียบร้อย',
-          }
-          : claim
-      )
-    );
-  };
+
 
   // กรองประกาศตามตัวกรอง
   const filteredPosts = myPosts.filter((post) => {
@@ -554,45 +551,29 @@ export default function AccountPage({
                       </div>
                     </td>
                     <td>
-                      {claim.status === 'ACCEPTED' && !claim.receiverConfirmed ? (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleConfirmReceived(claim.id)}
-                        >
-                          <Check size={14} className="account-btn-icon" />
-                          <span>ยืนยันได้รับของแล้ว</span>
-                        </Button>
-                      ) : claim.status === 'COMPLETED' ? (
-                        <span className="account-table-done-badge">
-                          <CheckCircle2 size={14} />
-                          <span>ได้รับของเรียบร้อย</span>
-                        </span>
-                      ) : (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => {
-                            const targetPostId = claim.post_id || claim.postId || 1;
-                            navigate(`/posts/${targetPostId}`, {
-                              state: {
-                                from: 'account',
-                                claim: claim,
-                                post: {
-                                  id: targetPostId,
-                                  title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
-                                  finderName: claim.postOwner,
-                                  date: claim.date || claim.created_at,
-                                  eventDate: claim.date || claim.created_at,
-                                  description: claim.proof_description || `สิ่งของที่ถูกประกาศโดย ${claim.postOwner}`,
-                                },
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          const targetPostId = claim.post_id || claim.postId || 1;
+                          navigate(`/posts/${targetPostId}`, {
+                            state: {
+                              from: 'account',
+                              claim: claim,
+                              post: {
+                                id: targetPostId,
+                                title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
+                                finderName: claim.postOwner,
+                                date: claim.date || claim.created_at,
+                                eventDate: claim.date || claim.created_at,
+                                description: claim.proof_description || `สิ่งของที่ถูกประกาศโดย ${claim.postOwner}`,
                               },
-                            });
-                          }}
-                        >
-                          ดูรายละเอียด
-                        </Button>
-                      )}
+                            },
+                          });
+                        }}
+                      >
+                        ดูรายละเอียด
+                      </Button>
                     </td>
                   </tr>
                 ))}

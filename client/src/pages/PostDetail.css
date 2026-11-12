@@ -377,6 +377,177 @@
   font-weight: 600;
 }
 
+/* Dual Confirmation Card for Receiver */
+.receiver-handover-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.receiver-handover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.receiver-handover-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-gray-dark, #1e2022);
+  font-size: var(--text-card-title, 16px);
+}
+
+.handover-icon-shake {
+  color: var(--color-primary, #fa4616);
+  flex-shrink: 0;
+}
+
+.receiver-handover-intro {
+  margin: 0;
+  font-size: var(--text-helper-status, 13px);
+  color: #475569;
+  line-height: 1.5;
+}
+
+.receiver-handover-note {
+  background-color: var(--color-white, #ffffff);
+  border-left: 3.5px solid #16a34a;
+  border-radius: var(--radius-sm, 6px);
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-gray-dark, #1e2022);
+}
+
+.receiver-handover-note strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #15803d;
+}
+
+.receiver-handover-note p {
+  margin: 0;
+}
+
+.receiver-steps-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 4px 0;
+}
+
+.receiver-step-box {
+  background-color: var(--color-white, #ffffff);
+  border: 1.5px solid var(--color-gray-border, #e2e8f0);
+  border-radius: var(--radius-md, 10px);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.receiver-step-box.is-done {
+  border-color: #86efac;
+  background-color: #f0fdf4;
+}
+
+.receiver-step-box.is-current {
+  border-color: #fed7aa;
+  background-color: #fffaf5;
+}
+
+.receiver-step-box .step-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.receiver-step-box.is-done .step-num {
+  background-color: #16a34a;
+  color: #ffffff;
+}
+
+.receiver-step-box.is-current .step-num {
+  background-color: var(--color-primary, #fa4616);
+  color: #ffffff;
+}
+
+.receiver-step-box .step-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.receiver-step-box .step-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-gray-dark, #1e2022);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.receiver-step-box .step-status {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.receiver-step-box.is-done .step-status {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.receiver-step-box.is-current .step-status {
+  color: #c2410c;
+  font-weight: 600;
+}
+
+.receiver-confirm-warning {
+  margin: 0;
+  font-size: 11.5px;
+  color: #94a3b8;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.delivery-completed-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: var(--radius-md, 10px);
+  color: #15803d;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.claim-pending-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.claim-pending-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #c2410c;
+}
+
 /* ============================================================
    Owner Block (เมื่อเจ้าของโพสต์เปิดดูประกาศของตัวเอง)
    ============================================================ */
