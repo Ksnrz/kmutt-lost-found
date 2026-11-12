@@ -255,7 +255,7 @@ function Editpost() {
                   className="btn-submit-edit"
                   onClick={handleSave}
                 >
-                  แก้ไขโพสต์
+                  บันทึก
                 </Button>
               </div>
             </Card>

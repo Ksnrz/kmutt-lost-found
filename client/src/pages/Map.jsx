@@ -91,7 +91,7 @@ export default function Map() {
   return (
     <div className="map-page">
       <div className="map-container">
-        {/* Toolbar: ตัวเลือกประเภทโพสต์ และปุ่มสร้างโพสต์ */}
+        {/* Toolbar: ตัวเลือกประเภทโพสต์ */}
         <div className="map-toolbar">
           <div className="map-tabs">
             <label>
@@ -115,9 +115,6 @@ export default function Map() {
               <span>พบของ</span>
             </label>
           </div>
-          <button className="map-create" type="button" onClick={() => navigate('/posts/new')}>
-            + สร้างโพสต์
-          </button>
         </div>
 
         {/* Content: ฝั่งซ้ายตัวกรองอาคาร - ฝั่งขวาแผนที่ มจธ. */}

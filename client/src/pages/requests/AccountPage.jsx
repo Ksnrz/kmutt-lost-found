@@ -443,7 +443,7 @@ export default function AccountPage({
                         }
                       }}
                     >
-                      จัดการโพสต์
+                      แก้ไขโพสต์
                     </Button>
                   </div>
                 </div>

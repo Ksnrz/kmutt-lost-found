@@ -71,22 +71,13 @@ function Listpost() {
   return (
     <div className="listpost-page">
       <div className="listpost-container">
-        {/* Header พร้อม Tag ส้มภาษาอังกฤษตามดีไซน์ และปุ่มสร้างโพสต์ */}
+        {/* Header พร้อม Tag ส้มภาษาอังกฤษตามดีไซน์ */}
         <PageHeader
           backText="กลับแผนที่"
           onBack={() => navigate('/map')}
           tag="CAMPUS POSTS"
           title={`รายการโพสต์อาคาร ${buildingParam}`}
           subtitle="ดูสิ่งของที่หายและพบในอาคารนี้"
-          actions={
-            <button
-              className="create-btn"
-              type="button"
-              onClick={() => navigate('/posts/new')}
-            >
-              + สร้างโพสต์
-            </button>
-          }
         />
 
         {/* Filter Buttons */}
