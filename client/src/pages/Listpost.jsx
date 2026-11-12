@@ -1,10 +1,18 @@
-
 import { useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import BackButton from '../components/BackButton';
 import './Listpost.css';
 
 function Listpost() {
-  const [activeFilter, setActiveFilter] = useState('ทั้งหมด');
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const buildingParam = searchParams.get('building') || 'S4';
+  const typeParam = searchParams.get('type');
+
+  const [activeFilter, setActiveFilter] = useState(
+    typeParam && ['ของหาย', 'เจอของ'].includes(typeParam) ? typeParam : 'ทั้งหมด'
+  );
 
   const posts = [
     {
@@ -58,14 +66,13 @@ function Listpost() {
 
   return (
     <div className="listpost-container">
-
-      <BackButton text="กลับแผนที่" />
+      <BackButton text="กลับแผนที่" onClick={() => navigate('/map')} />
 
       {/* Header */}
       <div className="header-flex-container">
         <div>
           <h1 className="header-title">
-            รายการโพสต์อาคาร S4
+            รายการโพสต์อาคาร {buildingParam}
           </h1>
 
           <p className="subtitle">
@@ -73,7 +80,7 @@ function Listpost() {
           </p>
         </div>
 
-        <button className="create-btn">
+        <button className="create-btn" type="button" onClick={() => navigate('/posts/new')}>
           + สร้างโพสต์
         </button>
       </div>
@@ -83,6 +90,7 @@ function Listpost() {
         {['ทั้งหมด', 'ของหาย', 'เจอของ'].map(filter => (
           <button
             key={filter}
+            type="button"
             className={`filter-btn ${
               activeFilter === filter ? 'active' : ''
             }`}
@@ -102,13 +110,11 @@ function Listpost() {
       <div className="post-grid">
         {filteredPosts.map(post => (
           <div className="post-card" key={post.id}>
-
             <div className="post-image">
               รูปสิ่งของ
             </div>
 
             <div className="post-content">
-
               <span className={`status-badge ${
                 post.type === 'เจอของ' ? 'found' : 'lost'
               }`}>
@@ -121,19 +127,21 @@ function Listpost() {
 
               <div className="post-footer">
                 <p className="post-date">
-                  S4 {post.location} · {post.date}
+                  {buildingParam} {post.location} · {post.date}
                 </p>
 
-                <button className="detail-btn">
+                <button
+                  type="button"
+                  className="detail-btn"
+                  onClick={() => navigate(`/posts/${post.id}`)}
+                >
                   ดูรายละเอียด →
                 </button>
               </div>
-
             </div>
           </div>
         ))}
       </div>
-
     </div>
   );
 }

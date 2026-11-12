@@ -181,6 +181,20 @@
   flex: 1;
 }
 
+.map-summary-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-gray-dark, #1e2022);
+}
+
+.map-summary-sub {
+  color: var(--color-gray, #7b8189);
+  font-weight: 400;
+  font-size: 13px;
+}
+
 .map-chevron {
   transition: transform 0.2s ease;
 }
@@ -203,11 +217,18 @@
   z-index: 10;
 }
 
+.map-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .map-building-search {
   flex-shrink: 0;
   width: 100%;
   height: 40px;
-  padding: 8px 12px;
+  padding: 8px 32px 8px 12px;
   border: 1px solid var(--color-gray-border, #d9d9d9);
   border-radius: var(--radius-sm, 8px);
   font-size: var(--text-meta, 14px);
@@ -223,6 +244,28 @@
 
 .map-building-search::placeholder {
   color: var(--color-gray, #7b8189);
+}
+
+.map-search-clear {
+  position: absolute;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  color: var(--color-gray, #7b8189);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.map-search-clear:hover {
+  background-color: var(--color-gray-light, #f1f5f9);
+  color: var(--color-gray-dark, #1e2022);
 }
 
 .map-building-list {
@@ -279,13 +322,33 @@
 }
 
 .map-building span {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding-left: 8px;
+  padding-right: 8px;
   border-radius: var(--radius-sm, 8px);
   font-size: var(--text-meta, 14px);
   line-height: 28px;
   color: var(--color-gray-dark, #1e2022);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.map-building-code {
+  font-weight: var(--fw-semibold, 600);
+  flex-shrink: 0;
+}
+
+.map-building-name {
+  color: var(--color-gray, #7b8189);
+  font-size: 13px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .map-building input:checked + span {
@@ -294,8 +357,20 @@
   font-weight: var(--fw-semibold, 600);
 }
 
+.map-building input:checked + span .map-building-name {
+  color: var(--color-primary, #fa4616);
+  opacity: 0.9;
+}
+
 .map-building:hover span {
   background-color: var(--color-gray-light, #f7f7f7);
+}
+
+.map-empty-buildings {
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--color-gray, #7b8189);
+  font-size: 13px;
 }
 
 .map-search {
