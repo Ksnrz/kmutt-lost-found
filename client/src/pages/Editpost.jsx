@@ -44,7 +44,6 @@ function Editpost() {
 
   const handleDelete = () => {
     if (window.confirm('คุณต้องการลบโพสต์นี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
-      alert('ลบโพสต์สำเร็จเรียบร้อยแล้ว');
       if (routerLocation.state?.from === 'account') {
         navigate('/account', {
           state: {
@@ -53,18 +52,21 @@ function Editpost() {
           },
         });
       } else {
-        navigate('/posts');
+        navigate('/posts', {
+          state: {
+            successMessage: 'ลบโพสต์สำเร็จเรียบร้อยแล้ว',
+          },
+        });
       }
     }
   };
 
   const handleSave = (e) => {
     e.preventDefault();
-    alert('บันทึกการแก้ไขโพสต์เรียบร้อยแล้ว');
     if (routerLocation.state?.from === 'account') {
       navigate('/account', {
         state: {
-          successMessage: 'แก้ไขโพสต์เรียบร้อยแล้ว',
+          successMessage: 'บันทึกการแก้ไขโพสต์เรียบร้อยแล้ว',
           updatedPost: {
             id: postId || postData?.id || postData?.post_id,
             post_id: postId || postData?.id || postData?.post_id,

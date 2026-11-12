@@ -1,5 +1,5 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { Handshake, CheckCircle2, Check } from 'lucide-react';
+import { Handshake, CheckCircle2, Check, Lock } from 'lucide-react';
 import BackButton from '../components/BackButton';
 import Card from '../components/Card';
 import StatusBadge from '../components/StatusBadge';
@@ -213,10 +213,9 @@ function PostDetail() {
                                 } catch {
                                   // ignore storage errors
                                 }
-                                alert('ยืนยันได้รับของเรียบร้อยแล้ว! สถานะเปลี่ยนเป็น COMPLETED (ส่งมอบสำเร็จ)');
                                 navigate('/account', {
                                   state: {
-                                    successMessage: 'ยืนยันได้รับของเรียบร้อยแล้ว การส่งมอบสำเร็จ!',
+                                    successMessage: 'ยืนยันได้รับของเรียบร้อยแล้ว การส่งมอบสำเร็จสมบูรณ์!',
                                     confirmedClaimId: claimId,
                                   },
                                 });
@@ -287,22 +286,35 @@ function PostDetail() {
                   </div>
                 )
               ) : (
-                <>
-                  <button
-                    type="button"
-                    className="btn-claim"
-                    onClick={() =>
-                      navigate(`/posts/${postId || 1}/claim`, { state: { post } })
-                    }
-                  >
-                    นี่อาจเป็นของฉัน
-                  </button>
-
-                  <div className="custody-helper-text">
-                    <p>หากเป็นสิ่งของของคุณส่งคำขอ</p>
-                    <p>พร้อมรายละเอียดเฉพาะเพื่อยืนยัน</p>
+                /* โพสต์ทั่วไปที่เปิดจากหน้าหลัก / รวมโพสต์ */
+                post.status === 'closed' || post.status === 'completed' ? (
+                  <div className="postdetail-closed-box">
+                    <div className="postdetail-closed-badge">
+                      <Lock size={15} />
+                      <span>ปิดรับคำขอแล้ว</span>
+                    </div>
+                    <p className="postdetail-closed-desc">
+                      สิ่งของนี้ได้รับการส่งมอบคืนเจ้าของเรียบร้อยแล้ว ขอขอบคุณทุกท่านที่ช่วยเหลือครับ
+                    </p>
                   </div>
-                </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="btn-claim"
+                      onClick={() =>
+                        navigate(`/posts/${postId || 1}/claim`, { state: { post } })
+                      }
+                    >
+                      นี่อาจเป็นของฉัน
+                    </button>
+
+                    <div className="custody-helper-text">
+                      <p>หากเป็นสิ่งของของคุณส่งคำขอ</p>
+                      <p>พร้อมรายละเอียดเฉพาะเพื่อยืนยัน</p>
+                    </div>
+                  </>
+                )
               )}
             </Card>
           </div>

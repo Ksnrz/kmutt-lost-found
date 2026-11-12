@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
+import { Inbox, CheckCircle2, X } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import Badge from '../components/ui/Badge';
 import './Listpost.css';
@@ -7,6 +8,11 @@ import './Listpost.css';
 function Listpost() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [bannerMessage, setBannerMessage] = useState(
+    location.state?.successMessage || null
+  );
 
   const buildingParam = searchParams.get('building') || 'S4';
   const typeParam = searchParams.get('type');
@@ -80,6 +86,24 @@ function Listpost() {
           subtitle="ดูสิ่งของที่หายและพบในอาคารนี้"
         />
 
+        {/* แถบแจ้งเตือนเมื่อสร้างโพสต์สำเร็จ */}
+        {bannerMessage && (
+          <div className="listpost-success-banner" role="status">
+            <div className="listpost-banner-content">
+              <CheckCircle2 size={18} className="listpost-banner-icon" />
+              <span>{bannerMessage}</span>
+            </div>
+            <button
+              type="button"
+              className="listpost-banner-close"
+              onClick={() => setBannerMessage(null)}
+              aria-label="ปิดการแจ้งเตือน"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         {/* Filter Buttons */}
         <div className="filter-container">
           {['ทั้งหมด', 'ของหาย', 'พบของ'].map(filter => (
@@ -101,40 +125,72 @@ function Listpost() {
           พบ {filteredPosts.length} โพสต์
         </h2>
 
-        {/* Post Grid (Responsive Full Width) */}
-        <div className="post-grid">
-          {filteredPosts.map(post => (
-            <div className="post-card" key={post.id}>
-              <div className="post-image">
-                รูปสิ่งของ
-              </div>
+        {/* Post Grid หรือ Empty State หากไม่พบโพสต์ */}
+        {filteredPosts.length > 0 ? (
+          <div className="post-grid">
+            {filteredPosts.map(post => (
+              <div className="post-card" key={post.id}>
+                <div className="post-image">
+                  รูปสิ่งของ
+                </div>
 
-              <div className="post-content">
-                <Badge variant={post.type === 'พบของ' ? 'found' : 'lost'}>
-                  {post.type}
-                </Badge>
+                <div className="post-content">
+                  <Badge variant={post.type === 'พบของ' ? 'found' : 'lost'}>
+                    {post.type}
+                  </Badge>
 
-                <h3 className="post-title">
-                  {post.title}
-                </h3>
+                  <h3 className="post-title">
+                    {post.title}
+                  </h3>
 
-                <div className="post-footer">
-                  <p className="post-date">
-                    {buildingParam} {post.location} · {post.date}
-                  </p>
+                  <div className="post-footer">
+                    <p className="post-date">
+                      {buildingParam} {post.location} · {post.date}
+                    </p>
 
-                  <button
-                    type="button"
-                    className="detail-btn"
-                    onClick={() => navigate(`/posts/${post.id}`)}
-                  >
-                    ดูรายละเอียด →
-                  </button>
+                    <button
+                      type="button"
+                      className="detail-btn"
+                      onClick={() => navigate(`/posts/${post.id}`)}
+                    >
+                      ดูรายละเอียด →
+                    </button>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+        ) : (
+          <div className="listpost-empty-box">
+            <div className="listpost-empty-icon-wrap">
+              <Inbox size={38} className="listpost-empty-icon" />
             </div>
-          ))}
-        </div>
+            <h3 className="listpost-empty-title">
+              ไม่พบประกาศ{activeFilter !== 'ทั้งหมด' ? `ประเภท "${activeFilter}"` : ''} ในอาคารนี้
+            </h3>
+            <p className="listpost-empty-subtitle">
+              ยังไม่มีผู้แจ้งของหายหรือพบของที่ตรงกับเงื่อนไขในอาคาร {buildingParam} ลองสลับตัวกรอง หรือค้นหาอาคารอื่นบนแผนที่
+            </p>
+            <div className="listpost-empty-actions">
+              {activeFilter !== 'ทั้งหมด' && (
+                <button
+                  type="button"
+                  className="filter-btn"
+                  onClick={() => setActiveFilter('ทั้งหมด')}
+                >
+                  ดูทั้งหมดในอาคารนี้
+                </button>
+              )}
+              <button
+                type="button"
+                className="filter-btn active"
+                onClick={() => navigate('/map')}
+              >
+                กลับไปดูแผนที่
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

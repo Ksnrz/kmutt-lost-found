@@ -50,7 +50,6 @@ export default function Navbar({
     setIsDropdownOpen(false);
     const confirmLogout = window.confirm('คุณต้องการออกจากระบบใช่หรือไม่?');
     if (confirmLogout) {
-      alert('ออกจากระบบเรียบร้อยแล้ว');
       navigate('/login');
     }
   };

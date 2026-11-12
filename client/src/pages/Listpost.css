@@ -55,6 +55,120 @@
 }
 
 /* ============================================================
+   Success Notification Banner
+   ============================================================ */
+.listpost-success-banner {
+  background-color: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: var(--radius-md, 12px);
+  padding: 12px 18px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #15803d;
+  font-size: var(--text-meta, 14px);
+  font-weight: var(--fw-medium, 500);
+  box-shadow: var(--shadow-sm);
+  animation: listpostFadeIn 0.25s ease-out;
+}
+
+@keyframes listpostFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.listpost-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.listpost-banner-icon {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.listpost-banner-close {
+  background: transparent;
+  border: none;
+  color: #15803d;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm, 6px);
+  transition: background-color 0.15s ease;
+}
+
+.listpost-banner-close:hover {
+  background-color: rgba(22, 163, 74, 0.15);
+}
+
+/* ============================================================
+   Empty State Box
+   ============================================================ */
+.listpost-empty-box {
+  background-color: var(--color-white, #ffffff);
+  border: 1.5px dashed var(--color-gray-border, #d9d9d9);
+  border-radius: var(--radius-lg, 16px);
+  padding: clamp(36px, 6vw, 64px) 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+  box-sizing: border-box;
+}
+
+.listpost-empty-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: var(--color-orange-subtle, #fff5f2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.listpost-empty-icon {
+  color: var(--color-orange, #fa4616);
+}
+
+.listpost-empty-title {
+  font-size: var(--text-h2-section, 20px);
+  font-weight: var(--fw-bold, 700);
+  color: var(--color-gray-dark, #1e2022);
+  margin: 0 0 8px 0;
+}
+
+.listpost-empty-subtitle {
+  font-size: var(--text-meta, 14px);
+  color: var(--color-gray, #7b8189);
+  margin: 0 0 24px 0;
+  max-width: 440px;
+  line-height: 1.6;
+}
+
+.listpost-empty-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ============================================================
    Filter Buttons
    ============================================================ */
 .filter-container {

@@ -23,8 +23,9 @@ function CreatePost() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('เผยแพร่โพสต์สำเร็จเรียบร้อยแล้ว');
-    navigate('/posts');
+    navigate('/posts', {
+      state: { successMessage: 'เผยแพร่ประกาศใหม่สำเร็จเรียบร้อยแล้ว!' },
+    });
   };
 
   return (
