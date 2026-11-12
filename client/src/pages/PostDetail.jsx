@@ -1,9 +1,10 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { Handshake, CheckCircle2 } from 'lucide-react';
+import { Handshake, CheckCircle2, Check } from 'lucide-react';
 import BackButton from '../components/BackButton';
 import Card from '../components/Card';
 import StatusBadge from '../components/StatusBadge';
 import Badge from '../components/ui/Badge';
+import Button from '../components/ui/Button';
 import './PostDetail.css';
 
 function PostDetail() {
@@ -143,54 +144,66 @@ function PostDetail() {
                   แก้ไขประกาศ
                 </button>
               ) : claim ? (
-                <div className="postdetail-claim-status-block">
-                  {claim.status === 'ACCEPTED' ? (
-                    /* ฝ่ายผู้พบอนุมัติคำขอแล้ว -> แสดงขั้นตอนการส่งมอบ (Dual Confirmation) */
-                    <div className="receiver-handover-card">
-                      <div className="receiver-handover-header">
-                        <div className="receiver-handover-title">
-                          <Handshake size={20} className="handover-icon-shake" />
-                          <strong>ขั้นตอนการส่งมอบ (Dual Confirmation)</strong>
+                claim.status === 'ACCEPTED' || claim.status === 'COMPLETED' ? (
+                  /* ขั้นตอนการส่งมอบสิ่งของ (Dual Confirmation) สไตล์เดียวกับ ReviewRequestsPage */
+                  <div className="review-handover-box postdetail-handover-card">
+                    <div className="review-handover-header">
+                      <div className="review-handover-title-wrap">
+                        <Handshake size={20} className="review-handover-icon" />
+                        <strong>ขั้นตอนการส่งมอบสิ่งของ (Dual Confirmation)</strong>
+                      </div>
+                      <span className={`review-handover-badge ${claim.status === 'COMPLETED' || claim.receiverConfirmed ? 'is-completed' : ''}`}>
+                        {claim.status === 'COMPLETED' || claim.receiverConfirmed ? 'ส่งมอบสำเร็จ' : 'รอทั้ง 2 ฝ่ายยืนยัน'}
+                      </span>
+                    </div>
+
+                    <p className="review-handover-sub">
+                      ตามกฎระบบ: ทั้งผู้พบและผู้รับต้องยืนยันการส่งมอบ เมื่อยืนยันครบ โพสต์จะเปลี่ยนเป็น <strong>CLOSED</strong> และคำขออื่นที่ค้างอยู่จะถูกยกเลิกอัตโนมัติ
+                    </p>
+
+                    {claim.ownerNote && (
+                      <div className="receiver-handover-note">
+                        <strong>สถานที่ / ข้อมูลนัดรับจากผู้พบ:</strong>
+                        <p>{claim.ownerNote}</p>
+                      </div>
+                    )}
+
+                    <div className="review-handover-steps-grid">
+                      {/* ฝ่ายที่ 1: ผู้พบ */}
+                      <div className="handover-step-card is-done">
+                        <div className="handover-step-header">
+                          <span className="step-num">
+                            <Check size={14} />
+                          </span>
+                          <span className="step-label" title={`ฝ่ายผู้พบ (${post.finderName})`}>
+                            ฝ่ายผู้พบ ({post.finderName})
+                          </span>
                         </div>
-                        <Badge variant="success">อนุมัติแล้ว</Badge>
+                        <p className="step-status-text">อนุมัติคำขอแล้ว</p>
+                        <span className="handover-confirmed-tag">
+                          <CheckCircle2 size={13} />
+                          <span>อนุมัติแล้ว</span>
+                        </span>
                       </div>
 
-                      <p className="receiver-handover-intro">
-                        ผู้พบได้อนุมัติคำขอของคุณแล้ว! โปรดติดต่อและตรวจสอบสิ่งของก่อนกดยืนยันรับของ
-                      </p>
-
-                      {claim.ownerNote && (
-                        <div className="receiver-handover-note">
-                          <strong>สถานที่ / ข้อมูลนัดรับจากผู้พบ:</strong>
-                          <p>{claim.ownerNote}</p>
+                      {/* ฝ่ายที่ 2: ผู้รับ (คุณ) */}
+                      <div className={`handover-step-card ${claim.status === 'COMPLETED' || claim.receiverConfirmed ? 'is-done' : ''}`}>
+                        <div className="handover-step-header">
+                          <span className="step-num">
+                            {claim.status === 'COMPLETED' || claim.receiverConfirmed ? <Check size={14} /> : '2'}
+                          </span>
+                          <span className="step-label">ฝ่ายผู้รับ (คุณ)</span>
                         </div>
-                      )}
-
-                      <div className="receiver-steps-grid">
-                        <div className="receiver-step-box is-done">
-                          <div className="step-num">1</div>
-                          <div className="step-info">
-                            <span className="step-label">ฝ่ายผู้พบ ({post.finderName})</span>
-                            <span className="step-status">อนุมัติคำขอแล้ว ✓</span>
-                          </div>
-                        </div>
-
-                        <div className={`receiver-step-box ${claim.receiverConfirmed ? 'is-done' : 'is-current'}`}>
-                          <div className="step-num">2</div>
-                          <div className="step-info">
-                            <span className="step-label">ฝ่ายผู้รับ (คุณ)</span>
-                            <span className="step-status">
-                              {claim.receiverConfirmed ? 'ยืนยันรับของแล้ว ✓' : 'รอยืนยันการรับสิ่งของ'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {!claim.receiverConfirmed ? (
-                        <>
-                          <button
-                            type="button"
-                            className="btn-confirm-delivery"
+                        <p className="step-status-text">
+                          {claim.status === 'COMPLETED' || claim.receiverConfirmed
+                            ? 'ยืนยันได้รับของแล้ว'
+                            : 'รอยืนยันการรับสิ่งของ'}
+                        </p>
+                        {claim.status !== 'COMPLETED' && !claim.receiverConfirmed ? (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="btn-handover-action"
                             onClick={() => {
                               if (window.confirm('คุณได้ตรวจเช็กและรับสิ่งของจริงถูกต้องครบถ้วนแล้วใช่หรือไม่?')) {
                                 alert('ยืนยันได้รับของเรียบร้อยแล้ว! สถานะเปลี่ยนเป็น COMPLETED (ส่งมอบสำเร็จ)');
@@ -203,75 +216,69 @@ function PostDetail() {
                               }
                             }}
                           >
-                            <CheckCircle2 size={18} />
-                            <span>ยืนยันได้รับของแล้ว</span>
-                          </button>
-                          <p className="receiver-confirm-warning">
-                            * เมื่อกดยืนยันแล้ว การส่งมอบจะเสร็จสิ้นสมบูรณ์และโพสต์จะปิดโดยอัตโนมัติ
-                          </p>
-                        </>
-                      ) : (
-                        <div className="delivery-completed-box">
-                          <CheckCircle2 size={18} />
-                          <span>คุณได้ยืนยันการรับมอบสิ่งของเรียบร้อยแล้ว</span>
-                        </div>
+                            ยืนยันการรับมอบ
+                          </Button>
+                        ) : (
+                          <span className="handover-confirmed-tag">
+                            <CheckCircle2 size={13} />
+                            <span>ยืนยันแล้ว</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {claim.status !== 'COMPLETED' && !claim.receiverConfirmed && (
+                      <p className="receiver-confirm-warning">
+                        * เมื่อกดยืนยันแล้ว การส่งมอบจะเสร็จสิ้นสมบูรณ์และโพสต์จะปิดโดยอัตโนมัติ
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  /* สถานะอื่นๆ เช่น PENDING, REJECTED, CANCELLED */
+                  <div className="postdetail-claim-status-block">
+                    <div className="claim-status-header">
+                      <span className="claim-status-label">สถานะคำขอของคุณ:</span>
+                      {claim.status === 'PENDING' && (
+                        <Badge variant="pending">PENDING · รอตรวจ</Badge>
+                      )}
+                      {claim.status === 'REJECTED' && (
+                        <Badge variant="danger">REJECTED · ปฏิเสธ</Badge>
+                      )}
+                      {claim.status === 'CANCELLED' && (
+                        <Badge variant="neutral">CANCELLED · ยกเลิก</Badge>
                       )}
                     </div>
-                  ) : (
-                    /* สถานะอื่นๆ ที่ยังไม่อนุมัติ (PENDING, REJECTED, CANCELLED, COMPLETED) */
-                    <div>
-                      <div className="claim-status-header">
-                        <span className="claim-status-label">สถานะคำขอของคุณ:</span>
-                        {claim.status === 'PENDING' && (
-                          <Badge variant="pending">PENDING · รอตรวจ</Badge>
-                        )}
-                        {claim.status === 'REJECTED' && (
-                          <Badge variant="danger">REJECTED · ปฏิเสธ</Badge>
-                        )}
-                        {claim.status === 'CANCELLED' && (
-                          <Badge variant="neutral">CANCELLED · ยกเลิก</Badge>
-                        )}
-                        {claim.status === 'COMPLETED' && (
-                          <Badge variant="completed">COMPLETED · สำเร็จ</Badge>
-                        )}
-                      </div>
 
-                      <div className="claim-status-body">
-                        {claim.status === 'PENDING' && (
-                          <div className="claim-pending-box">
-                            <p className="claim-status-desc">
-                              คำขอของคุณอยู่ระหว่างรอผู้พบตรวจสอบความถูกต้องของหลักฐาน
-                            </p>
-                            <p className="claim-pending-hint">
-                              ⏳ <em>ปุ่มยืนยันรับของจะแสดงหลังจากผู้พบอนุมัติคำขอของคุณแล้วเท่านั้น</em>
-                            </p>
-                          </div>
-                        )}
-                        {claim.status === 'REJECTED' && (
-                          <div className="claim-rejected-box">
-                            <p className="claim-status-desc">ผู้พบได้ปฏิเสธคำขอนี้</p>
-                            {claim.ownerNote && (
-                              <div className="claim-owner-note">
-                                <strong>เหตุผล:</strong>
-                                <p>{claim.ownerNote}</p>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {claim.status === 'CANCELLED' && (
+                    <div className="claim-status-body">
+                      {claim.status === 'PENDING' && (
+                        <div className="claim-pending-box">
                           <p className="claim-status-desc">
-                            คำขอนี้หรือโพสต์ถูกยกเลิกแล้ว
+                            คำขอของคุณอยู่ระหว่างรอผู้พบตรวจสอบความถูกต้องของหลักฐาน
                           </p>
-                        )}
-                        {claim.status === 'COMPLETED' && (
-                          <p className="claim-status-desc claim-done">
-                            ✓ ทั้งสองฝ่ายยืนยันการส่งมอบเสร็จสิ้นแล้ว ขอบคุณครับ
+                          <p className="claim-pending-hint">
+                            ⏳ <em>ปุ่มยืนยันรับของจะแสดงหลังจากผู้พบอนุมัติคำขอของคุณแล้วเท่านั้น</em>
                           </p>
-                        )}
-                      </div>
+                        </div>
+                      )}
+                      {claim.status === 'REJECTED' && (
+                        <div className="claim-rejected-box">
+                          <p className="claim-status-desc">ผู้พบได้ปฏิเสธคำขอนี้</p>
+                          {claim.ownerNote && (
+                            <div className="claim-owner-note">
+                              <strong>เหตุผล:</strong>
+                              <p>{claim.ownerNote}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {claim.status === 'CANCELLED' && (
+                        <p className="claim-status-desc">
+                          คำขอนี้หรือโพสต์ถูกยกเลิกแล้ว
+                        </p>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )
               ) : (
                 <>
                   <button

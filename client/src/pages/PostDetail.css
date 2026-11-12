@@ -93,7 +93,7 @@
 .postdetail-sidebar {
   flex: 1.1;
   min-width: 320px;
-  max-width: 440px;
+  max-width: 480px;
 }
 
 /* ============================================================
@@ -377,39 +377,158 @@
   font-weight: 600;
 }
 
-/* Dual Confirmation Card for Receiver */
-.receiver-handover-card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* ============================================================
+   Dual Confirmation Handover Box (สไตล์เดียวกับ ReviewRequestsPage)
+   ============================================================ */
+.review-handover-box {
+  background-color: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md, 12px);
+  padding: 18px;
+  box-sizing: border-box;
 }
 
-.receiver-handover-header {
+.postdetail-handover-card {
+  margin-top: 4px;
+}
+
+.review-handover-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
+  gap: 8px;
 }
 
-.receiver-handover-title {
+.review-handover-title-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.review-handover-title-wrap strong {
   color: var(--color-gray-dark, #1e2022);
   font-size: var(--text-card-title, 16px);
 }
 
-.handover-icon-shake {
-  color: var(--color-primary, #fa4616);
+.review-handover-icon {
+  color: var(--color-orange, #fa4616);
   flex-shrink: 0;
 }
 
-.receiver-handover-intro {
+.review-handover-badge {
+  font-size: var(--text-helper-status, 12px);
+  font-weight: var(--fw-bold, 700);
+  color: var(--color-orange, #fa4616);
+  background-color: var(--color-orange-light, #ffebe3);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.review-handover-badge.is-completed {
+  color: #16a34a;
+  background-color: #dcfce7;
+}
+
+.review-handover-sub {
+  color: var(--color-gray, #7b8189);
+  font-size: var(--text-helper-status, 12px);
+  line-height: 1.45;
+  margin: 0 0 14px 0;
+}
+
+.review-handover-steps-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.handover-step-card {
+  background-color: var(--color-white, #ffffff);
+  border: 1px solid var(--color-gray-border, #d9d9d9);
+  border-radius: var(--radius-md, 12px);
+  padding: 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.handover-step-card.is-done {
+  border-color: #86efac;
+  background-color: #f0fdf4;
+}
+
+.handover-step-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.handover-step-card .step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--color-gray-light, #f1f5f9);
+  color: var(--color-gray-dark, #334155);
+  font-weight: var(--fw-bold, 700);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.handover-step-card.is-done .step-num {
+  background-color: #16a34a;
+  color: #ffffff;
+}
+
+.handover-step-header .step-label {
+  font-size: var(--text-meta, 13px);
+  font-weight: var(--fw-bold, 700);
+  color: var(--color-gray-dark, #1e2022);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.handover-step-card .step-status-text {
+  font-size: var(--text-helper-status, 12px);
+  color: var(--color-gray, #64748b);
   margin: 0;
-  font-size: var(--text-helper-status, 13px);
-  color: #475569;
-  line-height: 1.5;
+}
+
+.handover-step-card.is-done .step-status-text {
+  color: #16a34a;
+  font-weight: var(--fw-medium, 500);
+}
+
+.handover-confirmed-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-helper-status, 12px);
+  font-weight: var(--fw-bold, 700);
+  color: #16a34a;
+  background-color: #dcfce7;
+  padding: 4px 8px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.btn-handover-action {
+  width: 100%;
+  min-height: 36px;
+  font-size: 13.5px;
+  font-weight: 700;
+  border-radius: var(--radius-sm, 8px);
 }
 
 .receiver-handover-note {
@@ -420,6 +539,7 @@
   font-size: 13px;
   line-height: 1.5;
   color: var(--color-gray-dark, #1e2022);
+  margin-bottom: 12px;
 }
 
 .receiver-handover-note strong {
@@ -432,90 +552,8 @@
   margin: 0;
 }
 
-.receiver-steps-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin: 4px 0;
-}
-
-.receiver-step-box {
-  background-color: var(--color-white, #ffffff);
-  border: 1.5px solid var(--color-gray-border, #e2e8f0);
-  border-radius: var(--radius-md, 10px);
-  padding: 10px 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.receiver-step-box.is-done {
-  border-color: #86efac;
-  background-color: #f0fdf4;
-}
-
-.receiver-step-box.is-current {
-  border-color: #fed7aa;
-  background-color: #fffaf5;
-}
-
-.receiver-step-box .step-num {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background-color: #e2e8f0;
-  color: #475569;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 12px;
-  flex-shrink: 0;
-}
-
-.receiver-step-box.is-done .step-num {
-  background-color: #16a34a;
-  color: #ffffff;
-}
-
-.receiver-step-box.is-current .step-num {
-  background-color: var(--color-primary, #fa4616);
-  color: #ffffff;
-}
-
-.receiver-step-box .step-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.receiver-step-box .step-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-gray-dark, #1e2022);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.receiver-step-box .step-status {
-  font-size: 11px;
-  color: #64748b;
-}
-
-.receiver-step-box.is-done .step-status {
-  color: #16a34a;
-  font-weight: 600;
-}
-
-.receiver-step-box.is-current .step-status {
-  color: #c2410c;
-  font-weight: 600;
-}
-
 .receiver-confirm-warning {
-  margin: 0;
+  margin: 4px 0 0 0;
   font-size: 11.5px;
   color: #94a3b8;
   line-height: 1.4;
