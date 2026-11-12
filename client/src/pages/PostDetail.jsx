@@ -5,6 +5,7 @@ import Card from '../components/Card';
 import StatusBadge from '../components/StatusBadge';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
+import { claimService } from '../services/claimService';
 import './PostDetail.css';
 
 function PostDetail() {
@@ -204,15 +205,10 @@ function PostDetail() {
                             variant="primary"
                             size="sm"
                             className="btn-handover-action"
-                            onClick={() => {
+                            onClick={async () => {
                               if (window.confirm('คุณได้ตรวจเช็กและรับสิ่งของจริงถูกต้องครบถ้วนแล้วใช่หรือไม่?')) {
                                 const claimId = claim.id || claim.verify_id || '102';
-                                try {
-                                  localStorage.setItem(`receiver_confirmed_${claimId}`, 'true');
-                                  localStorage.setItem('receiver_confirmed_102', 'true');
-                                } catch {
-                                  // ignore storage errors
-                                }
+                                await claimService.confirmHandover(claimId, 'receiver');
                                 navigate('/account', {
                                   state: {
                                     successMessage: 'ยืนยันได้รับของเรียบร้อยแล้ว การส่งมอบสำเร็จสมบูรณ์!',

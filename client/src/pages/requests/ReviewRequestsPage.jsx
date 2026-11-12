@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Handshake,
@@ -14,6 +14,7 @@ import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
 import Thumbnail from '../../components/ui/Thumbnail';
 import Badge from '../../components/ui/Badge';
+import { claimService } from '../../services/claimService';
 import './ReviewRequestsPage.css';
 
 /**
@@ -69,20 +70,31 @@ export default function ReviewRequestsPage({
   // State 1: สถานะของโพสต์ประกาศหลัก ('OPEN' | 'CLOSED' | 'CANCELLED')
   const [postStatus, setPostStatus] = useState('OPEN');
 
-  // State 2: รายการคำขอทั้งหมด (อ่านสถานะยืนยันจริงจากฝั่งผู้รับ)
-  const [requests, setRequests] = useState(() => {
-    return initialRequests.map((r) => {
-      try {
-        const isConfirmed = localStorage.getItem(`receiver_confirmed_${r.id}`) === 'true';
-        if (isConfirmed) {
-          return { ...r, receiverConfirmed: true };
-        }
-      } catch {
-        // ignore storage errors
+  // State 2: รายการคำขอทั้งหมด
+  const [requests, setRequests] = useState(initialRequests);
+
+  // เชื่อมต่อ State กลางและรับข้อมูลแบบ Real-time จาก claimService
+  useEffect(() => {
+    let isMounted = true;
+    claimService.getClaimsByPost('p-101').then((data) => {
+      if (isMounted && data && data.length > 0) {
+        setRequests(data);
       }
-      return r;
     });
-  });
+
+    // ซิงก์ข้อมูลทันทีเมื่อมีการส่งคำขอใหม่จากหน้า 6 หรือมีการอัปเดตจากหน้าอื่น
+    const unsubscribe = claimService.subscribe((updatedClaims) => {
+      const forPost = updatedClaims.filter(c => String(c.post_id) === 'p-101' || String(c.postId) === 'p-101');
+      if (forPost.length > 0) {
+        setRequests(forPost);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   // State 3: รหัสคำขอที่กำลังเลือกดูรายละเอียดอยู่
   const [selectedId, setSelectedId] = useState('102');
@@ -101,141 +113,52 @@ export default function ReviewRequestsPage({
   const pendingCount = requests.filter((r) => r.status === 'PENDING').length;
 
   // 1. ตอบรับคำขอ (ACCEPTED / อนุมัติคำขอ) — ล็อกให้ตอบรับได้ทีละ 1 คนต่อโพสต์
-  const handleAccept = () => {
+  // กฎ Business Logic: คำขออื่นที่รออยู่จะถูก CANCELLED อัตโนมัติทันที
+  const handleAccept = async () => {
     if (!activeRequest || isOtherAccepted) return;
 
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === activeRequest.id
-          ? {
-            ...r,
-            status: 'ACCEPTED',
-            verify_status: 'ACCEPTED',
-            note: noteText,
-            finderConfirmed: false,
-            receiverConfirmed: false,
-          }
-          : r
-      )
-    );
-
+    await claimService.updateClaimStatus(activeRequest.id, 'ACCEPTED', noteText);
     setNoteText('');
   };
 
   // 2. ปฏิเสธคำขอ (REJECTED)
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!activeRequest) return;
 
     const confirmReject = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอ #${activeRequest.id}?`);
     if (!confirmReject) return;
 
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === activeRequest.id
-          ? { ...r, status: 'REJECTED', verify_status: 'REJECTED', note: noteText }
-          : r
-      )
-    );
-
+    await claimService.updateClaimStatus(activeRequest.id, 'REJECTED', noteText);
     setNoteText('');
   };
 
-  // 3. ฝ่ายผู้พบ (คุณ) กดยืนยันการส่งมอบ
-  const handleConfirmFinder = (id) => {
-    setRequests((prev) => {
-      const target = prev.find((r) => r.id === id);
-      if (!target) return prev;
-      const willComplete = target.receiverConfirmed;
-
-      if (willComplete) {
-        setPostStatus('CLOSED');
-      }
-
-      return prev.map((r) => {
-        if (r.id === id) {
-          return {
-            ...r,
-            finderConfirmed: true,
-            status: willComplete ? 'COMPLETED' : r.status,
-            verify_status: willComplete ? 'COMPLETED' : r.verify_status,
-          };
-        }
-        if (willComplete && r.status === 'PENDING') {
-          return {
-            ...r,
-            status: 'CANCELLED',
-            verify_status: 'CANCELLED',
-            note: 'ระบบยกเลิกอัตโนมัติเนื่องจากส่งมอบสิ่งของสำเร็จแล้ว',
-          };
-        }
-        return r;
-      });
-    });
+  // 3. ฝ่ายผู้พบ (คุณ) กดยืนยันการส่งมอบ (Dual Confirmation)
+  const handleConfirmFinder = async (id) => {
+    const result = await claimService.confirmHandover(id, 'finder');
+    if (result?.postClosed) {
+      setPostStatus('CLOSED');
+    }
   };
 
   // 4. ส่งมอบไม่สำเร็จ ➔ ยกเลิกการตอบรับ (CANCELLED) เพื่อให้กลับไปเลือกคำขออื่นที่รออยู่ได้
-  const handleCancelAccepted = (id) => {
+  const handleCancelAccepted = async (id) => {
     const confirmCancel = window.confirm('ต้องการยกเลิกการตอบรับคำขอนี้ใช่หรือไม่? (ระบบจะเปิดให้คุณสามารถเลือกคำขออื่นที่ยังรออยู่ได้)');
     if (!confirmCancel) return;
 
-    try {
-      localStorage.removeItem(`receiver_confirmed_${id}`);
-    } catch {
-      // ignore
-    }
-
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === id
-          ? {
-            ...r,
-            status: 'CANCELLED',
-            verify_status: 'CANCELLED',
-            note: 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ',
-            finderConfirmed: false,
-            receiverConfirmed: false,
-          }
-          : r
-      )
-    );
+    await claimService.updateClaimStatus(id, 'CANCELLED', 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ');
   };
 
   // 5. รีเซ็ตสถานะกลับมาเป็น PENDING 
-  const handleResetStatus = (id) => {
-    try {
-      localStorage.removeItem(`receiver_confirmed_${id}`);
-    } catch {
-      // ignore
-    }
-
+  const handleResetStatus = async (id) => {
     setPostStatus('OPEN');
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === id
-          ? {
-            ...r,
-            status: 'PENDING',
-            verify_status: 'PENDING',
-            note: '',
-            finderConfirmed: false,
-            receiverConfirmed: false,
-          }
-          : r
-      )
-    );
+    await claimService.updateClaimStatus(id, 'PENDING', '');
   };
 
-  // 6. รีเซ็ตทั้งหมดทั้งโพสต์
+  // 6. รีเซ็ตทั้งหมดทั้งโพสต์กลับสู่ค่าเริ่มต้น
   const handleResetAll = () => {
-    try {
-      localStorage.removeItem('receiver_confirmed_102');
-      localStorage.removeItem('receiver_confirmed_103');
-    } catch {
-      // ignore
-    }
-
     setPostStatus('OPEN');
-    setRequests(initialRequests);
+    const resetData = claimService.resetAll();
+    setRequests(resetData);
     setNoteText('');
   };
 

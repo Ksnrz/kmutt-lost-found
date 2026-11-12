@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Megaphone,
@@ -12,6 +12,7 @@ import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
 import Thumbnail from '../../components/ui/Thumbnail';
 import Badge from '../../components/ui/Badge';
+import { claimService } from '../../services/claimService';
 import './AccountPage.css';
 
 /**
@@ -118,7 +119,7 @@ export default function AccountPage({
   });
 
   // State 4: ข้อมูลคำขอที่ฉันส่ง (Entity VERIFY_ITEMS ที่ current user เป็นผู้ submit)
-  const [sentClaims] = useState(() => {
+  const [sentClaims, setSentClaims] = useState(() => {
     let claims = [
       {
         id: 'c-01',
@@ -203,6 +204,53 @@ export default function AccountPage({
 
     return claims;
   });
+
+  // ซิงก์ข้อมูลสถานะคำขอที่ฉันส่งแบบ Real-time จาก claimService
+  useEffect(() => {
+    let isMounted = true;
+    claimService.getMyClaims().then((claims) => {
+      if (isMounted && claims && claims.length > 0) {
+        setSentClaims((prev) => {
+          return prev.map((old) => {
+            const match = claims.find(c => String(c.id) === String(old.id) || String(c.id) === '102' || String(c.id) === 'c-01');
+            if (match) {
+              return {
+                ...old,
+                status: match.status || match.verify_status || old.status,
+                verify_status: match.status || match.verify_status || old.verify_status,
+                ownerNote: match.ownerNote || match.note || old.ownerNote,
+                receiverConfirmed: match.receiverConfirmed,
+              };
+            }
+            return old;
+          });
+        });
+      }
+    });
+
+    const unsubscribe = claimService.subscribe((updatedClaims) => {
+      setSentClaims((prev) => {
+        return prev.map((old) => {
+          const match = updatedClaims.find(c => String(c.id) === String(old.id) || String(c.id) === '102' || String(c.id) === 'c-01');
+          if (match) {
+            return {
+              ...old,
+              status: match.status || match.verify_status || old.status,
+              verify_status: match.status || match.verify_status || old.verify_status,
+              ownerNote: match.ownerNote || match.note || old.ownerNote,
+              receiverConfirmed: match.receiverConfirmed,
+            };
+          }
+          return old;
+        });
+      });
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   // State 5: รายการประกาศของฉันที่มีคนส่งคำขอเข้ามา (POSTS ที่ receives VERIFY_ITEMS)
   const [receivedClaims] = useState([

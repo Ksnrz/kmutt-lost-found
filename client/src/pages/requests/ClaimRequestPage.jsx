@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
 import Thumbnail from '../../components/ui/Thumbnail';
 import AlertCallout from '../../components/ui/AlertCallout';
+import { claimService } from '../../services/claimService';
 import './ClaimRequestPage.css';
 
 /**
@@ -117,10 +118,8 @@ export default function ClaimRequestPage({
         evidenceCount: evidenceImages.length,
       };
 
-      console.log('ส่งคำขอยืนยันสิทธิ์:', payload);
-
-      // จำลอง network delay 
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // บันทึกคำขอผ่าน claimService (เชื่อมต่อ Backend API และ LocalStorage)
+      await claimService.submitClaim(payload);
 
       if (onSubmitSuccess) {
         onSubmitSuccess(payload);

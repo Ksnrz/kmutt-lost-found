@@ -1,5 +1,6 @@
 import express from 'express';
 import { pool } from './db.js';
+import claimRoutes from './routes/claimRoutes.js';
 
 const app = express();
 app.use(express.json());
@@ -8,6 +9,9 @@ app.get('/api/health', async (req, res) => {
   await pool.query('SELECT 1');
   res.json({ ok: true });
 });
+
+// ระบบ VERIFY (ตรวจสอบสิทธิ์และส่งมอบสิ่งของ)
+app.use('/api/claims', claimRoutes);
 
 // Mount each resource here, one file per person, e.g.
 // import postsRouter from './routes/posts.js';
