@@ -506,7 +506,22 @@ export default function AccountPage({
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => alert(`ขอดูรายละเอียดคำขอ #${claim.verify_id}`)}
+                          onClick={() => {
+                            const targetPostId = claim.post_id || claim.postId || 1;
+                            navigate(`/posts/${targetPostId}`, {
+                              state: {
+                                from: 'account',
+                                post: {
+                                  id: targetPostId,
+                                  title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
+                                  finderName: claim.postOwner,
+                                  date: claim.date || claim.created_at,
+                                  eventDate: claim.date || claim.created_at,
+                                  description: claim.proof_description || `สิ่งของที่ถูกประกาศโดย ${claim.postOwner}`,
+                                },
+                              },
+                            });
+                          }}
                         >
                           ดูรายละเอียด
                         </Button>

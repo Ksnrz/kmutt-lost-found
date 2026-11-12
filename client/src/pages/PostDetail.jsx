@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import BackButton from '../components/BackButton';
 import Card from '../components/Card';
 import StatusBadge from '../components/StatusBadge';
@@ -7,23 +7,25 @@ import './PostDetail.css';
 function PostDetail() {
   const navigate = useNavigate();
   const { postId } = useParams();
+  const locationState = useLocation();
+  const navPost = locationState?.state?.post;
 
-  // ข้อมูลโพสต์เริ่มต้น (ตรงตามรูปภาพต้นแบบ)
+  // ข้อมูลโพสต์เริ่มต้น (ตรงตามรูปภาพต้นแบบ หรือดึงจาก state หากมีส่งต่อมา)
   const post = {
-    id: postId || '1',
-    title: 'พบกระเป๋าสตางค์สีดำ',
-    type: 'พบของ',
-    typeEn: 'FOUND',
-    building: 'S4',
-    status: 'open',
-    date: '23 ก.ย. 2026',
-    description: 'กระเป๋าสตางค์สีดำขนาดเล็ก พบวางอยู่บริเวณชั้น 1 ของอาคาร S4',
-    location: 'อาคาร S4 ชั้น 1',
-    eventDate: '23 ก.ย. 2026',
-    finderName: 'นักศึกษา มจธ.',
-    custodyType: 'ผู้พบเก็บไว้เอง',
-    contact: '08X-XXX-XXXX',
-    imageUrl: null,
+    id: postId || navPost?.id || '1',
+    title: navPost?.title || (navPost?.itemTitle ? navPost.itemTitle.replace(/^ขอรับ/, 'พบ') : 'พบกระเป๋าสตางค์สีดำ'),
+    type: navPost?.type || (navPost?.post_type?.includes('LOST') ? 'ของหาย' : 'พบของ'),
+    typeEn: navPost?.typeEn || (navPost?.post_type?.includes('LOST') ? 'LOST' : 'FOUND'),
+    building: navPost?.building || 'S4',
+    status: navPost?.status?.toLowerCase() || 'open',
+    date: navPost?.date || '23 ก.ย. 2026',
+    description: navPost?.description || 'กระเป๋าสตางค์สีดำขนาดเล็ก พบวางอยู่บริเวณชั้น 1 ของอาคาร S4',
+    location: navPost?.location || navPost?.building_name || 'อาคาร S4 ชั้น 1',
+    eventDate: navPost?.eventDate || navPost?.date || '23 ก.ย. 2026',
+    finderName: navPost?.finderName || navPost?.postOwner || 'นักศึกษา มจธ.',
+    custodyType: navPost?.custodyType || navPost?.custody_type || 'ผู้พบเก็บไว้เอง',
+    contact: navPost?.contact || '08X-XXX-XXXX',
+    imageUrl: navPost?.imageUrl || null,
   };
 
   return (
@@ -31,7 +33,16 @@ function PostDetail() {
       <div className="postdetail-container">
         {/* 1. ปุ่มย้อนกลับ */}
         <div className="postdetail-back-row">
-          <BackButton text="กลับไปรายการประกาศ" onClick={() => navigate('/posts')} />
+          <BackButton
+            text={locationState?.state?.from === 'account' ? 'กลับไปหน้าประกาศของฉัน' : 'กลับไปรายการประกาศ'}
+            onClick={() => {
+              if (locationState?.state?.from === 'account') {
+                navigate('/account');
+              } else {
+                navigate('/posts');
+              }
+            }}
+          />
         </div>
 
         {/* 2. Header: Breadcrumb/Tag + Title + StatusBadge (ฝั่งซ้าย) และ วันที่โพสต์ (ฝั่งขวา) */}
