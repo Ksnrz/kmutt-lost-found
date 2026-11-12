@@ -61,7 +61,7 @@ export default function Navbar({
         {/* ============================================================
             1. ซ้าย: โลโก้ KMUTT Lost & Found
             ============================================================ */}
-        <NavLink to="/posts" className="navbar-brand" title="หน้ารวมโพสต์">
+        <NavLink to="/map" className="navbar-brand" title="แผนที่มหาวิทยาลัย">
           <div className="navbar-brand-badge" aria-hidden="true">
             {/* ไอคอนแว่นขยายที่มีเครื่องหมาย ? ด้านในตรงตามดีไซน์ */}
             <svg
