@@ -1,6 +1,11 @@
 import './Input.css';
 
-function Input({ type = 'text', placeholder, onChange }) {
+function Input({
+  type = 'text',
+  placeholder,
+  onChange,
+  value,
+}) {
   return (
     <div className="custom-input-wrapper">
       <input
@@ -8,6 +13,7 @@ function Input({ type = 'text', placeholder, onChange }) {
         className="custom-input"
         placeholder={placeholder}
         onChange={onChange}
+        value={value ?? ''}
       />
     </div>
   );
