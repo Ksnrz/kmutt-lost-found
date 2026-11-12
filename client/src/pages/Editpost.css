@@ -103,47 +103,6 @@
   box-shadow: var(--shadow-button);
 }
 
-/* Post Status Segmented Toggle with 3 options */
-.post-status-toggle {
-  margin-bottom: 12px;
-}
-
-.post-status-toggle .toggle-option {
-  font-size: 13.5px;
-  padding: 8px 6px;
-  min-height: 40px;
-}
-
-.post-status-toggle .toggle-option.is-active.is-open {
-  background-color: var(--color-primary, #fa4616);
-  color: var(--color-white, #ffffff);
-}
-
-.post-status-toggle .toggle-option.is-active.is-closed {
-  background-color: #1e293b;
-  color: #ffffff;
-}
-
-.post-status-toggle .toggle-option.is-active.is-cancelled {
-  background-color: #64748b;
-  color: #ffffff;
-}
-
-.status-helper-box {
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: var(--radius-md, 10px);
-  padding: 10px 14px;
-  margin-bottom: 20px;
-}
-
-.status-helper-text {
-  margin: 0;
-  font-size: var(--text-helper-status, 12.5px);
-  line-height: 1.5;
-  color: #334155;
-}
-
 /* ============================================================
    Form Row (Location + Date side by side)
    ============================================================ */
