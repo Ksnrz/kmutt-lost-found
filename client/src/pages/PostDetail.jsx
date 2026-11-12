@@ -131,25 +131,17 @@ function PostDetail() {
 
               {/* ด้านล่างของการ์ด: ตรวจสอบที่มาของโพสต์ */}
               {isOwner ? (
-                <div className="postdetail-owner-block">
-                  <div className="owner-badge-wrap">
-                    <Badge variant="found">📌 ประกาศของคุณ</Badge>
-                  </div>
-                  <p className="owner-hint-text">
-                    คุณเป็นเจ้าของประกาศนี้ จึงไม่สามารถส่งคำขอขอรับของตนเองได้
-                  </p>
-                  <button
-                    type="button"
-                    className="btn-owner-edit"
-                    onClick={() =>
-                      navigate(`/posts/${postId || 1}/edit`, {
-                        state: { post, from: 'account' },
-                      })
-                    }
-                  >
-                    แก้ไขประกาศนี้
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="btn-claim"
+                  onClick={() =>
+                    navigate(`/posts/${postId || 1}/edit`, {
+                      state: { post, from: 'account' },
+                    })
+                  }
+                >
+                  แก้ไขประกาศ
+                </button>
               ) : claim ? (
                 <div className="postdetail-claim-status-block">
                   {claim.status === 'ACCEPTED' ? (
