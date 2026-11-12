@@ -206,11 +206,18 @@ function PostDetail() {
                             className="btn-handover-action"
                             onClick={() => {
                               if (window.confirm('คุณได้ตรวจเช็กและรับสิ่งของจริงถูกต้องครบถ้วนแล้วใช่หรือไม่?')) {
+                                const claimId = claim.id || claim.verify_id || '102';
+                                try {
+                                  localStorage.setItem(`receiver_confirmed_${claimId}`, 'true');
+                                  localStorage.setItem('receiver_confirmed_102', 'true');
+                                } catch {
+                                  // ignore storage errors
+                                }
                                 alert('ยืนยันได้รับของเรียบร้อยแล้ว! สถานะเปลี่ยนเป็น COMPLETED (ส่งมอบสำเร็จ)');
                                 navigate('/account', {
                                   state: {
                                     successMessage: 'ยืนยันได้รับของเรียบร้อยแล้ว การส่งมอบสำเร็จ!',
-                                    confirmedClaimId: claim.id || claim.verify_id,
+                                    confirmedClaimId: claimId,
                                   },
                                 });
                               }

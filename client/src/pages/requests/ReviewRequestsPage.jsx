@@ -69,8 +69,20 @@ export default function ReviewRequestsPage({
   // State 1: สถานะของโพสต์ประกาศหลัก ('OPEN' | 'CLOSED' | 'CANCELLED')
   const [postStatus, setPostStatus] = useState('OPEN');
 
-  // State 2: รายการคำขอทั้งหมด
-  const [requests, setRequests] = useState(initialRequests);
+  // State 2: รายการคำขอทั้งหมด (อ่านสถานะยืนยันจริงจากฝั่งผู้รับ)
+  const [requests, setRequests] = useState(() => {
+    return initialRequests.map((r) => {
+      try {
+        const isConfirmed = localStorage.getItem(`receiver_confirmed_${r.id}`) === 'true';
+        if (isConfirmed) {
+          return { ...r, receiverConfirmed: true };
+        }
+      } catch {
+        // ignore storage errors
+      }
+      return r;
+    });
+  });
 
   // State 3: รหัสคำขอที่กำลังเลือกดูรายละเอียดอยู่
   const [selectedId, setSelectedId] = useState('102');
@@ -161,43 +173,16 @@ export default function ReviewRequestsPage({
     });
   };
 
-  // 4. จำลองฝ่ายผู้รับ กดยืนยันว่าได้รับของแล้ว (Dual Confirmation)
-  const handleConfirmReceiver = (id) => {
-    setRequests((prev) => {
-      const target = prev.find((r) => r.id === id);
-      if (!target) return prev;
-      const willComplete = target.finderConfirmed;
-
-      if (willComplete) {
-        setPostStatus('CLOSED');
-      }
-
-      return prev.map((r) => {
-        if (r.id === id) {
-          return {
-            ...r,
-            receiverConfirmed: true,
-            status: willComplete ? 'COMPLETED' : r.status,
-            verify_status: willComplete ? 'COMPLETED' : r.verify_status,
-          };
-        }
-        if (willComplete && r.status === 'PENDING') {
-          return {
-            ...r,
-            status: 'CANCELLED',
-            verify_status: 'CANCELLED',
-            note: 'ระบบยกเลิกอัตโนมัติเนื่องจากส่งมอบสิ่งของสำเร็จแล้ว',
-          };
-        }
-        return r;
-      });
-    });
-  };
-
-  // 5. ส่งมอบไม่สำเร็จ ➔ ยกเลิกการตอบรับ (CANCELLED) เพื่อให้กลับไปเลือกคำขออื่นที่รออยู่ได้
+  // 4. ส่งมอบไม่สำเร็จ ➔ ยกเลิกการตอบรับ (CANCELLED) เพื่อให้กลับไปเลือกคำขออื่นที่รออยู่ได้
   const handleCancelAccepted = (id) => {
     const confirmCancel = window.confirm('ต้องการยกเลิกการตอบรับคำขอนี้ใช่หรือไม่? (ระบบจะเปิดให้คุณสามารถเลือกคำขออื่นที่ยังรออยู่ได้)');
     if (!confirmCancel) return;
+
+    try {
+      localStorage.removeItem(`receiver_confirmed_${id}`);
+    } catch {
+      // ignore
+    }
 
     setRequests((prev) =>
       prev.map((r) =>
@@ -215,8 +200,14 @@ export default function ReviewRequestsPage({
     );
   };
 
-  // 6. รีเซ็ตสถานะกลับมาเป็น PENDING 
+  // 5. รีเซ็ตสถานะกลับมาเป็น PENDING 
   const handleResetStatus = (id) => {
+    try {
+      localStorage.removeItem(`receiver_confirmed_${id}`);
+    } catch {
+      // ignore
+    }
+
     setPostStatus('OPEN');
     setRequests((prev) =>
       prev.map((r) =>
@@ -234,8 +225,15 @@ export default function ReviewRequestsPage({
     );
   };
 
-  // 7. รีเซ็ตทั้งหมดทั้งโพสต์
+  // 6. รีเซ็ตทั้งหมดทั้งโพสต์
   const handleResetAll = () => {
+    try {
+      localStorage.removeItem('receiver_confirmed_102');
+      localStorage.removeItem('receiver_confirmed_103');
+    } catch {
+      // ignore
+    }
+
     setPostStatus('OPEN');
     setRequests(initialRequests);
     setNoteText('');
@@ -447,18 +445,14 @@ export default function ReviewRequestsPage({
                     <p className="step-status-text">
                       {activeRequest.receiverConfirmed ? 'ยืนยันได้รับของแล้ว' : 'รอผู้รับยืนยัน'}
                     </p>
-                    {!activeRequest.receiverConfirmed ? (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => handleConfirmReceiver(activeRequest.id)}
-                      >
-                        จำลอง: ผู้รับยืนยัน
-                      </Button>
-                    ) : (
+                    {activeRequest.receiverConfirmed ? (
                       <span className="handover-confirmed-tag">
                         <CheckCircle2 size={13} />
                         <span>ยืนยันแล้ว</span>
+                      </span>
+                    ) : (
+                      <span className="handover-waiting-tag">
+                        <span>รอผู้รับยืนยัน</span>
                       </span>
                     )}
                   </div>
