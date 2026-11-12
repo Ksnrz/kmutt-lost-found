@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import BackButton from '../components/BackButton';
+import PageHeader from '../components/ui/PageHeader';
 import './Listpost.css';
 
 function Listpost() {
@@ -65,82 +65,83 @@ function Listpost() {
       : posts.filter(post => post.type === activeFilter);
 
   return (
-    <div className="listpost-container">
-      <BackButton text="กลับแผนที่" onClick={() => navigate('/map')} />
+    <div className="listpost-page">
+      <div className="listpost-container">
+        {/* Header พร้อม Tag ส้มภาษาอังกฤษตามดีไซน์ และปุ่มสร้างโพสต์ */}
+        <PageHeader
+          backText="กลับแผนที่"
+          onBack={() => navigate('/map')}
+          tag="CAMPUS POSTS"
+          title={`รายการโพสต์อาคาร ${buildingParam}`}
+          subtitle="ดูสิ่งของที่หายและพบในอาคารนี้"
+          actions={
+            <button
+              className="create-btn"
+              type="button"
+              onClick={() => navigate('/posts/new')}
+            >
+              + สร้างโพสต์
+            </button>
+          }
+        />
 
-      {/* Header */}
-      <div className="header-flex-container">
-        <div>
-          <h1 className="header-title">
-            รายการโพสต์อาคาร {buildingParam}
-          </h1>
-
-          <p className="subtitle">
-            ดูสิ่งของที่หายและพบในอาคารนี้
-          </p>
+        {/* Filter Buttons */}
+        <div className="filter-container">
+          {['ทั้งหมด', 'ของหาย', 'เจอของ'].map(filter => (
+            <button
+              key={filter}
+              type="button"
+              className={`filter-btn ${
+                activeFilter === filter ? 'active' : ''
+              }`}
+              onClick={() => setActiveFilter(filter)}
+            >
+              {filter}
+            </button>
+          ))}
         </div>
 
-        <button className="create-btn" type="button" onClick={() => navigate('/posts/new')}>
-          + สร้างโพสต์
-        </button>
-      </div>
+        {/* Post count */}
+        <h2 className="post-count">
+          พบ {filteredPosts.length} โพสต์
+        </h2>
 
-      {/* Filter */}
-      <div className="filter-container">
-        {['ทั้งหมด', 'ของหาย', 'เจอของ'].map(filter => (
-          <button
-            key={filter}
-            type="button"
-            className={`filter-btn ${
-              activeFilter === filter ? 'active' : ''
-            }`}
-            onClick={() => setActiveFilter(filter)}
-          >
-            {filter}
-          </button>
-        ))}
-      </div>
+        {/* Post Grid (Responsive Full Width) */}
+        <div className="post-grid">
+          {filteredPosts.map(post => (
+            <div className="post-card" key={post.id}>
+              <div className="post-image">
+                รูปสิ่งของ
+              </div>
 
-      {/* Post count */}
-      <h2 className="post-count">
-        พบ {filteredPosts.length} โพสต์
-      </h2>
+              <div className="post-content">
+                <span className={`status-badge ${
+                  post.type === 'เจอของ' ? 'found' : 'lost'
+                }`}>
+                  {post.type}
+                </span>
 
-      {/* Post Grid */}
-      <div className="post-grid">
-        {filteredPosts.map(post => (
-          <div className="post-card" key={post.id}>
-            <div className="post-image">
-              รูปสิ่งของ
-            </div>
+                <h3 className="post-title">
+                  {post.title}
+                </h3>
 
-            <div className="post-content">
-              <span className={`status-badge ${
-                post.type === 'เจอของ' ? 'found' : 'lost'
-              }`}>
-                {post.type}
-              </span>
+                <div className="post-footer">
+                  <p className="post-date">
+                    {buildingParam} {post.location} · {post.date}
+                  </p>
 
-              <h3 className="post-title">
-                {post.title}
-              </h3>
-
-              <div className="post-footer">
-                <p className="post-date">
-                  {buildingParam} {post.location} · {post.date}
-                </p>
-
-                <button
-                  type="button"
-                  className="detail-btn"
-                  onClick={() => navigate(`/posts/${post.id}`)}
-                >
-                  ดูรายละเอียด →
-                </button>
+                  <button
+                    type="button"
+                    className="detail-btn"
+                    onClick={() => navigate(`/posts/${post.id}`)}
+                  >
+                    ดูรายละเอียด →
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
