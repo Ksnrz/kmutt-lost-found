@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import PageHeader from '../components/ui/PageHeader';
+import Badge from '../components/ui/Badge';
 import './Listpost.css';
 
 function Listpost() {
@@ -10,14 +11,17 @@ function Listpost() {
   const buildingParam = searchParams.get('building') || 'S4';
   const typeParam = searchParams.get('type');
 
+  // รองรับทั้ง 'พบของ' และ 'เจอของ' เพื่อความเข้ากันได้
+  const normalizedType = typeParam === 'เจอของ' ? 'พบของ' : typeParam;
+
   const [activeFilter, setActiveFilter] = useState(
-    typeParam && ['ของหาย', 'เจอของ'].includes(typeParam) ? typeParam : 'ทั้งหมด'
+    normalizedType && ['ของหาย', 'พบของ'].includes(normalizedType) ? normalizedType : 'ทั้งหมด'
   );
 
   const posts = [
     {
       id: 1,
-      type: 'เจอของ',
+      type: 'พบของ',
       title: 'พบกระเป๋าสตางค์สีดำ',
       location: 'ชั้น 1',
       date: '23 ก.ย. 2026'
@@ -31,7 +35,7 @@ function Listpost() {
     },
     {
       id: 3,
-      type: 'เจอของ',
+      type: 'พบของ',
       title: 'พบหูฟังไร้สาย',
       location: 'โถงกลาง',
       date: '21 ก.ย. 2026'
@@ -45,7 +49,7 @@ function Listpost() {
     },
     {
       id: 5,
-      type: 'เจอของ',
+      type: 'พบของ',
       title: 'พบขวดน้ำสแตนเลส',
       location: 'ชั้น 3',
       date: '19 ก.ย. 2026'
@@ -87,7 +91,7 @@ function Listpost() {
 
         {/* Filter Buttons */}
         <div className="filter-container">
-          {['ทั้งหมด', 'ของหาย', 'เจอของ'].map(filter => (
+          {['ทั้งหมด', 'ของหาย', 'พบของ'].map(filter => (
             <button
               key={filter}
               type="button"
@@ -115,11 +119,9 @@ function Listpost() {
               </div>
 
               <div className="post-content">
-                <span className={`status-badge ${
-                  post.type === 'เจอของ' ? 'found' : 'lost'
-                }`}>
+                <Badge variant={post.type === 'พบของ' ? 'found' : 'lost'}>
                   {post.type}
-                </span>
+                </Badge>
 
                 <h3 className="post-title">
                   {post.title}

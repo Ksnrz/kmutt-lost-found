@@ -83,7 +83,7 @@ export default function Map() {
       params.set('building', selectedBuilding);
     }
     if (postType) {
-      params.set('type', postType === 'lost' ? 'ของหาย' : 'เจอของ');
+      params.set('type', postType === 'lost' ? 'ของหาย' : 'พบของ');
     }
     navigate(`/posts?${params.toString()}`);
   };
@@ -112,7 +112,7 @@ export default function Map() {
                 checked={postType === 'found'}
                 onChange={() => setPostType('found')}
               />
-              <span>เจอของ</span>
+              <span>พบของ</span>
             </label>
           </div>
           <button className="map-create" type="button" onClick={() => navigate('/posts/new')}>

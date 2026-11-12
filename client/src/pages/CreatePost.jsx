@@ -18,7 +18,7 @@ function CreatePost() {
 						<h2>ประเภท</h2>
 						<div className='flex-button'>
 							<Button>ของหาย</Button>
-							<Button>เจอของ</Button>
+							<Button>พบของ</Button>
 						</div>
 						<h2>ข้อมูลสิ่งของ</h2>
 						<h3>ชื่อสิ่งของ *</h3>

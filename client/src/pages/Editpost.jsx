@@ -37,7 +37,7 @@ function Editpost() {
                                 className={type === 'found' ? 'active' : ''}
                                 onClick={() => setType('found')}
                             >
-                                เจอของ
+                                พบของ
                             </Button>
                         </div>
 
