@@ -9,6 +9,7 @@ function PostDetail() {
   const { postId } = useParams();
   const locationState = useLocation();
   const navPost = locationState?.state?.post;
+  const claim = locationState?.state?.claim;
 
   // ข้อมูลโพสต์เริ่มต้น (ตรงตามรูปภาพต้นแบบ หรือดึงจาก state หากมีส่งต่อมา)
   const post = {
@@ -125,20 +126,102 @@ function PostDetail() {
                 <div className="custody-phone">{post.contact}</div>
               </div>
 
-              <button
-                type="button"
-                className="btn-claim"
-                onClick={() =>
-                  navigate(`/posts/${postId || 1}/claim`, { state: { post } })
-                }
-              >
-                นี่อาจเป็นของฉัน
-              </button>
+              {/* ด้านล่างของการ์ด: ถ้าเปิดมาจากตารางคำขอที่ฉันส่ง ให้แสดงแถบสถานะแทนปุ่มส้ม */}
+              {claim ? (
+                <div className="postdetail-claim-status-block">
+                  <div className="claim-status-header">
+                    <span className="claim-status-label">สถานะคำขอของคุณ:</span>
+                    {claim.status === 'PENDING' && (
+                      <span className="badge badge-pending">PENDING · รอตรวจ</span>
+                    )}
+                    {claim.status === 'ACCEPTED' && (
+                      <span className="badge badge-success">ACCEPTED · ตอบรับแล้ว</span>
+                    )}
+                    {claim.status === 'REJECTED' && (
+                      <span className="badge badge-danger">REJECTED · ปฏิเสธ</span>
+                    )}
+                    {claim.status === 'CANCELLED' && (
+                      <span className="badge badge-neutral">CANCELLED · ยกเลิก</span>
+                    )}
+                    {claim.status === 'COMPLETED' && (
+                      <span className="badge badge-completed">COMPLETED · สำเร็จ</span>
+                    )}
+                  </div>
 
-              <div className="custody-helper-text">
-                <p>หากเป็นสิ่งของของคุณส่งคำขอ</p>
-                <p>พร้อมรายละเอียดเฉพาะเพื่อยืนยัน</p>
-              </div>
+                  <div className="claim-status-body">
+                    {claim.status === 'PENDING' && (
+                      <p className="claim-status-desc">
+                        คุณได้ยื่นคำขอตรวจสอบแล้ว อยู่ระหว่างรอผู้พบตรวจสอบความถูกต้องของหลักฐาน
+                      </p>
+                    )}
+                    {claim.status === 'ACCEPTED' && (
+                      <div className="claim-accepted-box">
+                        <p className="claim-status-desc">
+                          ผู้พบได้ตอบรับคำขอของคุณแล้ว สามารถติดต่อเพื่อนัดรับสิ่งของได้
+                        </p>
+                        {claim.ownerNote && (
+                          <div className="claim-owner-note">
+                            <strong>หมายเหตุจากผู้พบ:</strong>
+                            <p>{claim.ownerNote}</p>
+                          </div>
+                        )}
+                        {!claim.receiverConfirmed && (
+                          <button
+                            type="button"
+                            className="btn-confirm-delivery"
+                            onClick={() => {
+                              alert('ยืนยันได้รับของเรียบร้อยแล้ว');
+                              navigate('/account');
+                            }}
+                          >
+                            ✓ ยืนยันได้รับของแล้ว
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {claim.status === 'REJECTED' && (
+                      <div className="claim-rejected-box">
+                        <p className="claim-status-desc">
+                          ผู้พบได้ปฏิเสธคำขอนี้
+                        </p>
+                        {claim.ownerNote && (
+                          <div className="claim-owner-note">
+                            <strong>เหตุผล:</strong>
+                            <p>{claim.ownerNote}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {claim.status === 'CANCELLED' && (
+                      <p className="claim-status-desc">
+                        คำขอนี้หรือโพสต์ถูกยกเลิกแล้ว
+                      </p>
+                    )}
+                    {claim.status === 'COMPLETED' && (
+                      <p className="claim-status-desc claim-done">
+                        ✓ ทั้งสองฝ่ายยืนยันการส่งมอบเสร็จสิ้นแล้ว ขอบคุณครับ
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="btn-claim"
+                    onClick={() =>
+                      navigate(`/posts/${postId || 1}/claim`, { state: { post } })
+                    }
+                  >
+                    นี่อาจเป็นของฉัน
+                  </button>
+
+                  <div className="custody-helper-text">
+                    <p>หากเป็นสิ่งของของคุณส่งคำขอ</p>
+                    <p>พร้อมรายละเอียดเฉพาะเพื่อยืนยัน</p>
+                  </div>
+                </>
+              )}
             </Card>
           </div>
         </div>

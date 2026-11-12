@@ -288,6 +288,96 @@
 }
 
 /* ============================================================
+   Claim Status Block (เมื่อเปิดมาจากหน้า "คำขอที่ฉันส่ง")
+   ============================================================ */
+.postdetail-claim-status-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--color-bg-page, #f8fafc);
+  border: 1.5px solid var(--color-gray-border, #e2e8f0);
+  border-radius: var(--radius-md, 12px);
+  box-sizing: border-box;
+}
+
+.claim-status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.claim-status-label {
+  font-size: var(--text-meta, 13px);
+  font-weight: var(--fw-bold, 700);
+  color: var(--color-gray-dark, #1e2022);
+}
+
+.claim-status-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.claim-status-desc {
+  font-size: var(--text-helper-status, 13px);
+  color: var(--color-gray, #64748b);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.claim-owner-note {
+  background-color: var(--color-white, #ffffff);
+  border-left: 3px solid var(--color-primary, #fa4616);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-gray-dark, #1e2022);
+}
+
+.claim-owner-note strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--color-primary, #fa4616);
+}
+
+.claim-owner-note p {
+  margin: 0;
+}
+
+.btn-confirm-delivery {
+  width: 100%;
+  min-height: 44px;
+  background-color: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md, 10px);
+  font-size: 14px;
+  font-weight: var(--fw-bold, 700);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.btn-confirm-delivery:hover {
+  background-color: #15803d;
+  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.25);
+}
+
+.claim-status-desc.claim-done {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+/* ============================================================
    Responsive Breakpoints
    ============================================================ */
 @media (max-width: 960px) {
