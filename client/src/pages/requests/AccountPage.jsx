@@ -44,64 +44,79 @@ export default function AccountPage({
   const [postFilter, setPostFilter] = useState('all');
 
   // State 3: ข้อมูลประกาศที่ฉันสร้าง (ดึงมาจาก Entity POSTS + LOCATION ตาม ER Diagram)
-  const [myPosts, setMyPosts] = useState([
-    {
-      id: 'p-101',
-      post_id: 'p-101',
-      title: 'พบกระเป๋าสตางค์สีดำ',
-      post_type: 'ประกาศเจอของ (FOUND)',
-      custody_type: 'ผู้พบเก็บรักษาเอง',
-      building_name: 'อาคาร S4 ชั้น 1',
-      location: 'S4 ชั้น 1',
-      date: '24 ก.ย. 2026',
-      created_at: '24 ก.ย. 2026',
-      status: 'OPEN', // post_status: 'OPEN' | 'CLOSED' | 'CANCELLED'
-      post_status: 'OPEN',
-      pendingRequestsCount: 2,
-    },
-    {
-      id: 'p-102',
-      post_id: 'p-102',
-      title: 'ตามหากุญแจรถยนต์ Honda',
-      post_type: 'ตามหาของหาย (LOST)',
-      custody_type: 'เจ้าของตามหาเอง',
-      building_name: 'อาคาร CB4 ชั้น 2',
-      location: 'CB4 ชั้น 2',
-      date: '22 ก.ย. 2026',
-      created_at: '22 ก.ย. 2026',
-      status: 'OPEN',
-      post_status: 'OPEN',
-      pendingRequestsCount: 0,
-    },
-    {
-      id: 'p-103',
-      post_id: 'p-103',
-      title: 'พบหูฟังไร้สาย AirPods',
-      post_type: 'ประกาศเจอของ (FOUND)',
-      custody_type: 'ฝากจุดประชาสัมพันธ์',
-      building_name: 'หอสมุด ชั้น 3',
-      location: 'หอสมุด ชั้น 3',
-      date: '18 ก.ย. 2026',
-      created_at: '18 ก.ย. 2026',
-      status: 'CLOSED',
-      post_status: 'CLOSED',
-      pendingRequestsCount: 0,
-    },
-    {
-      id: 'p-104',
-      post_id: 'p-104',
-      title: 'พบร่มพับสีน้ำเงิน',
-      post_type: 'ประกาศเจอของ (FOUND)',
-      custody_type: 'ส่งต่อจุดรับของหาย',
-      building_name: 'โรงอาหารพระจอมเกล้า',
-      location: 'โรงอาหารพระจอมเกล้า',
-      date: '15 ก.ย. 2026',
-      created_at: '15 ก.ย. 2026',
-      status: 'CANCELLED',
-      post_status: 'CANCELLED',
-      pendingRequestsCount: 0,
-    },
-  ]);
+  const [myPosts] = useState(() => {
+    let posts = [
+      {
+        id: 'p-101',
+        post_id: 'p-101',
+        title: 'พบกระเป๋าสตางค์สีดำ',
+        post_type: 'ประกาศเจอของ (FOUND)',
+        custody_type: 'ผู้พบเก็บรักษาเอง',
+        building_name: 'อาคาร S4 ชั้น 1',
+        location: 'S4 ชั้น 1',
+        date: '24 ก.ย. 2026',
+        created_at: '24 ก.ย. 2026',
+        status: 'OPEN', // post_status: 'OPEN' | 'CLOSED' | 'CANCELLED'
+        post_status: 'OPEN',
+        pendingRequestsCount: 2,
+      },
+      {
+        id: 'p-102',
+        post_id: 'p-102',
+        title: 'ตามหากุญแจรถยนต์ Honda',
+        post_type: 'ตามหาของหาย (LOST)',
+        custody_type: 'เจ้าของตามหาเอง',
+        building_name: 'อาคาร CB4 ชั้น 2',
+        location: 'CB4 ชั้น 2',
+        date: '22 ก.ย. 2026',
+        created_at: '22 ก.ย. 2026',
+        status: 'OPEN',
+        post_status: 'OPEN',
+        pendingRequestsCount: 0,
+      },
+      {
+        id: 'p-103',
+        post_id: 'p-103',
+        title: 'พบหูฟังไร้สาย AirPods',
+        post_type: 'ประกาศเจอของ (FOUND)',
+        custody_type: 'ฝากจุดประชาสัมพันธ์',
+        building_name: 'หอสมุด ชั้น 3',
+        location: 'หอสมุด ชั้น 3',
+        date: '18 ก.ย. 2026',
+        created_at: '18 ก.ย. 2026',
+        status: 'CLOSED',
+        post_status: 'CLOSED',
+        pendingRequestsCount: 0,
+      },
+      {
+        id: 'p-104',
+        post_id: 'p-104',
+        title: 'พบร่มพับสีน้ำเงิน',
+        post_type: 'ประกาศเจอของ (FOUND)',
+        custody_type: 'ส่งต่อจุดรับของหาย',
+        building_name: 'โรงอาหารพระจอมเกล้า',
+        location: 'โรงอาหารพระจอมเกล้า',
+        date: '15 ก.ย. 2026',
+        created_at: '15 ก.ย. 2026',
+        status: 'CANCELLED',
+        post_status: 'CANCELLED',
+        pendingRequestsCount: 0,
+      },
+    ];
+
+    if (location.state?.updatedPost) {
+      const up = location.state.updatedPost;
+      posts = posts.map((p) =>
+        p.id === up.id || p.post_id === up.id ? { ...p, ...up } : p
+      );
+    }
+    if (location.state?.deletedPostId) {
+      const delId = location.state.deletedPostId;
+      posts = posts.filter((p) => p.id !== delId && p.post_id !== delId);
+    }
+
+    return posts;
+  });
 
   // State 4: ข้อมูลคำขอที่ฉันส่ง (Entity VERIFY_ITEMS ที่ current user เป็นผู้ submit)
   const [sentClaims, setSentClaims] = useState([
@@ -191,16 +206,7 @@ export default function AccountPage({
     },
   ]);
 
-  // สลับสถานะเปิด/ปิดประกาศ (Open / Close / Cancel toggle)
-  const handleChangePostStatus = (postId, nextStatus) => {
-    setMyPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId
-          ? { ...post, status: nextStatus, post_status: nextStatus }
-          : post
-      )
-    );
-  };
+
 
   // ฝ่ายผู้รับกดยืนยันว่าได้รับของแล้ว (Dual Confirmation ฝั่งผู้ส่งคำขอใน My Requests)
   const handleConfirmReceived = (claimId) => {
@@ -414,35 +420,8 @@ export default function AccountPage({
                         }
                       }}
                     >
-                      ดูประกาศ
+                      จัดการโพสต์
                     </Button>
-
-                    {post.status === 'OPEN' ? (
-                      <>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleChangePostStatus(post.id, 'CLOSED')}
-                        >
-                          ปิดโพสต์ (CLOSED)
-                        </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleChangePostStatus(post.id, 'CANCELLED')}
-                        >
-                          ยกเลิกโพสต์
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => handleChangePostStatus(post.id, 'OPEN')}
-                      >
-                        เปิดรับคำขอใหม่
-                      </Button>
-                    )}
                   </div>
                 </div>
               ))}

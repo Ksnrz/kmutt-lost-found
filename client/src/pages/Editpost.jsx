@@ -17,6 +17,9 @@ function Editpost() {
     if (postData?.post_type?.includes('LOST') || postData?.type === 'lost') return 'lost';
     return 'found';
   });
+  const [postStatus, setPostStatus] = useState(() => {
+    return postData?.status || postData?.post_status || 'OPEN';
+  });
   const [storageStatus, setStorageStatus] = useState(() => {
     if (postData?.custody_type?.includes('เก็บ')) return 'เก็บไว้เอง';
     return 'ฝากไว้';
@@ -46,7 +49,12 @@ function Editpost() {
     if (window.confirm('คุณต้องการลบโพสต์นี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
       alert('ลบโพสต์สำเร็จเรียบร้อยแล้ว');
       if (routerLocation.state?.from === 'account') {
-        navigate('/account', { state: { successMessage: 'ลบโพสต์สำเร็จเรียบร้อยแล้ว' } });
+        navigate('/account', {
+          state: {
+            successMessage: 'ลบโพสต์สำเร็จเรียบร้อยแล้ว',
+            deletedPostId: postId || postData?.id || postData?.post_id,
+          },
+        });
       } else {
         navigate('/posts');
       }
@@ -55,9 +63,35 @@ function Editpost() {
 
   const handleSave = (e) => {
     e.preventDefault();
-    alert('บันทึกการแก้ไขโพสต์เรียบร้อยแล้ว');
+    const statusLabel =
+      postStatus === 'OPEN'
+        ? 'เปิดรับคำขอ (OPEN)'
+        : postStatus === 'CLOSED'
+        ? 'ปิดโพสต์ (CLOSED)'
+        : 'ยกเลิกโพสต์ (CANCELLED)';
+
+    alert(`บันทึกการแก้ไขโพสต์เรียบร้อยแล้ว (${statusLabel})`);
     if (routerLocation.state?.from === 'account') {
-      navigate('/account', { state: { successMessage: 'แก้ไขโพสต์เรียบร้อยแล้ว' } });
+      navigate('/account', {
+        state: {
+          successMessage: `บันทึกการแก้ไขโพสต์เรียบร้อยแล้ว (${statusLabel})`,
+          updatedPost: {
+            id: postId || postData?.id || postData?.post_id,
+            post_id: postId || postData?.id || postData?.post_id,
+            title: itemName,
+            status: postStatus,
+            post_status: postStatus,
+            post_type: type === 'lost' ? 'ตามหาของหาย (LOST)' : 'ประกาศเจอของ (FOUND)',
+            custody_type: storageStatus === 'ฝากไว้' ? 'ฝากจุดประชาสัมพันธ์' : 'ผู้พบเก็บรักษาเอง',
+            building_name: location,
+            location: location,
+            date: eventDate,
+            description: itemDetail,
+            contact: contact,
+            depositLocation: depositLocation,
+          },
+        },
+      });
     } else {
       navigate(`/posts/${postId || 1}`);
     }
@@ -157,9 +191,54 @@ function Editpost() {
             </Card>
           </div>
 
-          {/* ฝั่งขวา: ข้อมูลการเก็บรักษา & ปุ่มดำเนินการ */}
+          {/* ฝั่งขวา: สถานะประกาศ, ข้อมูลการเก็บรักษา & ปุ่มดำเนินการ */}
           <div className="form-right">
             <Card>
+              <h2>สถานะประกาศ</h2>
+              <div className="segmented-toggle post-status-toggle">
+                <button
+                  type="button"
+                  className={`toggle-option ${postStatus === 'OPEN' ? 'is-active is-open' : ''}`}
+                  onClick={() => setPostStatus('OPEN')}
+                >
+                  เปิดรับคำขอ
+                </button>
+                <button
+                  type="button"
+                  className={`toggle-option ${postStatus === 'CLOSED' ? 'is-active is-closed' : ''}`}
+                  onClick={() => setPostStatus('CLOSED')}
+                >
+                  ปิดโพสต์ (CLOSED)
+                </button>
+                <button
+                  type="button"
+                  className={`toggle-option ${postStatus === 'CANCELLED' ? 'is-active is-cancelled' : ''}`}
+                  onClick={() => setPostStatus('CANCELLED')}
+                >
+                  ยกเลิกโพสต์
+                </button>
+              </div>
+
+              <div className="status-helper-box">
+                {postStatus === 'OPEN' && (
+                  <p className="status-helper-text">
+                    🟢 <strong>เปิดรับคำขอ (OPEN):</strong> โพสต์นี้จะแสดงในผลการค้นหา และเปิดให้ผู้อื่นส่งคำขอตรวจสอบยืนยันได้
+                  </p>
+                )}
+                {postStatus === 'CLOSED' && (
+                  <p className="status-helper-text">
+                    🔵 <strong>ปิดโพสต์ (CLOSED):</strong> โพสต์นี้ปิดแล้วเนื่องจากส่งมอบสำเร็จ จะถูกย้ายไปแท็บประวัติ
+                  </p>
+                )}
+                {postStatus === 'CANCELLED' && (
+                  <p className="status-helper-text">
+                    ⚪ <strong>ยกเลิกโพสต์ (CANCELLED):</strong> โพสต์นี้ถูกยกเลิกการประกาศ และจะไม่เปิดรับคำขอใหม่
+                  </p>
+                )}
+              </div>
+
+              <hr className="editpost-divider" />
+
               <h2>ข้อมูลการเก็บรักษา</h2>
               <h3>
                 สถานะสิ่งของ <span className="req-star">*</span>
