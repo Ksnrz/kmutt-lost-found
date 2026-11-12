@@ -83,6 +83,15 @@ function saveClaims(claims) {
   }
 }
 
+async function safeJson(res) {
+  try {
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const claimService = {
   /**
    * C2: ส่งคำขอตรวจสอบสิทธิ์ (POST /api/posts/:id/verify)
@@ -123,19 +132,25 @@ export const claimService = {
         });
       }
 
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || 'เกิดข้อผิดพลาดในการส่งคำขอ');
-      }
+      const json = await safeJson(res);
 
-      backendSuccess = true;
-      backendData = json.data || json.verify;
+      if (res.ok) {
+        backendSuccess = true;
+        backendData = json?.data || json?.verify;
+      } else if (json && json.error) {
+        // ข้อผิดพลาดจาก Express Backend เช่น โพสต์ DEPOSITED หรือส่งคำขอโพสต์ตัวเอง
+        throw new Error(json.error);
+      }
     } catch (err) {
-      // หากเป็นข้อผิดพลาดจาก business logic (400, 403, 404) ให้ throw ออกไปแจ้งเตือนผู้ใช้ทันที
-      if (err.message && !err.message.includes('Failed to fetch')) {
+      // หากเป็นข้อผิดพลาดจาก Business Logic ให้โยนแจ้งเตือนผู้ใช้ทันที
+      if (
+        err.message &&
+        !err.message.includes('Failed to fetch') &&
+        !err.message.includes('JSON')
+      ) {
         throw err;
       }
-      // เซิร์ฟเวอร์ออฟไลน์ -> ใช้ Local fallback
+      // เซิร์ฟเวอร์ Backend ยังไม่ได้รัน หรือ Proxy ล้มเหลว -> ตกไปใช้ LocalStorage Fallback อัตโนมัติ
     }
 
     const localClaim = this.addClaimLocal({
@@ -186,8 +201,8 @@ export const claimService = {
         headers: { 'x-test-user': '1' }, // เจ้าของโพสต์
       });
       if (res.ok) {
-        const json = await res.json();
-        const claims = json.requests || json.data;
+        const json = await safeJson(res);
+        const claims = json?.requests || json?.data;
         if (Array.isArray(claims) && claims.length > 0) {
           return claims;
         }
@@ -214,8 +229,10 @@ export const claimService = {
         body: JSON.stringify({ status: newStatus, note }),
       });
       if (!res.ok) {
-        const errJson = await res.json();
-        console.warn('API updateClaimStatus warning:', errJson.error);
+        const errJson = await safeJson(res);
+        if (errJson?.error) {
+          console.warn('API updateClaimStatus warning:', errJson.error);
+        }
       }
     } catch {
       // fallback
@@ -275,11 +292,13 @@ export const claimService = {
         body: JSON.stringify({ note }),
       });
       if (!res.ok) {
-        const errJson = await res.json();
-        throw new Error(errJson.error || 'ไม่สามารถยกเลิกคำขอได้');
+        const errJson = await safeJson(res);
+        if (errJson?.error) {
+          throw new Error(errJson.error);
+        }
       }
     } catch (err) {
-      if (err.message && !err.message.includes('Failed to fetch')) {
+      if (err.message && !err.message.includes('Failed to fetch') && !err.message.includes('JSON')) {
         throw err;
       }
     }
@@ -319,8 +338,8 @@ export const claimService = {
         body: JSON.stringify({ party }),
       });
       if (res.ok) {
-        const json = await res.json();
-        apiPostClosed = json.postClosed;
+        const json = await safeJson(res);
+        apiPostClosed = Boolean(json?.postClosed);
       }
     } catch {
       // fallback
@@ -374,8 +393,8 @@ export const claimService = {
         headers: { 'x-test-user': '2' },
       });
       if (res.ok) {
-        const json = await res.json();
-        const claims = json.requests || json.data;
+        const json = await safeJson(res);
+        const claims = json?.requests || json?.data;
         if (Array.isArray(claims) && claims.length > 0) {
           return claims;
         }

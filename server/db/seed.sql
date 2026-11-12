@@ -73,3 +73,4 @@ ON CONFLICT (post_id, user_id) DO NOTHING;
 
 -- Reset sequence for verify_items
 SELECT setval('verify_items_verify_id_seq', (SELECT MAX(verify_id) FROM verify_items));
+
