@@ -50,7 +50,7 @@ export default function Map() {
   const navigate = useNavigate();
 
   // State
-  const [postType, setPostType] = useState('found'); // 'found' | 'lost'
+  const [postType, setPostType] = useState('all'); // 'all' | 'found' | 'lost'
   const [selectedBuilding, setSelectedBuilding] = useState('S1');
   const [searchQuery, setSearchQuery] = useState('');
   const [open, setOpen] = useState(true);
@@ -90,7 +90,8 @@ export default function Map() {
     if (selectedBuilding) {
       params.set('building', selectedBuilding);
     }
-    if (postType) {
+    // 'all' sends no type, so the list page shows every type
+    if (postType !== 'all') {
       params.set('type', postType === 'lost' ? 'ของหาย' : 'พบของ');
     }
     navigate(`/posts?${params.toString()}`);
@@ -102,6 +103,16 @@ export default function Map() {
         {/* Toolbar: ตัวเลือกประเภทโพสต์ */}
         <div className="map-toolbar">
           <div className="map-tabs">
+            <label>
+              <input
+                type="radio"
+                name="postType"
+                value="all"
+                checked={postType === 'all'}
+                onChange={() => setPostType('all')}
+              />
+              <span>ทั้งหมด</span>
+            </label>
             <label>
               <input
                 type="radio"

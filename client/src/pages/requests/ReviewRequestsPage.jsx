@@ -22,47 +22,7 @@ import './ReviewRequestsPage.css';
  * Route URL: /requests/review
  */
 export default function ReviewRequestsPage({
-  // ข้อมูลเริ่มต้นตาม Figma
-  initialRequests = [
-    {
-      verify_id: '102',
-      id: '102',
-      post_id: 'p-101',
-      postId: 'p-101',
-      itemTitle: 'กระเป๋าสตางค์สีดำ',
-      requester: 'นักศึกษา B',
-      date: '24 ก.ย. 2026',
-      created_at: '24 ก.ย. 2026',
-      verify_status: 'PENDING',
-      status: 'PENDING',
-      proof_description: 'มีรอยถลอกเล็ก ๆ ที่มุมด้านใน และมีบัตรสีฟ้าอยู่หนึ่งใบ',
-      description: 'มีรอยถลอกเล็ก ๆ ที่มุมด้านใน และมีบัตรสีฟ้าอยู่หนึ่งใบ',
-      verify_images: ['หลักฐาน 1', 'หลักฐาน 2'],
-      evidences: ['หลักฐาน 1', 'หลักฐาน 2'],
-      finderConfirmed: false,
-      receiverConfirmed: false,
-      note: '',
-    },
-    {
-      verify_id: '103',
-      id: '103',
-      post_id: 'p-101',
-      postId: 'p-101',
-      itemTitle: 'กระเป๋าสตางค์สีดำ',
-      requester: 'นักศึกษา D',
-      date: '25 ก.ย. 2026',
-      created_at: '25 ก.ย. 2026',
-      verify_status: 'PENDING',
-      status: 'PENDING',
-      proof_description: 'กระเป๋าตังค์หนังแท้สีดำ มีช่องใส่เหรียญซิปทอง มีเศษบิลซื้อของอยู่ด้านใน',
-      description: 'กระเป๋าตังค์หนังแท้สีดำ มีช่องใส่เหรียญซิปทอง มีเศษบิลซื้อของอยู่ด้านใน',
-      verify_images: ['หลักฐาน 1'],
-      evidences: ['หลักฐาน 1'],
-      finderConfirmed: false,
-      receiverConfirmed: false,
-      note: '',
-    },
-  ],
+  initialRequests = [],
   onBack,
 }) {
   const navigate = useNavigate();
@@ -77,7 +37,7 @@ export default function ReviewRequestsPage({
   const [requests, setRequests] = useState(initialRequests);
 
   // State 3: รหัสคำขอที่กำลังเลือกดูรายละเอียดอยู่
-  const [selectedId, setSelectedId] = useState('102');
+  const [selectedId, setSelectedId] = useState(null);
 
   // State 4: ข้อความในช่อง "หมายเหตุสำหรับผู้ส่ง"
   const [noteText, setNoteText] = useState('');
@@ -86,7 +46,7 @@ export default function ReviewRequestsPage({
   useEffect(() => {
     let isMounted = true;
     claimService.getClaimsByPost(targetPostId).then((data) => {
-      if (isMounted && data && data.length > 0) {
+      if (isMounted && data) {
         setRequests(data);
         if (data[0]?.id || data[0]?.verify_id) {
           setSelectedId(String(data[0].id || data[0].verify_id));
@@ -108,6 +68,15 @@ export default function ReviewRequestsPage({
     };
   }, [targetPostId]);
 
+  // เรียก API แล้วแจ้ง error ให้ผู้ใช้เห็น (คืนค่า undefined เมื่อไม่สำเร็จ)
+  const run = async (fn) => {
+    try {
+      return (await fn()) ?? true;
+    } catch (err) {
+      alert(err.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่');
+    }
+  };
+
   // ค้นหาข้อมูลคำขอที่กำลังถูกเลือก
   const activeRequest = requests.find((r) => r.id === selectedId) || requests[0];
 
@@ -124,8 +93,7 @@ export default function ReviewRequestsPage({
     if (!activeRequest || isOtherAccepted) return;
 
     const finalNote = noteText.trim() || 'อนุมัติคำขอแล้ว กรุณานัดหมายวันเวลาและสถานที่รับมอบสิ่งของ';
-    await claimService.updateClaimStatus(activeRequest.id, 'ACCEPTED', finalNote);
-    setNoteText('');
+    if (await run(() => claimService.updateClaimStatus(activeRequest.id, 'ACCEPTED', finalNote))) setNoteText('');
   };
 
   // 2. ปฏิเสธคำขอ (REJECTED)
@@ -135,13 +103,12 @@ export default function ReviewRequestsPage({
     const confirmReject = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอ #${activeRequest.id}?`);
     if (!confirmReject) return;
 
-    await claimService.updateClaimStatus(activeRequest.id, 'REJECTED', noteText);
-    setNoteText('');
+    if (await run(() => claimService.updateClaimStatus(activeRequest.id, 'REJECTED', noteText))) setNoteText('');
   };
 
   // 3. ฝ่ายผู้พบ (คุณ) กดยืนยันการส่งมอบ (Dual Confirmation)
   const handleConfirmFinder = async (id) => {
-    const result = await claimService.confirmHandover(id, 'finder');
+    const result = await run(() => claimService.confirmHandover(id, 'finder'));
     if (result?.postClosed) {
       setPostStatus('CLOSED');
     }
@@ -152,13 +119,13 @@ export default function ReviewRequestsPage({
     const confirmCancel = window.confirm('ต้องการยกเลิกการตอบรับคำขอนี้ใช่หรือไม่? (ระบบจะเปิดให้คุณสามารถเลือกคำขออื่นที่ยังรออยู่ได้)');
     if (!confirmCancel) return;
 
-    await claimService.updateClaimStatus(id, 'CANCELLED', 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ');
+    // server รับเฉพาะ ACCEPTED -> PENDING: คำขอนี้กลับไปรอตรวจ และคำขออื่นที่ยัง PENDING อยู่ก็ตอบรับแทนได้
+    await run(() => claimService.updateClaimStatus(id, 'PENDING', 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ'));
   };
 
   // 5. รีเซ็ตสถานะกลับมาเป็น PENDING 
   const handleResetStatus = async (id) => {
-    setPostStatus('OPEN');
-    await claimService.updateClaimStatus(id, 'PENDING', '');
+    if (await run(() => claimService.updateClaimStatus(id, 'PENDING', ''))) setPostStatus('OPEN');
   };
 
   // 6. รีเซ็ตทั้งหมดทั้งโพสต์กลับสู่ค่าเริ่มต้น
@@ -453,7 +420,7 @@ export default function ReviewRequestsPage({
 
             {/* ปุ่มกดปฏิเสธ / อนุมัติคำขอ*/}
             <div className="review-detail-actions">
-              {activeRequest.status !== 'PENDING' && (
+              {activeRequest.status === 'ACCEPTED' && (
                 <Button
                   variant="secondary"
                   size="sm"
