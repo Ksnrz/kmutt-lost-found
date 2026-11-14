@@ -1,6 +1,7 @@
-
 import express from 'express';
 import { pool } from './db.js';
+import authRouter from './routes/auth.js';
+import meRouter from './routes/me.js';
 import postsRouter from './routes/posts.js';
 import locationsRouter from './routes/locations.js';
 
@@ -15,7 +16,7 @@ app.use((req, res, next) => {
   );
   res.header(
     'Access-Control-Allow-Headers',
-    'Content-Type, x-test-user'
+    'Content-Type, Authorization'
   );
 
   if (req.method === 'OPTIONS') {
@@ -32,10 +33,9 @@ app.get('/api/health', async (req, res) => {
   res.json({ ok: true });
 });
 
-// Posts routes
+app.use('/api/auth', authRouter);
+app.use('/api/me', meRouter);
 app.use('/api/posts', postsRouter);
-
-// Locations routes
 app.use('/api/locations', locationsRouter);
 
 // Access uploaded images
@@ -46,10 +46,11 @@ app.use('/api', (req, res) =>
 );
 
 const PG_ERRORS = {
-  '23505': [409, 'Already exists'],
-  '23503': [400, 'Referenced row not found'],
-  '23514': [400, 'Invalid value'],
-  '22P02': [400, 'Invalid input'],
+  '23505': [409, 'Already exists'],         // unique violation
+  '23503': [400, 'Referenced row not found'], // foreign key
+  '23514': [400, 'Invalid value'],          // check constraint
+  '22P02': [400, 'Invalid input'],          // bad number/uuid syntax
+  '22001': [400, 'Value too long'],        // varchar length exceeded
 };
 
 app.use((err, req, res, next) => {

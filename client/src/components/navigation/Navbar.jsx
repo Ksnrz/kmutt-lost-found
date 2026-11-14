@@ -50,6 +50,7 @@ export default function Navbar({
     setIsDropdownOpen(false);
     const confirmLogout = window.confirm('คุณต้องการออกจากระบบใช่หรือไม่?');
     if (confirmLogout) {
+      localStorage.removeItem('token');
       alert('ออกจากระบบเรียบร้อยแล้ว');
       navigate('/login');
     }
@@ -162,7 +163,7 @@ export default function Navbar({
                   className="navbar-dropdown-item"
                   onClick={() => {
                     setIsDropdownOpen(false);
-                    navigate('/account');
+                    navigate('/profile');
                   }}
                   role="menuitem"
                 >

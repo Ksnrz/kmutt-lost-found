@@ -317,3 +317,15 @@
     aspect-ratio: 906 / 687;
   }
 }
+
+.map-location summary span.is-selected {
+  color: #252525;
+  font-weight: 700;
+}
+
+.map-empty {
+  padding: 16px 0;
+  color: var(--color-gray);
+  font-size: 14px;
+  text-align: center;
+}

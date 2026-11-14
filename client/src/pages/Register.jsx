@@ -1,10 +1,31 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { api } from '../api'
 import mascot from '../assets/login/mascot.png'
 import './Login.css'
 import './Register.css'
 
 export default function Register() {
   const navigate = useNavigate()
+  const [error, setError] = useState('')
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+    const form = new FormData(event.target)
+    if (form.get('password') !== form.get('confirmPassword')) {
+      return setError('รหัสผ่านไม่ตรงกัน')
+    }
+    try {
+      await api('/api/auth/register', {
+        method: 'POST',
+        body: { student_id: form.get('studentId'), email: form.get('email'), password: form.get('password') },
+      })
+      navigate('/login')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   return (
     <main className="login-page">
       <div className="login-layout">
@@ -27,7 +48,7 @@ export default function Register() {
             <h1>สมัครสมาชิก</h1>
             <p>สร้างบัญชีเพื่อเริ่มใช้งาน</p>
           </header>
-          <form className="register-form" onSubmit={(event) => { event.preventDefault(); navigate('/login') }}>
+          <form className="register-form" onSubmit={handleSubmit}>
             <div className="register-fields">
               <div className="login-field">
                 <label htmlFor="register-student-id">รหัสนักศึกษา</label>
@@ -46,6 +67,7 @@ export default function Register() {
                 <input id="register-confirm-password" name="confirmPassword" type="password" placeholder="กรอกรหัสผ่านอีกครั้ง" required />
               </div>
             </div>
+            {error && <p className="login-error" role="alert">{error}</p>}
             <button className="login-submit" type="submit">สมัครสมาชิก</button>
           </form>
           <p className="login-register">มีบัญชีอยู่แล้ว? <a href="/login">เข้าสู่ระบบ</a></p>
