@@ -44,7 +44,7 @@ export default function AccountPage({
   const [postFilter, setPostFilter] = useState('all');
 
   // State 3: ข้อมูลประกาศที่ฉันสร้าง (ดึงมาจาก Entity POSTS + LOCATION ตาม ER Diagram)
-  const [myPosts] = useState(() => {
+  const [myPosts, setMyPosts] = useState(() => {
     let posts = [
       {
         id: 'p-101',
@@ -114,6 +114,27 @@ export default function AccountPage({
       const delId = location.state.deletedPostId;
       posts = posts.filter((p) => p.id !== delId && p.post_id !== delId);
     }
+    if (location.state?.closedPostId) {
+      const closedId = String(location.state.closedPostId);
+      posts = posts.map((p) =>
+        String(p.id) === closedId || String(p.post_id) === closedId || (closedId === '1' && p.id === 'p-101') || (closedId === 'p-101' && p.id === 'p-101')
+          ? { ...p, status: 'CLOSED', post_status: 'CLOSED' }
+          : p
+      );
+    }
+
+    // ซิงก์สถานะจาก LocalStorage จากผลการกดยืนยันส่งมอบ Dual Confirmation
+    posts = posts.map((p) => {
+      const stored =
+        localStorage.getItem(`kmutt_lostfound_post_status_${p.id}`) ||
+        localStorage.getItem(`kmutt_lostfound_post_status_${p.post_id}`) ||
+        (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_1') : null) ||
+        (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_p-101') : null);
+      if (stored) {
+        return { ...p, status: stored, post_status: stored };
+      }
+      return p;
+    });
 
     return posts;
   });
@@ -233,6 +254,21 @@ export default function AccountPage({
     });
 
     const unsubscribe = claimService.subscribe((updatedClaims) => {
+      // ซิงก์สถานะโพสต์ที่ฉันสร้างเมื่อมีการยืนยันส่งมอบครบ 2 ฝ่ายจนปิดโพสต์
+      setMyPosts((prev) =>
+        prev.map((p) => {
+          const stored =
+            localStorage.getItem(`kmutt_lostfound_post_status_${p.id}`) ||
+            localStorage.getItem(`kmutt_lostfound_post_status_${p.post_id}`) ||
+            (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_1') : null) ||
+            (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_p-101') : null);
+          if (stored) {
+            return { ...p, status: stored, post_status: stored };
+          }
+          return p;
+        })
+      );
+
       setSentClaims((prev) => {
         return prev.map((old) => {
           const match = updatedClaims.find(c => String(c.id) === String(old.id) || String(c.verify_id) === String(old.id));
