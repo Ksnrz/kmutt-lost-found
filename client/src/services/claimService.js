@@ -129,36 +129,18 @@ export const claimService = {
     const target = currentClaims.find(c => String(c.id) === String(claimId));
     if (!target) return currentClaims;
 
-    const targetPostId = target.post_id || target.postId;
-
     const updated = currentClaims.map(c => {
-      if (String(c.id) === String(claimId)) {
-        const resolvedNote = note?.trim() || (newStatus === 'ACCEPTED' ? 'อนุมัติคำขอแล้ว กรุณานัดหมายวันเวลาและสถานที่รับมอบสิ่งของ' : (newStatus === 'PENDING' ? '' : c.note));
-        return {
-          ...c,
-          status: newStatus,
-          verify_status: newStatus,
-          note: resolvedNote,
-          ownerNote: resolvedNote,
-          finderConfirmed: false,
-          receiverConfirmed: false,
-        };
-      }
-
-      // กฎข้อ 1: 1 คำขอต่อ 1 โพสต์ (คำขออื่นที่รออยู่ให้เป็น CANCELLED เมื่อมีการตอบรับ)
-      if (newStatus === 'ACCEPTED' && (String(c.post_id) === String(targetPostId) || String(c.postId) === String(targetPostId))) {
-        if (c.status === 'PENDING' || c.verify_status === 'PENDING') {
-          return {
-            ...c,
-            status: 'CANCELLED',
-            verify_status: 'CANCELLED',
-            note: 'ระบบยกเลิกอัตโนมัติเนื่องจากผู้พบได้ตอบรับคำขออื่นในโพสต์นี้แล้ว',
-            ownerNote: 'ระบบยกเลิกอัตโนมัติเนื่องจากผู้พบได้ตอบรับคำขออื่นในโพสต์นี้แล้ว',
-          };
-        }
-      }
-
-      return c;
+      if (String(c.id) !== String(claimId)) return c;
+      const resolvedNote = note?.trim() || (newStatus === 'ACCEPTED' ? 'อนุมัติคำขอแล้ว กรุณานัดหมายวันเวลาและสถานที่รับมอบสิ่งของ' : c.note);
+      return {
+        ...c,
+        status: newStatus,
+        verify_status: newStatus,
+        note: resolvedNote,
+        ownerNote: resolvedNote,
+        finderConfirmed: false,
+        receiverConfirmed: false,
+      };
     });
 
     saveClaims(updated);

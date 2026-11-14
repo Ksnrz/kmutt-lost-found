@@ -119,7 +119,8 @@ export default function ReviewRequestsPage({
     const confirmCancel = window.confirm('ต้องการยกเลิกการตอบรับคำขอนี้ใช่หรือไม่? (ระบบจะเปิดให้คุณสามารถเลือกคำขออื่นที่ยังรออยู่ได้)');
     if (!confirmCancel) return;
 
-    await run(() => claimService.updateClaimStatus(id, 'CANCELLED', 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ'));
+    // server รับเฉพาะ ACCEPTED -> PENDING: คำขอนี้กลับไปรอตรวจ และคำขออื่นที่ยัง PENDING อยู่ก็ตอบรับแทนได้
+    await run(() => claimService.updateClaimStatus(id, 'PENDING', 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ'));
   };
 
   // 5. รีเซ็ตสถานะกลับมาเป็น PENDING 
@@ -419,7 +420,7 @@ export default function ReviewRequestsPage({
 
             {/* ปุ่มกดปฏิเสธ / อนุมัติคำขอ*/}
             <div className="review-detail-actions">
-              {activeRequest.status !== 'PENDING' && (
+              {activeRequest.status === 'ACCEPTED' && (
                 <Button
                   variant="secondary"
                   size="sm"
