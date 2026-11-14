@@ -4,7 +4,6 @@ import authRouter from './routes/auth.js';
 import meRouter from './routes/me.js';
 import postsRouter from './routes/posts.js';
 import verifyRouter from './routes/verify.js';
-import claimRoutes from './routes/claimRoutes.js';
 import locationsRouter from './routes/locations.js';
 
 const app = express();
@@ -42,10 +41,11 @@ app.use('/api/locations', locationsRouter);
 
 // ระบบ VERIFY (C2 - C6: /api/posts/:id/verify, /api/verify/...)
 app.use('/api', verifyRouter);
-app.use('/api/claims', claimRoutes);
 
 // Access uploaded images
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static('uploads', {
+  setHeaders: (res) => res.set('X-Content-Type-Options', 'nosniff'),
+}));
 
 app.use('/api', (req, res) =>
   res.status(404).json({ error: 'Not found' })
@@ -60,6 +60,9 @@ const PG_ERRORS = {
 };
 
 app.use((err, req, res, next) => {
+  // multer limits (file too large, too many files) are the client's fault
+  if (err.name === 'MulterError') err.status = 400;
+
   const [status, message] = PG_ERRORS[err.code] ?? [
     err.status ?? 500,
     err.status ? err.message : 'Internal server error',

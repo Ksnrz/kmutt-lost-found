@@ -257,13 +257,23 @@ router.patch('/:id/cancel', requireAuth, async (req, res) => {
     const { id } = req.params;
     const user_id = req.user.user_id;
 
+    // one statement, so the post and its open claims are cancelled together
     const result = await pool.query(
-        `UPDATE posts
-         SET post_status = 'CANCELLED'
-         WHERE post_id = $1
-           AND user_id = $2
-           AND post_status = 'OPEN'
-         RETURNING *`,
+        `WITH cancelled AS (
+            UPDATE posts
+            SET post_status = 'CANCELLED'
+            WHERE post_id = $1
+              AND user_id = $2
+              AND post_status = 'OPEN'
+            RETURNING *
+         ), claims AS (
+            UPDATE verify_items
+            SET verify_status = 'CANCELLED',
+                note = 'ระบบยกเลิกอัตโนมัติเนื่องจากประกาศนี้ถูกยกเลิก'
+            WHERE post_id IN (SELECT post_id FROM cancelled)
+              AND verify_status IN ('PENDING', 'ACCEPTED')
+         )
+         SELECT * FROM cancelled`,
         [id, user_id]
     );
 
