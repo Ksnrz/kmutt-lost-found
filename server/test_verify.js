@@ -1,4 +1,5 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import { pool } from './src/db.js';
 import verifyRouter from './src/routes/verify.js';
 
@@ -6,19 +7,23 @@ const app = express();
 app.use(express.json());
 app.use('/api', verifyRouter);
 
+const secret = process.env.JWT_SECRET || 'change-me';
+const auth1 = { Authorization: `Bearer ${jwt.sign({ user_id: 1 }, secret)}` };
+const auth2 = { Authorization: `Bearer ${jwt.sign({ user_id: 2 }, secret)}` };
+
 const server = app.listen(3999, async () => {
   console.log('Test server running on port 3999');
   try {
-    // Test 1: GET /api/posts/1/verify with x-test-user: 1 (Owner)
+    // Test 1: GET /api/posts/1/verify with auth1 (Owner)
     const res1 = await fetch('http://localhost:3999/api/posts/1/verify', {
-      headers: { 'x-test-user': '1' }
+      headers: { ...auth1 }
     });
     const data1 = await res1.json();
     console.log('TEST 1 (Owner views claims): status =', res1.status, '| claims count =', data1.requests?.length);
 
-    // Test 2: GET /api/posts/1/verify with x-test-user: 2 (Not Owner) -> 403
+    // Test 2: GET /api/posts/1/verify with auth2 (Not Owner) -> 403
     const res2 = await fetch('http://localhost:3999/api/posts/1/verify', {
-      headers: { 'x-test-user': '2' }
+      headers: { ...auth2 }
     });
     const data2 = await res2.json();
     console.log('TEST 2 (Non-owner views claims -> 403 Forbidden): status =', res2.status, '| error =', data2.error);
@@ -26,16 +31,16 @@ const server = app.listen(3999, async () => {
     // Test 3: POST /api/posts/2/verify (DEPOSITED post -> 400)
     const res3 = await fetch('http://localhost:3999/api/posts/2/verify', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-test-user': '2' },
+      headers: { 'Content-Type': 'application/json', ...auth2 },
       body: JSON.stringify({ proof_description: 'ของฉันเองครับ' })
     });
     const data3 = await res3.json();
     console.log('TEST 3 (Claim DEPOSITED post -> 400 Bad Request): status =', res3.status, '| error =', data3.error);
 
-    // Test 4: POST /api/posts/1/verify with x-test-user: 1 (Own post -> 403)
+    // Test 4: POST /api/posts/1/verify with auth1 (Own post -> 403)
     const res4 = await fetch('http://localhost:3999/api/posts/1/verify', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-test-user': '1' },
+      headers: { 'Content-Type': 'application/json', ...auth1 },
       body: JSON.stringify({ proof_description: 'ของฉันเอง' })
     });
     const data4 = await res4.json();
@@ -44,7 +49,7 @@ const server = app.listen(3999, async () => {
     // Test 5: PUT /api/verify/102/status with ACCEPTED
     const res5 = await fetch('http://localhost:3999/api/verify/102/status', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-test-user': '1' },
+      headers: { 'Content-Type': 'application/json', ...auth1 },
       body: JSON.stringify({ status: 'ACCEPTED', note: 'นัดรับที่ตึก S4' })
     });
     const data5 = await res5.json();
@@ -53,7 +58,7 @@ const server = app.listen(3999, async () => {
     // Test 6: Dual Confirm - Finder confirms
     const res6 = await fetch('http://localhost:3999/api/verify/102/confirm', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-test-user': '1' },
+      headers: { 'Content-Type': 'application/json', ...auth1 },
       body: JSON.stringify({ party: 'finder' })
     });
     const data6 = await res6.json();
@@ -62,7 +67,7 @@ const server = app.listen(3999, async () => {
     // Test 7: Dual Confirm - Receiver confirms (Both confirmed -> Post CLOSED)
     const res7 = await fetch('http://localhost:3999/api/verify/102/confirm', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-test-user': '2' },
+      headers: { 'Content-Type': 'application/json', ...auth2 },
       body: JSON.stringify({ party: 'receiver' })
     });
     const data7 = await res7.json();
