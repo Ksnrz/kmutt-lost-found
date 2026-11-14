@@ -389,6 +389,24 @@
   margin: 0;
 }
 
+.handover-step-card.is-done .step-status-text {
+  color: #16a34a;
+  font-weight: var(--fw-medium, 500);
+}
+
+.handover-waiting-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-helper-status);
+  font-weight: var(--fw-medium);
+  color: var(--color-gray);
+  background-color: var(--color-gray-light);
+  padding: 4px 8px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
 .handover-confirmed-tag {
   display: inline-flex;
   align-items: center;

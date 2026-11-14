@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   Handshake,
   Check,
@@ -14,6 +14,7 @@ import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
 import Thumbnail from '../../components/ui/Thumbnail';
 import Badge from '../../components/ui/Badge';
+import { claimService } from '../../services/claimService';
 import './ReviewRequestsPage.css';
 
 /**
@@ -65,6 +66,9 @@ export default function ReviewRequestsPage({
   onBack,
 }) {
   const navigate = useNavigate();
+  const { postId: routePostId } = useParams();
+  const location = useLocation();
+  const targetPostId = routePostId || location.state?.postId || 'p-101';
 
   // State 1: สถานะของโพสต์ประกาศหลัก ('OPEN' | 'CLOSED' | 'CANCELLED')
   const [postStatus, setPostStatus] = useState('OPEN');
@@ -78,6 +82,32 @@ export default function ReviewRequestsPage({
   // State 4: ข้อความในช่อง "หมายเหตุสำหรับผู้ส่ง"
   const [noteText, setNoteText] = useState('');
 
+  // เชื่อมต่อ State กลางและรับข้อมูลแบบ Real-time จาก claimService
+  useEffect(() => {
+    let isMounted = true;
+    claimService.getClaimsByPost(targetPostId).then((data) => {
+      if (isMounted && data && data.length > 0) {
+        setRequests(data);
+        if (data[0]?.id || data[0]?.verify_id) {
+          setSelectedId(String(data[0].id || data[0].verify_id));
+        }
+      }
+    });
+
+    // ซิงก์ข้อมูลทันทีเมื่อมีการส่งคำขอใหม่จากหน้า 6 หรือมีการอัปเดตจากหน้าอื่น
+    const unsubscribe = claimService.subscribe((updatedClaims) => {
+      const forPost = updatedClaims.filter(c => String(c.post_id) === String(targetPostId) || String(c.postId) === String(targetPostId));
+      if (forPost.length > 0) {
+        setRequests(forPost);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [targetPostId]);
+
   // ค้นหาข้อมูลคำขอที่กำลังถูกเลือก
   const activeRequest = requests.find((r) => r.id === selectedId) || requests[0];
 
@@ -89,161 +119,63 @@ export default function ReviewRequestsPage({
   const pendingCount = requests.filter((r) => r.status === 'PENDING').length;
 
   // 1. ตอบรับคำขอ (ACCEPTED / อนุมัติคำขอ) — ล็อกให้ตอบรับได้ทีละ 1 คนต่อโพสต์
-  const handleAccept = () => {
+  // กฎ Business Logic: คำขออื่นที่รออยู่จะถูก CANCELLED อัตโนมัติทันที
+  const handleAccept = async () => {
     if (!activeRequest || isOtherAccepted) return;
 
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === activeRequest.id
-          ? {
-            ...r,
-            status: 'ACCEPTED',
-            verify_status: 'ACCEPTED',
-            note: noteText,
-            finderConfirmed: false,
-            receiverConfirmed: false,
-          }
-          : r
-      )
-    );
-
+    const finalNote = noteText.trim() || 'อนุมัติคำขอแล้ว กรุณานัดหมายวันเวลาและสถานที่รับมอบสิ่งของ';
+    await claimService.updateClaimStatus(activeRequest.id, 'ACCEPTED', finalNote);
     setNoteText('');
   };
 
   // 2. ปฏิเสธคำขอ (REJECTED)
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!activeRequest) return;
 
     const confirmReject = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอ #${activeRequest.id}?`);
     if (!confirmReject) return;
 
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === activeRequest.id
-          ? { ...r, status: 'REJECTED', verify_status: 'REJECTED', note: noteText }
-          : r
-      )
-    );
-
+    await claimService.updateClaimStatus(activeRequest.id, 'REJECTED', noteText);
     setNoteText('');
   };
 
-  // 3. ฝ่ายผู้พบ (คุณ) กดยืนยันการส่งมอบ
-  const handleConfirmFinder = (id) => {
-    setRequests((prev) => {
-      const target = prev.find((r) => r.id === id);
-      if (!target) return prev;
-      const willComplete = target.receiverConfirmed;
-
-      if (willComplete) {
-        setPostStatus('CLOSED');
-      }
-
-      return prev.map((r) => {
-        if (r.id === id) {
-          return {
-            ...r,
-            finderConfirmed: true,
-            status: willComplete ? 'COMPLETED' : r.status,
-            verify_status: willComplete ? 'COMPLETED' : r.verify_status,
-          };
-        }
-        if (willComplete && r.status === 'PENDING') {
-          return {
-            ...r,
-            status: 'CANCELLED',
-            verify_status: 'CANCELLED',
-            note: 'ระบบยกเลิกอัตโนมัติเนื่องจากส่งมอบสิ่งของสำเร็จแล้ว',
-          };
-        }
-        return r;
-      });
-    });
+  // 3. ฝ่ายผู้พบ (คุณ) กดยืนยันการส่งมอบ (Dual Confirmation)
+  const handleConfirmFinder = async (id) => {
+    const result = await claimService.confirmHandover(id, 'finder');
+    if (result?.postClosed) {
+      setPostStatus('CLOSED');
+    }
   };
 
-  // 4. จำลองฝ่ายผู้รับ กดยืนยันว่าได้รับของแล้ว (Dual Confirmation)
-  const handleConfirmReceiver = (id) => {
-    setRequests((prev) => {
-      const target = prev.find((r) => r.id === id);
-      if (!target) return prev;
-      const willComplete = target.finderConfirmed;
-
-      if (willComplete) {
-        setPostStatus('CLOSED');
-      }
-
-      return prev.map((r) => {
-        if (r.id === id) {
-          return {
-            ...r,
-            receiverConfirmed: true,
-            status: willComplete ? 'COMPLETED' : r.status,
-            verify_status: willComplete ? 'COMPLETED' : r.verify_status,
-          };
-        }
-        if (willComplete && r.status === 'PENDING') {
-          return {
-            ...r,
-            status: 'CANCELLED',
-            verify_status: 'CANCELLED',
-            note: 'ระบบยกเลิกอัตโนมัติเนื่องจากส่งมอบสิ่งของสำเร็จแล้ว',
-          };
-        }
-        return r;
-      });
-    });
-  };
-
-  // 5. ส่งมอบไม่สำเร็จ ➔ ยกเลิกการตอบรับ (CANCELLED) เพื่อให้กลับไปเลือกคำขออื่นที่รออยู่ได้
-  const handleCancelAccepted = (id) => {
+  // 4. ส่งมอบไม่สำเร็จ ➔ ยกเลิกการตอบรับ (CANCELLED) เพื่อให้กลับไปเลือกคำขออื่นที่รออยู่ได้
+  const handleCancelAccepted = async (id) => {
     const confirmCancel = window.confirm('ต้องการยกเลิกการตอบรับคำขอนี้ใช่หรือไม่? (ระบบจะเปิดให้คุณสามารถเลือกคำขออื่นที่ยังรออยู่ได้)');
     if (!confirmCancel) return;
 
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === id
-          ? {
-            ...r,
-            status: 'CANCELLED',
-            verify_status: 'CANCELLED',
-            note: 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ',
-            finderConfirmed: false,
-            receiverConfirmed: false,
-          }
-          : r
-      )
-    );
+    await claimService.updateClaimStatus(id, 'CANCELLED', 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ');
   };
 
-  // 6. รีเซ็ตสถานะกลับมาเป็น PENDING 
-  const handleResetStatus = (id) => {
+  // 5. รีเซ็ตสถานะกลับมาเป็น PENDING 
+  const handleResetStatus = async (id) => {
     setPostStatus('OPEN');
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === id
-          ? {
-            ...r,
-            status: 'PENDING',
-            verify_status: 'PENDING',
-            note: '',
-            finderConfirmed: false,
-            receiverConfirmed: false,
-          }
-          : r
-      )
-    );
+    await claimService.updateClaimStatus(id, 'PENDING', '');
   };
 
-  // 7. รีเซ็ตทั้งหมดทั้งโพสต์
+  // 6. รีเซ็ตทั้งหมดทั้งโพสต์กลับสู่ค่าเริ่มต้น
   const handleResetAll = () => {
     setPostStatus('OPEN');
-    setRequests(initialRequests);
+    const resetData = claimService.resetAll();
+    setRequests(resetData);
     setNoteText('');
   };
 
   const handleGoBack = () => {
     if (onBack) {
       onBack();
+    } else if (location.state?.from) {
+      navigate(location.state.from);
+    } else if (targetPostId && targetPostId !== 'p-101') {
+      navigate(`/posts/${targetPostId}`);
     } else {
       navigate('/account');
     }
@@ -256,7 +188,7 @@ export default function ReviewRequestsPage({
         tag="RECEIVED REQUESTS"
         title="คำขอที่ส่งมายังประกาศของฉัน"
         subtitle="ตรวจหลักฐานและยืนยันการส่งมอบสิ่งของคืนเจ้าของตามกฎระบบ"
-        backText="กลับไปรายการประกาศ"
+        backText={location.state?.from === 'detail' ? 'กลับไปหน้ารายละเอียดโพสต์' : 'กลับไปหน้าประกาศของฉัน'}
         onBack={handleGoBack}
       />
 
@@ -265,7 +197,7 @@ export default function ReviewRequestsPage({
         <div className="review-post-banner-info">
           <span className="review-post-banner-label">โพสต์ที่จัดการ:</span>
           <strong className="review-post-banner-title">
-            พบกระเป๋าสตางค์สีดำ (#p-101 · S4 ชั้น 1)
+            {location.state?.post?.title || activeRequest?.itemTitle || 'พบกระเป๋าสตางค์สีดำ'} (#{targetPostId})
           </strong>
         </div>
         <div className="review-post-banner-right">
@@ -447,18 +379,14 @@ export default function ReviewRequestsPage({
                     <p className="step-status-text">
                       {activeRequest.receiverConfirmed ? 'ยืนยันได้รับของแล้ว' : 'รอผู้รับยืนยัน'}
                     </p>
-                    {!activeRequest.receiverConfirmed ? (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => handleConfirmReceiver(activeRequest.id)}
-                      >
-                        จำลอง: ผู้รับยืนยัน
-                      </Button>
-                    ) : (
+                    {activeRequest.receiverConfirmed ? (
                       <span className="handover-confirmed-tag">
                         <CheckCircle2 size={13} />
                         <span>ยืนยันแล้ว</span>
+                      </span>
+                    ) : (
+                      <span className="handover-waiting-tag">
+                        <span>รอผู้รับยืนยัน</span>
                       </span>
                     )}
                   </div>

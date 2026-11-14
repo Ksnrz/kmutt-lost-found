@@ -4,16 +4,20 @@ import { pool } from '../db.js';
 const router = express.Router();
 
 // API สำหรับดึงรายการสถานที่ทั้งหมด
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
+  try {
     const result = await pool.query(
-        `SELECT *
-         FROM locations
-         ORDER BY building_name ASC`
+      `SELECT *
+       FROM locations
+       ORDER BY building_name ASC`
     );
 
     res.json({
-        locations: result.rows
+      locations: result.rows,
     });
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;

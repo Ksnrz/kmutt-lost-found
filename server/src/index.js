@@ -3,6 +3,8 @@ import { pool } from './db.js';
 import authRouter from './routes/auth.js';
 import meRouter from './routes/me.js';
 import postsRouter from './routes/posts.js';
+import verifyRouter from './routes/verify.js';
+import claimRoutes from './routes/claimRoutes.js';
 import locationsRouter from './routes/locations.js';
 
 const app = express();
@@ -37,6 +39,10 @@ app.use('/api/auth', authRouter);
 app.use('/api/me', meRouter);
 app.use('/api/posts', postsRouter);
 app.use('/api/locations', locationsRouter);
+
+// ระบบ VERIFY (C2 - C6: /api/posts/:id/verify, /api/verify/...)
+app.use('/api', verifyRouter);
+app.use('/api/claims', claimRoutes);
 
 // Access uploaded images
 app.use('/uploads', express.static('uploads'));

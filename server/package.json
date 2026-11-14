@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "node --watch --env-file=.env src/index.js",
     "start": "node --env-file=.env src/index.js",
-    "db:reset": "psql -U postgres -d lostfound -f db/schema.sql"
+    "db:reset": "psql -U postgres -d lostfound -f db/schema.sql",
+    "db:seed": "psql -U postgres -d lostfound -f db/seed.sql",
+    "test:verify": "node --env-file=.env test_verify.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

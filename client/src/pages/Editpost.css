@@ -1,180 +1,275 @@
+/**
+ * KMUTT Lost & Found — Editpost Page Styles
+ * Full-width responsive layout matching mockup (media_1794484669913_93ab8a4e.png)
+ */
 
-.container {
-    padding: 60px 50px;
-    background-color: #F7F7F7;
-    min-height: 100vh;
-    font-family: "Noto Sans Thai", sans-serif;
-    box-sizing: border-box;
+.editpost-page {
+  min-height: calc(100vh - 72px);
+  width: 100%;
+  background-color: var(--color-bg-page, #f8fafc);
+  color: var(--color-gray-dark, #1e2022);
 }
 
-.container h1 {
-    font-size: 30px;
-    font-weight: bold;
-    color: #000;
-    margin-bottom: 30px;
+.editpost-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 40px) clamp(16px, 3.5vw, 48px);
+  box-sizing: border-box;
+  text-align: left;
+  font-family: var(--font-family-base, 'Noto Sans Thai', sans-serif);
 }
 
+/* ============================================================
+   Form Layout Grid
+   ============================================================ */
 .form-layout {
-    display: flex;
-    align-items: stretch;
-    gap: 15px;
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
 }
 
 .form-left {
-    flex: 2;
-    min-width: 0;
+  flex: 2;
+  min-width: 0;
 }
 
 .form-right {
-    flex: 1.1;
-    min-width: 0;
+  flex: 1.25;
+  min-width: 0;
 }
 
-.form-left h2,
-.form-right h2 {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 20px;
+/* Headings scoped inside editpost */
+.editpost-container h2 {
+  font-size: var(--text-h2-section, 20px);
+  font-weight: var(--fw-bold, 700);
+  color: var(--color-gray-dark, #1e2022);
+  margin: 0 0 18px 0;
 }
 
-.form-left h3,
-.form-right h3 {
-    font-size: 14px;
-    font-weight: bold;
-    margin: 12px 0 7px;
+.editpost-container h3 {
+  font-size: var(--text-input-label, 14px);
+  font-weight: var(--fw-bold, 700);
+  color: var(--color-gray-dark, #1e2022);
+  margin: 16px 0 8px 0;
 }
 
-.form-left h3 span,
-.form-right h3 span {
-    color: #ff451f;
+.editpost-container .req-star {
+  color: var(--color-primary, #fa4616);
+  margin-left: 2px;
 }
 
-.container p {
-    color: #7B8189;
+/* ============================================================
+   Segmented Pill Toggle
+   ============================================================ */
+.segmented-toggle {
+  display: flex;
+  padding: 4px;
+  background-color: var(--color-white, #ffffff);
+  border: 1.5px solid var(--color-gray-border, #d9d9d9);
+  border-radius: var(--radius-lg, 14px);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.form-left .flex-button {
-    display: flex;
-    gap: 10px;
-    margin: 0 0 20px 5px;
+.toggle-option {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--color-gray, #7b8189);
+  font-family: inherit;
+  font-size: var(--text-btn-primary, 16px);
+  font-weight: var(--fw-semibold, 600);
+  border-radius: var(--radius-md, 10px);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  user-select: none;
 }
 
-.form-left .flex-button .custom-btn {
-    flex: 1;
+.toggle-option:hover:not(.is-active) {
+  color: var(--color-gray-dark, #1e2022);
+  background-color: var(--color-gray-light, #f8fafc);
 }
 
-.form-right .flex-button1 {
-    display: flex;
-    gap: 10px;
-    margin: 0 0 15px 5px;
+.toggle-option.is-active {
+  background-color: var(--color-primary, #fa4616);
+  color: var(--color-white, #ffffff);
+  font-weight: var(--fw-bold, 700);
+  box-shadow: var(--shadow-button);
 }
 
-.form-right .flex-button1 .custom-btn {
-    flex: 1;
-}
-
-.form-left .flex-button .custom-btn.active,
-.form-right .flex-button1 .custom-btn.active {
-    background-color: #ff4500;
-    color: #fff;
-    border-color: #ff4500;
-}
-
-.form-left .flex-button .custom-btn.active:hover,
-.form-right .flex-button1 .custom-btn.active:hover {
-    background-color: #e83e00;
-    color: #fff;
-}
-
+/* ============================================================
+   Form Row (Location + Date side by side)
+   ============================================================ */
 .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
 
 .form-row > div {
-    min-width: 0;
+  min-width: 0;
 }
 
+/* Textarea for item description */
 .form-left textarea {
-    width: 100%;
-    min-height: 75px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 7px;
-    resize: vertical;
-    font-family: inherit;
-    font-size: 13px;
-    box-sizing: border-box;
-    outline: none;
+  width: 100%;
+  min-height: 100px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-gray-border, #d9d9d9);
+  border-radius: var(--radius-md, 12px);
+  resize: vertical;
+  font-family: inherit;
+  font-size: var(--text-meta, 14px);
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .form-left textarea:focus {
-    border-color: #ff451f;
+  border-color: var(--color-orange, #fa4616);
+  box-shadow: 0 0 0 3px var(--color-orange-light, #ffebe3);
 }
 
+/* Add image full-width box */
 .add-image {
-    width: 100%;
-    padding: 7px;
-    margin-top: 8px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: #f7f7f7;
-    color: #888;
-    text-align: center;
-    font-size: 12px;
-    cursor: pointer;
-    box-sizing: border-box;
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  border: 1px solid var(--color-gray-border, #d9d9d9);
+  border-radius: var(--radius-md, 12px);
+  background-color: var(--color-gray-light, #f7f7f7);
+  color: var(--color-gray, #7b8189);
+  font-size: var(--text-meta, 14px);
+  font-weight: var(--fw-medium, 500);
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
 }
 
-.form-right .card {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: 8px;
-    height: 100%;
-    box-sizing: border-box;
+.add-image:hover {
+  border-color: var(--color-primary, #fa4616);
+  color: var(--color-primary, #fa4616);
 }
 
+/* Divider in Right Card */
+.editpost-divider {
+  border: none;
+  border-top: 1px solid var(--color-gray-light, #ededed);
+  margin: 18px 0;
+}
+
+/* ============================================================
+   Helper Descriptions
+   ============================================================ */
 .form-description {
-    margin: 12px 5px 5px;
-    color: #7B8189;
-    font-size: 11px;
+  margin: 20px 0;
+  font-size: var(--text-helper-status, 12px);
+  color: var(--color-gray, #7b8189);
+  line-height: 1.6;
 }
 
 .form-description p {
-    margin: 3px 0;
+  margin: 2px 0;
 }
 
-.form-right .flex-button2 {
-    display: flex;
-    gap: 10px;
-    margin: 8px 0 0 5px;
+/* ============================================================
+   Bottom Action Buttons (Cancel / Delete / Submit Edit)
+   ============================================================ */
+.editpost-container .flex-button2 {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
 }
 
-.form-right .flex-button2 .custom-btn {
-    flex: 1;
+.editpost-container .btn-cancel,
+.editpost-container .btn-delete {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px 16px;
+  background-color: var(--color-white, #ffffff) !important;
+  color: var(--color-gray-dark, #1e2022) !important;
+  border: 1.5px solid var(--color-gray-border, #d9d9d9) !important;
+  border-radius: var(--radius-md, 12px) !important;
+  font-size: var(--text-btn-primary, 16px);
+  font-weight: var(--fw-bold, 700);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.form-right .submit-button {
+.editpost-container .btn-cancel:hover {
+  background-color: var(--color-gray-light, #f7f7f7) !important;
+  border-color: var(--color-gray, #7b8189) !important;
+}
+
+.editpost-container .btn-delete:hover {
+  background-color: #fef2f2 !important;
+  border-color: var(--color-status-danger, #dc2626) !important;
+  color: var(--color-status-danger, #dc2626) !important;
+}
+
+.submit-button-wrap {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.editpost-container .btn-submit-edit {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 20px;
+  background-color: var(--color-primary, #fa4616) !important;
+  color: var(--color-white, #ffffff) !important;
+  border: none !important;
+  border-radius: var(--radius-md, 12px) !important;
+  font-size: var(--text-btn-primary, 16px);
+  font-weight: var(--fw-bold, 700);
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: var(--shadow-button);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editpost-container .btn-submit-edit:hover {
+  background-color: var(--color-orange-hover, #e03b0f) !important;
+  box-shadow: 0 4px 8px rgba(250, 70, 22, 0.28);
+}
+
+.editpost-container .btn-submit-edit:active {
+  background-color: var(--color-orange-active, #c5320c) !important;
+  transform: translateY(1px);
+}
+
+/* ============================================================
+   Responsive Breakpoints
+   ============================================================ */
+@media (max-width: 960px) {
+  .form-layout {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-left,
+  .form-right {
     width: 100%;
-    margin: 5px 0 0;
-}
-
-.form-right .submit-button .custom-btn {
-    width: 100%;
-}
-
-@media (max-width: 768px) {
-    .container {
-        padding: 30px 15px;
-    }
-
-    .form-layout {
-        flex-direction: column;
-    }
-
-    .form-row {
-        grid-template-columns: 1fr;
-    }
+    flex: none;
+  }
 }

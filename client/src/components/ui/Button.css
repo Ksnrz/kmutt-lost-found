@@ -1,16 +1,18 @@
-
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-family: inherit;
-  font-weight: var(--fw-bold);
-  border-radius: var(--radius-md);
+  font-size: var(--text-btn-primary, 16px);
+  font-weight: var(--fw-bold, 700);
+  border-radius: var(--radius-md, 12px);
   cursor: pointer;
+  padding: 10px 20px;
   transition: all 0.2s ease;
   outline: none;
   border: 1px solid transparent;
   white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .btn:disabled {
@@ -18,7 +20,7 @@
   cursor: not-allowed;
 }
 
-/* Variants */
+/* Primary Variant (Default KMUTT Orange) */
 .btn-primary {
   background-color: var(--color-orange);
   color: var(--color-white);
@@ -32,23 +34,25 @@
   transform: translateY(-1px);
 }
 
+/* Secondary Variant (White with border) */
 .btn-secondary {
   background-color: var(--color-white);
-  color: #334155;
-  border: 1.5px solid var(--color-gray-border);
-  font-weight: var(--fw-medium);
+  color: var(--color-gray-dark, #1e2022);
+  border: 1px solid var(--color-gray-border, #d9d9d9);
+  font-weight: var(--fw-medium, 500);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: var(--color-gray-light);
-  border-color: #94a3b8;
+  background-color: var(--color-orange-light, #ffebe3);
+  border-color: var(--color-orange);
   color: var(--color-orange);
 }
 
+/* Danger Variant */
 .btn-danger {
-  background-color: var(--color-status-danger);
+  background-color: var(--color-status-danger, #dc2626);
   color: var(--color-white);
-  border-color: var(--color-status-danger);
+  border-color: var(--color-status-danger, #dc2626);
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -56,21 +60,35 @@
   border-color: #b91c1c;
 }
 
+/* Teammate Filter/Toggle Active State (.active) */
+.btn.active,
+.btn-secondary.active {
+  background-color: var(--color-orange) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-orange) !important;
+}
+
+.btn.active:hover:not(:disabled),
+.btn-secondary.active:hover:not(:disabled) {
+  background-color: var(--color-orange-hover) !important;
+  border-color: var(--color-orange-hover) !important;
+}
+
 /* Sizes */
 .btn-sm {
-  font-size: var(--text-helper-status);
   padding: 6px 14px;
-  border-radius: 8px;
+  font-size: var(--text-meta, 14px);
+  border-radius: var(--radius-sm, 8px);
 }
 
 .btn-md {
-  font-size: var(--text-meta);
   padding: 10px 20px;
-  min-height: 42px;
+  font-size: var(--text-btn-primary, 16px);
+  border-radius: var(--radius-md, 12px);
 }
 
 .btn-lg {
-  font-size: var(--text-btn-primary);
-  padding: 12px 26px;
-  min-height: 48px;
+  padding: 14px 28px;
+  font-size: 18px;
+  border-radius: var(--radius-lg, 16px);
 }

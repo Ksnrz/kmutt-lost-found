@@ -222,6 +222,16 @@
   min-width: 0;
 }
 
+.account-clickable {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.account-clickable:hover .account-post-title,
+.account-clickable:hover .account-table-item-title {
+  color: var(--color-orange, #fa4616);
+}
+
 .account-post-details {
   display: flex;
   flex-direction: column;
@@ -369,6 +379,13 @@
   padding: 8px 12px;
   border-radius: var(--radius-sm);
   border-left: 3px solid var(--color-orange);
+}
+
+.account-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* ============================================================

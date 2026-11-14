@@ -48,6 +48,7 @@ function App() {
           <Route path="/claims/new" element={<ClaimRequestPage />} />
           <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
           <Route path="/requests/review" element={<ReviewRequestsPage />} />
+          <Route path="/posts/:postId/review" element={<ReviewRequestsPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/profile" element={<Profile />} />
         </Route>

@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Megaphone,
   Send,
   Inbox,
-  Check,
   CheckCircle2,
   X,
 } from 'lucide-react';
@@ -13,6 +12,7 @@ import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
 import Thumbnail from '../../components/ui/Thumbnail';
 import Badge from '../../components/ui/Badge';
+import { claimService } from '../../services/claimService';
 import './AccountPage.css';
 
 /**
@@ -31,7 +31,7 @@ import './AccountPage.css';
  */
 export default function AccountPage({
   onNavigateReview,
-  onNavigatePostDetail,
+  onNavigateEditPost,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -44,138 +44,253 @@ export default function AccountPage({
   const [postFilter, setPostFilter] = useState('all');
 
   // State 3: ข้อมูลประกาศที่ฉันสร้าง (ดึงมาจาก Entity POSTS + LOCATION ตาม ER Diagram)
-  const [myPosts, setMyPosts] = useState([
-    {
-      id: 'p-101',
-      post_id: 'p-101',
-      title: 'พบกระเป๋าสตางค์สีดำ',
-      post_type: 'ประกาศเจอของ (FOUND)',
-      custody_type: 'ผู้พบเก็บรักษาเอง',
-      building_name: 'อาคาร S4 ชั้น 1',
-      location: 'S4 ชั้น 1',
-      date: '24 ก.ย. 2026',
-      created_at: '24 ก.ย. 2026',
-      status: 'OPEN', // post_status: 'OPEN' | 'CLOSED' | 'CANCELLED'
-      post_status: 'OPEN',
-      pendingRequestsCount: 2,
-    },
-    {
-      id: 'p-102',
-      post_id: 'p-102',
-      title: 'ตามหากุญแจรถยนต์ Honda',
-      post_type: 'ตามหาของหาย (LOST)',
-      custody_type: 'เจ้าของตามหาเอง',
-      building_name: 'อาคาร CB4 ชั้น 2',
-      location: 'CB4 ชั้น 2',
-      date: '22 ก.ย. 2026',
-      created_at: '22 ก.ย. 2026',
-      status: 'OPEN',
-      post_status: 'OPEN',
-      pendingRequestsCount: 0,
-    },
-    {
-      id: 'p-103',
-      post_id: 'p-103',
-      title: 'พบหูฟังไร้สาย AirPods',
-      post_type: 'ประกาศเจอของ (FOUND)',
-      custody_type: 'ฝากจุดประชาสัมพันธ์',
-      building_name: 'หอสมุด ชั้น 3',
-      location: 'หอสมุด ชั้น 3',
-      date: '18 ก.ย. 2026',
-      created_at: '18 ก.ย. 2026',
-      status: 'CLOSED',
-      post_status: 'CLOSED',
-      pendingRequestsCount: 0,
-    },
-    {
-      id: 'p-104',
-      post_id: 'p-104',
-      title: 'พบร่มพับสีน้ำเงิน',
-      post_type: 'ประกาศเจอของ (FOUND)',
-      custody_type: 'ส่งต่อจุดรับของหาย',
-      building_name: 'โรงอาหารพระจอมเกล้า',
-      location: 'โรงอาหารพระจอมเกล้า',
-      date: '15 ก.ย. 2026',
-      created_at: '15 ก.ย. 2026',
-      status: 'CANCELLED',
-      post_status: 'CANCELLED',
-      pendingRequestsCount: 0,
-    },
-  ]);
+  const [myPosts, setMyPosts] = useState(() => {
+    let posts = [
+      {
+        id: 'p-101',
+        post_id: 'p-101',
+        title: 'พบกระเป๋าสตางค์สีดำ',
+        post_type: 'ประกาศเจอของ (FOUND)',
+        custody_type: 'ผู้พบเก็บรักษาเอง',
+        building_name: 'อาคาร S4 ชั้น 1',
+        location: 'S4 ชั้น 1',
+        date: '24 ก.ย. 2026',
+        created_at: '24 ก.ย. 2026',
+        status: 'OPEN', // post_status: 'OPEN' | 'CLOSED' | 'CANCELLED'
+        post_status: 'OPEN',
+        pendingRequestsCount: 2,
+      },
+      {
+        id: 'p-102',
+        post_id: 'p-102',
+        title: 'ตามหากุญแจรถยนต์ Honda',
+        post_type: 'ตามหาของหาย (LOST)',
+        custody_type: 'เจ้าของตามหาเอง',
+        building_name: 'อาคาร CB4 ชั้น 2',
+        location: 'CB4 ชั้น 2',
+        date: '22 ก.ย. 2026',
+        created_at: '22 ก.ย. 2026',
+        status: 'OPEN',
+        post_status: 'OPEN',
+        pendingRequestsCount: 0,
+      },
+      {
+        id: 'p-103',
+        post_id: 'p-103',
+        title: 'พบหูฟังไร้สาย AirPods',
+        post_type: 'ประกาศเจอของ (FOUND)',
+        custody_type: 'ฝากจุดประชาสัมพันธ์',
+        building_name: 'หอสมุด ชั้น 3',
+        location: 'หอสมุด ชั้น 3',
+        date: '18 ก.ย. 2026',
+        created_at: '18 ก.ย. 2026',
+        status: 'CLOSED',
+        post_status: 'CLOSED',
+        pendingRequestsCount: 0,
+      },
+      {
+        id: 'p-104',
+        post_id: 'p-104',
+        title: 'พบร่มพับสีน้ำเงิน',
+        post_type: 'ประกาศเจอของ (FOUND)',
+        custody_type: 'ส่งต่อจุดรับของหาย',
+        building_name: 'โรงอาหารพระจอมเกล้า',
+        location: 'โรงอาหารพระจอมเกล้า',
+        date: '15 ก.ย. 2026',
+        created_at: '15 ก.ย. 2026',
+        status: 'CANCELLED',
+        post_status: 'CANCELLED',
+        pendingRequestsCount: 0,
+      },
+    ];
+
+    if (location.state?.updatedPost) {
+      const up = location.state.updatedPost;
+      posts = posts.map((p) =>
+        p.id === up.id || p.post_id === up.id ? { ...p, ...up } : p
+      );
+    }
+    if (location.state?.deletedPostId) {
+      const delId = location.state.deletedPostId;
+      posts = posts.filter((p) => p.id !== delId && p.post_id !== delId);
+    }
+    if (location.state?.closedPostId) {
+      const closedId = String(location.state.closedPostId);
+      posts = posts.map((p) =>
+        String(p.id) === closedId || String(p.post_id) === closedId || (closedId === '1' && p.id === 'p-101') || (closedId === 'p-101' && p.id === 'p-101')
+          ? { ...p, status: 'CLOSED', post_status: 'CLOSED' }
+          : p
+      );
+    }
+
+    // ซิงก์สถานะจาก LocalStorage จากผลการกดยืนยันส่งมอบ Dual Confirmation
+    posts = posts.map((p) => {
+      const stored =
+        localStorage.getItem(`kmutt_lostfound_post_status_${p.id}`) ||
+        localStorage.getItem(`kmutt_lostfound_post_status_${p.post_id}`) ||
+        (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_1') : null) ||
+        (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_p-101') : null);
+      if (stored) {
+        return { ...p, status: stored, post_status: stored };
+      }
+      return p;
+    });
+
+    return posts;
+  });
 
   // State 4: ข้อมูลคำขอที่ฉันส่ง (Entity VERIFY_ITEMS ที่ current user เป็นผู้ submit)
-  const [sentClaims, setSentClaims] = useState([
-    {
-      id: 'c-01',
-      verify_id: 'c-01',
-      post_id: 'p-101',
-      itemTitle: 'ขอรับกระเป๋าสตางค์สีดำ',
-      postOwner: 'นายสมเกียรติ มั่นคง (ผู้พบ)',
-      date: '25 ก.ย. 2026',
-      created_at: '25 ก.ย. 2026',
-      status: 'ACCEPTED', // verify_status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED'
-      verify_status: 'ACCEPTED',
-      proof_description: 'กระเป๋าสตางค์สีดำ Guy Laroche มีบัตรสีฟ้า',
-      ownerNote: 'ตอบรับแล้ว! นัดรับของที่โถง CB4 วันนี้เวลา 16:30 น.',
-      receiverConfirmed: false,
-    },
-    {
-      id: 'c-02',
-      verify_id: 'c-02',
-      post_id: 'p-089',
-      itemTitle: 'ขอรับบัตรนักศึกษาที่ทำหาย',
-      postOwner: 'เจ้าหน้าที่ห้องทะเบียน',
-      date: '20 ก.ย. 2026',
-      created_at: '20 ก.ย. 2026',
-      status: 'COMPLETED',
-      verify_status: 'COMPLETED',
-      proof_description: 'บัตรนักศึกษาคณะวิศวกรรมศาสตร์ ภาควิชา CPE',
-      ownerNote: 'ทั้งสองฝ่ายยืนยันการส่งมอบเสร็จสิ้นแล้ว ขอบคุณครับ',
-      receiverConfirmed: true,
-    },
-    {
-      id: 'c-03',
-      verify_id: 'c-03',
-      post_id: 'p-075',
-      itemTitle: 'ขอรับหูฟังไร้สาย AirPods',
-      postOwner: 'นายชินวัฒน์ อักษร (ผู้พบ)',
-      date: '24 ก.ย. 2026',
-      created_at: '24 ก.ย. 2026',
-      status: 'PENDING',
-      verify_status: 'PENDING',
-      proof_description: 'เคสหูฟังมีสติกเกอร์รูปแมวสีส้มติดอยู่ที่ฝา',
-      ownerNote: 'กำลังตรวจสอบรูปภาพและรายละเอียดตำหนิที่ส่งมา',
-      receiverConfirmed: false,
-    },
-    {
-      id: 'c-04',
-      verify_id: 'c-04',
-      post_id: 'p-064',
-      itemTitle: 'ขอรับกระติกน้ำเก็บความเย็น',
-      postOwner: 'นายธนาคาร เจริญสุข (ผู้พบ)',
-      date: '15 ก.ย. 2026',
-      created_at: '15 ก.ย. 2026',
-      status: 'REJECTED',
-      verify_status: 'REJECTED',
-      proof_description: 'กระติกน้ำสีดำด้าน ขนาด 500ml',
-      ownerNote: 'ตำหนิตรงฝาไม่ตรงกับของจริงที่เก็บได้ ขออภัยด้วยครับ',
-      receiverConfirmed: false,
-    },
-    {
-      id: 'c-05',
-      verify_id: 'c-05',
-      post_id: 'p-055',
-      itemTitle: 'ขอรับสายชาร์จไอโฟน',
-      postOwner: 'นางสาวพิมพ์มาดา รักษ์ดี (ผู้พบ)',
-      date: '10 ก.ย. 2026',
-      created_at: '10 ก.ย. 2026',
-      status: 'CANCELLED',
-      verify_status: 'CANCELLED',
-      proof_description: 'สายชาร์จ Type-C to Lightning สีขาว มีปลอกพันสายไฟสีฟ้า',
-      ownerNote: 'โพสต์ถูกปิดเนื่องจากส่งมอบให้แก่เจ้าของท่านอื่นเรียบร้อยแล้ว',
-      receiverConfirmed: false,
-    },
-  ]);
+  const [sentClaims, setSentClaims] = useState(() => {
+    let claims = [
+      {
+        id: 'c-01',
+        verify_id: 'c-01',
+        post_id: 'p-075',
+        itemTitle: 'ขอรับกุญแจรถยนต์ Honda',
+        postOwner: 'นายชินวัฒน์ อักษร (ผู้พบ)',
+        date: '25 ก.ย. 2026',
+        created_at: '25 ก.ย. 2026',
+        status: 'ACCEPTED', // verify_status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED'
+        verify_status: 'ACCEPTED',
+        proof_description: 'กุญแจรถยนต์ Honda มีพวงกุญแจสีดำ',
+        ownerNote: 'ตอบรับแล้ว! นัดรับของที่โถง CB4 วันนี้เวลา 16:30 น.',
+        receiverConfirmed: false,
+      },
+      {
+        id: 'c-02',
+        verify_id: 'c-02',
+        post_id: 'p-089',
+        itemTitle: 'ขอรับบัตรนักศึกษาที่ทำหาย',
+        postOwner: 'เจ้าหน้าที่ห้องทะเบียน',
+        date: '20 ก.ย. 2026',
+        created_at: '20 ก.ย. 2026',
+        status: 'COMPLETED',
+        verify_status: 'COMPLETED',
+        proof_description: 'บัตรนักศึกษาคณะวิศวกรรมศาสตร์ ภาควิชา CPE',
+        ownerNote: 'ทั้งสองฝ่ายยืนยันการส่งมอบเสร็จสิ้นแล้ว ขอบคุณครับ',
+        receiverConfirmed: true,
+      },
+      {
+        id: 'c-03',
+        verify_id: 'c-03',
+        post_id: 'p-075',
+        itemTitle: 'ขอรับหูฟังไร้สาย AirPods',
+        postOwner: 'นายชินวัฒน์ อักษร (ผู้พบ)',
+        date: '24 ก.ย. 2026',
+        created_at: '24 ก.ย. 2026',
+        status: 'PENDING',
+        verify_status: 'PENDING',
+        proof_description: 'เคสหูฟังมีสติกเกอร์รูปแมวสีส้มติดอยู่ที่ฝา',
+        ownerNote: 'กำลังตรวจสอบรูปภาพและรายละเอียดตำหนิที่ส่งมา',
+        receiverConfirmed: false,
+      },
+      {
+        id: 'c-04',
+        verify_id: 'c-04',
+        post_id: 'p-064',
+        itemTitle: 'ขอรับกระติกน้ำเก็บความเย็น',
+        postOwner: 'นายธนาคาร เจริญสุข (ผู้พบ)',
+        date: '15 ก.ย. 2026',
+        created_at: '15 ก.ย. 2026',
+        status: 'REJECTED',
+        verify_status: 'REJECTED',
+        proof_description: 'กระติกน้ำสีดำด้าน ขนาด 500ml',
+        ownerNote: 'ตำหนิตรงฝาไม่ตรงกับของจริงที่เก็บได้ ขออภัยด้วยครับ',
+        receiverConfirmed: false,
+      },
+      {
+        id: 'c-05',
+        verify_id: 'c-05',
+        post_id: 'p-055',
+        itemTitle: 'ขอรับสายชาร์จไอโฟน',
+        postOwner: 'นางสาวพิมพ์มาดา รักษ์ดี (ผู้พบ)',
+        date: '10 ก.ย. 2026',
+        created_at: '10 ก.ย. 2026',
+        status: 'CANCELLED',
+        verify_status: 'CANCELLED',
+        proof_description: 'สายชาร์จ Type-C to Lightning สีขาว มีปลอกพันสายไฟสีฟ้า',
+        ownerNote: 'โพสต์ถูกปิดเนื่องจากส่งมอบให้แก่เจ้าของท่านอื่นเรียบร้อยแล้ว',
+        receiverConfirmed: false,
+      },
+    ];
+
+    if (location.state?.confirmedClaimId) {
+      const cid = location.state.confirmedClaimId;
+      claims = claims.map((c) =>
+        c.id === cid || c.verify_id === cid
+          ? { ...c, receiverConfirmed: true, status: 'COMPLETED', verify_status: 'COMPLETED' }
+          : c
+      );
+    }
+
+    return claims;
+  });
+
+  // ซิงก์ข้อมูลสถานะคำขอที่ฉันส่งแบบ Real-time จาก claimService
+  useEffect(() => {
+    let isMounted = true;
+    claimService.getMyClaims().then((claims) => {
+      if (isMounted && claims && claims.length > 0) {
+        setSentClaims((prev) => {
+          const updatedPrev = prev.map((old) => {
+            const match = claims.find(c => String(c.id) === String(old.id) || String(c.verify_id) === String(old.id));
+            if (match) {
+              return {
+                ...old,
+                status: match.status || match.verify_status || old.status,
+                verify_status: match.status || match.verify_status || old.verify_status,
+                ownerNote: match.ownerNote || match.note || old.ownerNote,
+                receiverConfirmed: match.receiverConfirmed,
+              };
+            }
+            return old;
+          });
+
+          // นำคำขอใหม่ที่ผู้ใช้เพิ่งสร้างส่งเข้ามาจริงมาแสดงด้านบน
+          const newClaims = claims.filter(c => !prev.some(old => String(old.id) === String(c.id) || String(old.verify_id) === String(c.id)));
+          return [...newClaims, ...updatedPrev];
+        });
+      }
+    });
+
+    const unsubscribe = claimService.subscribe((updatedClaims) => {
+      // ซิงก์สถานะโพสต์ที่ฉันสร้างเมื่อมีการยืนยันส่งมอบครบ 2 ฝ่ายจนปิดโพสต์
+      setMyPosts((prev) =>
+        prev.map((p) => {
+          const stored =
+            localStorage.getItem(`kmutt_lostfound_post_status_${p.id}`) ||
+            localStorage.getItem(`kmutt_lostfound_post_status_${p.post_id}`) ||
+            (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_1') : null) ||
+            (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_p-101') : null);
+          if (stored) {
+            return { ...p, status: stored, post_status: stored };
+          }
+          return p;
+        })
+      );
+
+      setSentClaims((prev) => {
+        return prev.map((old) => {
+          const match = updatedClaims.find(c => String(c.id) === String(old.id) || String(c.verify_id) === String(old.id));
+          if (match) {
+            return {
+              ...old,
+              status: match.status || match.verify_status || old.status,
+              verify_status: match.status || match.verify_status || old.verify_status,
+              ownerNote: match.ownerNote || match.note || old.ownerNote,
+              receiverConfirmed: match.receiverConfirmed,
+            };
+          }
+          return old;
+        });
+      });
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   // State 5: รายการประกาศของฉันที่มีคนส่งคำขอเข้ามา (POSTS ที่ receives VERIFY_ITEMS)
   const [receivedClaims] = useState([
@@ -191,33 +306,9 @@ export default function AccountPage({
     },
   ]);
 
-  // สลับสถานะเปิด/ปิดประกาศ (Open / Close / Cancel toggle)
-  const handleChangePostStatus = (postId, nextStatus) => {
-    setMyPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId
-          ? { ...post, status: nextStatus, post_status: nextStatus }
-          : post
-      )
-    );
-  };
 
-  // ฝ่ายผู้รับกดยืนยันว่าได้รับของแล้ว (Dual Confirmation ฝั่งผู้ส่งคำขอใน My Requests)
-  const handleConfirmReceived = (claimId) => {
-    setSentClaims((prev) =>
-      prev.map((claim) =>
-        claim.id === claimId
-          ? {
-            ...claim,
-            receiverConfirmed: true,
-            status: 'COMPLETED',
-            verify_status: 'COMPLETED',
-            ownerNote: 'คุณยืนยันได้รับของแล้ว — การส่งมอบสำเร็จเรียบร้อย',
-          }
-          : claim
-      )
-    );
-  };
+
+
 
   // กรองประกาศตามตัวกรอง
   const filteredPosts = myPosts.filter((post) => {
@@ -370,7 +461,33 @@ export default function AccountPage({
             <div className="account-posts-list">
               {filteredPosts.map((post) => (
                 <div key={post.id} className="account-post-card">
-                  <div className="account-post-header">
+                  <div
+                    className="account-post-header account-clickable"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      const targetId = post.id || post.post_id;
+                      navigate(`/posts/${targetId}`, {
+                        state: {
+                          from: 'account',
+                          isOwner: true,
+                          post: post,
+                        },
+                      });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        const targetId = post.id || post.post_id;
+                        navigate(`/posts/${targetId}`, {
+                          state: {
+                            from: 'account',
+                            isOwner: true,
+                            post: post,
+                          },
+                        });
+                      }
+                    }}
+                  >
                     <Thumbnail text="รูปโพสต์" />
                     <div className="account-post-details">
                       <h3 className="account-post-title">{post.title}</h3>
@@ -404,39 +521,18 @@ export default function AccountPage({
                       variant="secondary"
                       size="sm"
                       onClick={() => {
-                        if (onNavigatePostDetail) onNavigatePostDetail(post.id);
-                        else navigate(`/posts/${post.id}`);
+                        const targetId = post.id || post.post_id;
+                        if (onNavigateEditPost) {
+                          onNavigateEditPost(targetId, post);
+                        } else {
+                          navigate(`/posts/${targetId}/edit`, {
+                            state: { post, from: 'account' },
+                          });
+                        }
                       }}
                     >
-                      ดูประกาศ
+                      แก้ไขโพสต์
                     </Button>
-
-                    {post.status === 'OPEN' ? (
-                      <>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleChangePostStatus(post.id, 'CLOSED')}
-                        >
-                          ปิดโพสต์ (CLOSED)
-                        </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleChangePostStatus(post.id, 'CANCELLED')}
-                        >
-                          ยกเลิกโพสต์
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => handleChangePostStatus(post.id, 'OPEN')}
-                      >
-                        เปิดรับคำขอใหม่
-                      </Button>
-                    )}
                   </div>
                 </div>
               ))}
@@ -470,7 +566,47 @@ export default function AccountPage({
                 {sentClaims.map((claim) => (
                   <tr key={claim.id}>
                     <td>
-                      <div className="account-table-item">
+                      <div
+                        className="account-table-item account-clickable"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          const targetPostId = claim.post_id || claim.postId || 1;
+                          navigate(`/posts/${targetPostId}`, {
+                            state: {
+                              from: 'account',
+                              claim: claim,
+                              post: {
+                                id: targetPostId,
+                                title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
+                                finderName: claim.postOwner,
+                                date: claim.date || claim.created_at,
+                                eventDate: claim.date || claim.created_at,
+                                description: claim.proof_description || `สิ่งของที่ถูกประกาศโดย ${claim.postOwner}`,
+                              },
+                            },
+                          });
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            const targetPostId = claim.post_id || claim.postId || 1;
+                            navigate(`/posts/${targetPostId}`, {
+                              state: {
+                                from: 'account',
+                                claim: claim,
+                                post: {
+                                  id: targetPostId,
+                                  title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
+                                  finderName: claim.postOwner,
+                                  date: claim.date || claim.created_at,
+                                  eventDate: claim.date || claim.created_at,
+                                  description: claim.proof_description || `สิ่งของที่ถูกประกาศโดย ${claim.postOwner}`,
+                                },
+                              },
+                            });
+                          }
+                        }}
+                      >
                         <Thumbnail text="รูป" />
                         <span className="account-table-item-title">
                           {claim.itemTitle}
@@ -503,29 +639,49 @@ export default function AccountPage({
                       </div>
                     </td>
                     <td>
-                      {claim.status === 'ACCEPTED' && !claim.receiverConfirmed ? (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleConfirmReceived(claim.id)}
-                        >
-                          <Check size={14} className="account-btn-icon" />
-                          <span>ยืนยันได้รับของแล้ว</span>
-                        </Button>
-                      ) : claim.status === 'COMPLETED' ? (
-                        <span className="account-table-done-badge">
-                          <CheckCircle2 size={14} />
-                          <span>ได้รับของเรียบร้อย</span>
-                        </span>
-                      ) : (
+                      <div className="account-table-actions">
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => alert(`ขอดูรายละเอียดคำขอ #${claim.verify_id}`)}
+                          onClick={() => {
+                            const targetPostId = claim.post_id || claim.postId || 1;
+                            navigate(`/posts/${targetPostId}`, {
+                              state: {
+                                from: 'account',
+                                claim: claim,
+                                post: {
+                                  id: targetPostId,
+                                  title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
+                                  finderName: claim.postOwner,
+                                  date: claim.date || claim.created_at,
+                                  eventDate: claim.date || claim.created_at,
+                                  description: claim.proof_description || `สิ่งของที่ถูกประกาศโดย ${claim.postOwner}`,
+                                },
+                              },
+                            });
+                          }}
                         >
                           ดูรายละเอียด
                         </Button>
-                      )}
+                        {claim.status === 'PENDING' && (
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={async () => {
+                              if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำขอ #${claim.verify_id || claim.id}?`)) {
+                                try {
+                                  await claimService.cancelClaim(claim.verify_id || claim.id);
+                                  setBannerMessage('ยกเลิกคำขอของคุณเรียบร้อยแล้ว');
+                                } catch (err) {
+                                  alert(err.message || 'ไม่สามารถยกเลิกคำขอได้');
+                                }
+                              }
+                            }}
+                          >
+                            ยกเลิก
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -565,9 +721,11 @@ export default function AccountPage({
                   variant="primary"
                   onClick={() => {
                     if (onNavigateReview) {
-                      onNavigateReview();
+                      onNavigateReview(item);
                     } else {
-                      navigate('/requests/review');
+                      navigate(`/posts/${item.post_id || item.id}/review`, {
+                        state: { postId: item.post_id || item.id, postTitle: item.postTitle, from: '/account' },
+                      });
                     }
                   }}
                 >
