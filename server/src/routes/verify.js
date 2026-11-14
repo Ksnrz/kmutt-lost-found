@@ -247,7 +247,8 @@ const handleStatusUpdate = async (req, res, next) => {
       `SELECT v.verify_id, v.post_id, v.verify_status, p.user_id AS post_owner_id, p.post_status
        FROM verify_items v
        JOIN posts p ON v.post_id = p.post_id
-       WHERE v.verify_id = $1`,
+       WHERE v.verify_id = $1
+       FOR UPDATE`,
       [verifyId]
     );
 
@@ -256,7 +257,12 @@ const handleStatusUpdate = async (req, res, next) => {
       return res.status(404).json({ error: 'ไม่พบคำขอนี้' });
     }
 
-    const { post_id: postId, post_owner_id: postOwnerId, post_status: postStatus } = checkRes.rows[0];
+    const {
+      post_id: postId,
+      post_owner_id: postOwnerId,
+      post_status: postStatus,
+      verify_status: currentStatus,
+    } = checkRes.rows[0];
 
     // ตรวจสอบว่าเป็นเจ้าของโพสต์หรือไม่
     if (postOwnerId !== userId) {
@@ -268,6 +274,14 @@ const handleStatusUpdate = async (req, res, next) => {
     if (postStatus !== 'OPEN') {
       await client.query('ROLLBACK');
       return res.status(400).json({ error: 'ประกาศนี้ไม่ได้เปิดรับคำขออยู่' });
+    }
+
+    // เปลี่ยนสถานะได้เฉพาะ PENDING -> ACCEPTED/REJECTED และ ACCEPTED -> PENDING (ยกเลิกการตอบรับ)
+    // คำขอที่ถูกยกเลิก / ปฏิเสธ / ส่งมอบแล้ว ห้ามเปิดกลับมาใหม่
+    const ALLOWED = { PENDING: ['ACCEPTED', 'REJECTED'], ACCEPTED: ['PENDING'] };
+    if (!ALLOWED[currentStatus]?.includes(status)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: `ไม่สามารถเปลี่ยนสถานะคำขอจาก ${currentStatus} เป็น ${status} ได้` });
     }
 
     if (status === 'ACCEPTED') {
@@ -290,10 +304,13 @@ const handleStatusUpdate = async (req, res, next) => {
          WHERE verify_id = $2`,
         [note, verifyId]
       );
+      // คำขออื่นยังเป็น PENDING เพื่อให้เจ้าของโพสต์ยกเลิกการตอบรับแล้วเลือกคนอื่นได้
+      // (ถ้าส่งมอบสำเร็จ handleDualConfirm จะยกเลิกคำขอที่เหลือให้เอง)
     } else {
+      // ยกเลิกการตอบรับต้องล้างการยืนยันส่งมอบที่ค้างอยู่ด้วย
       await client.query(
         `UPDATE verify_items
-         SET verify_status = $1, note = $2
+         SET verify_status = $1, note = $2, finder_confirmed = false, receiver_confirmed = false
          WHERE verify_id = $3`,
         [status, note, verifyId]
       );
