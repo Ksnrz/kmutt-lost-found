@@ -1,6 +1,14 @@
+
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation, useSearchParams, useParams } from 'react-router-dom';
+import {
+  useNavigate,
+  useLocation,
+  useSearchParams,
+  useParams,
+} from 'react-router-dom';
 import { ImagePlus, X } from 'lucide-react';
+
+import { apiRequest } from '../../api';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
@@ -8,19 +16,8 @@ import Thumbnail from '../../components/ui/Thumbnail';
 import AlertCallout from '../../components/ui/AlertCallout';
 import './ClaimRequestPage.css';
 
-/**
- * ClaimRequestPage Component — หน้าส่งคำขอตรวจสอบ (VERIFICATION REQUEST)
- * Route URL: /claims/new
- */
 export default function ClaimRequestPage({
-  // ข้อมูลโพสต์ที่ส่งคำขอ
-  item = {
-    id: 'p-101',
-    title: 'พบกระเป๋าสตางค์สีดำ',
-    category: 'ประกาศเจอของ',
-    location: 'S4',
-    imageUrl: null,
-  },
+  item,
   onBack,
   onCancel,
   onSubmitSuccess,
@@ -30,41 +27,62 @@ export default function ClaimRequestPage({
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  // รองรับข้อมูลที่ส่งต่อมาจากหน้ารายละเอียดโพสต์ (state, query params หรือ fallback mock)
-  const incomingPost = location.state?.post || location.state?.item;
-  const currentItem = incomingPost || {
-    id: postId || searchParams.get('postId') || item.id || 'p-101',
-    title: item.title || 'พบกระเป๋าสตางค์สีดำ',
-    category: item.category || 'ประกาศเจอของ',
-    location: item.location || 'S4 ชั้น 1',
-    imageUrl: item.imageUrl || null,
-  };
+  const actualPostId =
+    postId || searchParams.get('postId') || item?.id;
 
-  // State 1: ข้อความรายละเอียดตำหนิ
+  const [post, setPost] = useState(null);
+  const [loadingPost, setLoadingPost] = useState(true);
+  const [postError, setPostError] = useState('');
+
   const [defectDetail, setDefectDetail] = useState('');
-
-  // State 2: รายการรูปภาพหลักฐาน
   const [evidenceImages, setEvidenceImages] = useState([]);
-
-  // State 3: ข้อความ Error เมื่อกรอกข้อมูลไม่ครบ
   const [errorMessage, setErrorMessage] = useState('');
-
-  // State 4: สถานะระหว่างกำลังส่งข้อมูล
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Ref สำหรับคลิกเปิด File Picker ที่ซ่อนอยู่
   const fileInputRef = useRef(null);
 
-  // Cleanup Object URLs เมื่อ component ถูกถอดออก (Best Practice ป้องกัน Memory Leak)
+  // ดึงข้อมูลโพสต์จริงจาก Backend
+  useEffect(() => {
+    const fetchPost = async () => {
+      if (!actualPostId) {
+        setPostError('ไม่พบรหัสประกาศ');
+        setLoadingPost(false);
+        return;
+      }
+
+      try {
+        setLoadingPost(true);
+        setPostError('');
+
+        const data = await apiRequest(`/posts/${actualPostId}`);
+
+        if (!data.post) {
+          throw new Error('ไม่พบประกาศนี้');
+        }
+
+        setPost(data.post);
+      } catch (err) {
+        setPostError(err.message || 'ไม่สามารถโหลดข้อมูลประกาศได้');
+      } finally {
+        setLoadingPost(false);
+      }
+    };
+
+    fetchPost();
+  }, [actualPostId]);
+
+  // ล้าง URL รูปภาพเมื่อออกจากหน้า
   useEffect(() => {
     return () => {
-      evidenceImages.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+      evidenceImages.forEach((img) => {
+        URL.revokeObjectURL(img.previewUrl);
+      });
     };
   }, [evidenceImages]);
 
-  // จัดการเมื่อเลือกไฟล์รูปภาพ
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files || []);
+
     if (selectedFiles.length === 0) return;
 
     const newImages = selectedFiles.map((file) => ({
@@ -78,63 +96,16 @@ export default function ClaimRequestPage({
     e.target.value = '';
   };
 
-  // ลบรูปภาพที่เลือกออก
   const handleRemoveImage = (idToRemove) => {
     setEvidenceImages((prev) => {
       const target = prev.find((img) => img.id === idToRemove);
-      if (target) URL.revokeObjectURL(target.previewUrl);
+
+      if (target) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+
       return prev.filter((img) => img.id !== idToRemove);
     });
-  };
-
-  // จัดการเมื่อกดปุ่มส่งฟอร์ม (Form Submission)
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // 1. ตรวจสอบความถูกต้องของข้อมูล (Validation)
-    if (!defectDetail.trim()) {
-      setErrorMessage('กรุณาระบุรายละเอียดตำหนิหรือข้อมูลเฉพาะเพื่อยืนยันความเป็นเจ้าของ');
-      return;
-    }
-
-    setErrorMessage('');
-    setIsSubmitting(true);
-
-    try {
-      // 2. โครงสร้าง Payload ส่งข้อมูลตาม ER Diagram
-      const payload = {
-        post_id: currentItem.id || 'p-101',
-        user_id: 'u-101',
-        verify_status: 'PENDING',
-        proof_description: defectDetail.trim(),
-        created_at: new Date().toISOString(),
-        verify_images: evidenceImages.map((img, idx) => ({
-          verify_image_id: `vimg-${Date.now()}-${idx}`,
-          verify_image_url: img.previewUrl,
-          file_name: img.name,
-        })),
-        itemTitle: currentItem.title,
-        evidenceCount: evidenceImages.length,
-      };
-
-      console.log('ส่งคำขอยืนยันสิทธิ์:', payload);
-
-      // จำลอง network delay 
-      await new Promise((resolve) => setTimeout(resolve, 600));
-
-      if (onSubmitSuccess) {
-        onSubmitSuccess(payload);
-      } else {
-        navigate('/account', {
-          state: { successMessage: `ส่งคำขอตรวจสอบสำหรับ "${currentItem.title}" เรียบร้อยแล้ว!` }
-        });
-      }
-    } catch (err) {
-      console.error(err);
-      setErrorMessage('เกิดข้อผิดพลาดในการส่งคำขอ กรุณาลองใหม่อีกครั้ง');
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleGoBack = () => {
@@ -143,15 +114,146 @@ export default function ClaimRequestPage({
     } else if (location.state?.from) {
       navigate(location.state.from);
     } else if (window.history.length > 1) {
-      navigate(-1); // กลับไปยังหน้ารายละเอียดโพสต์ของเพื่อนที่เปิดมาก่อนหน้า
+      navigate(-1);
     } else {
-      navigate('/account');
+      navigate('/posts');
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // ตรวจสอบสถานะโพสต์ก่อนส่งคำขอ
+    if (post?.post_status !== 'OPEN') {
+      setErrorMessage('ประกาศนี้ถูกยกเลิกแล้ว ไม่สามารถส่งคำขอได้');
+      return;
+    }
+
+    if (!defectDetail.trim()) {
+      setErrorMessage(
+        'กรุณาระบุรายละเอียดตำหนิหรือข้อมูลเฉพาะเพื่อยืนยันความเป็นเจ้าของ'
+      );
+      return;
+    }
+
+    setErrorMessage('');
+    setIsSubmitting(true);
+
+    try {
+      // ตรวจสอบสถานะจาก Backend อีกครั้งก่อนดำเนินการ
+      const latestData = await apiRequest(`/posts/${actualPostId}`);
+
+      if (latestData.post?.post_status !== 'OPEN') {
+        setPost(latestData.post);
+        setErrorMessage('ประกาศนี้ถูกยกเลิกแล้ว ไม่สามารถส่งคำขอได้');
+        return;
+      }
+
+      // ข้อมูลสำหรับส่งต่อให้ระบบส่วนอื่น
+      const payload = {
+        post_id: post.post_id,
+        proof_description: defectDetail.trim(),
+        verify_images: evidenceImages.map((img) => ({
+          file: img.file,
+          file_name: img.name,
+        })),
+        itemTitle: post.title,
+        evidenceCount: evidenceImages.length,
+      };
+
+      console.log('ข้อมูลคำขอตรวจสอบ:', payload);
+
+      if (onSubmitSuccess) {
+        onSubmitSuccess(payload);
+      } else {
+        alert('ตรวจสอบสถานะประกาศแล้ว แต่ระบบบันทึกคำขอ Claim ยังไม่ได้เชื่อมต่อ Backend');
+      }
+    } catch (err) {
+      setErrorMessage(err.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const postStatus = String(post?.post_status || '')
+    .trim()
+    .toUpperCase();
+
+  const imageUrl = post?.images?.[0]?.item_image_url
+    ? `http://localhost:3000${post.images[0].item_image_url}`
+    : null;
+
+  const currentItem = {
+    id: post?.post_id,
+    title: post?.title || '',
+    category:
+      post?.post_type === 'FOUND'
+        ? 'ประกาศเจอของ'
+        : 'ประกาศของหาย',
+    location: post?.building_name || '-',
+    imageUrl,
+  };
+
+  if (loadingPost) {
+    return (
+      <div className="claim-request-container">
+        <p>กำลังโหลดข้อมูลประกาศ...</p>
+      </div>
+    );
+  }
+
+  if (postError || !post) {
+    return (
+      <div className="claim-request-container">
+        <PageHeader
+          backText="กลับไปรายการประกาศ"
+          onBack={handleGoBack}
+          tag="VERIFICATION REQUEST"
+          title="ส่งคำขอตรวจสอบ"
+        />
+        <Card className="claim-request-card">
+          <p className="claim-error-text">
+            {postError || 'ไม่พบประกาศนี้'}
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (postStatus !== 'OPEN') {
+    return (
+      <div className="claim-request-container">
+        <PageHeader
+          backText="กลับไปรายการประกาศ"
+          onBack={handleGoBack}
+          tag="VERIFICATION REQUEST"
+          title="ไม่สามารถส่งคำขอได้"
+          subtitle="ประกาศนี้ถูกยกเลิกแล้ว"
+        />
+
+        <Card className="claim-request-card">
+          <p>
+            ประกาศ "{post.title}" ถูกยกเลิกแล้ว
+          </p>
+          <p>
+            จึงไม่สามารถส่งคำขอตรวจสอบความเป็นเจ้าของได้
+          </p>
+          <div className="claim-actions">
+            <Button
+              variant="primary"
+              type="button"
+              onClick={handleGoBack}
+            >
+              กลับไปหน้าก่อนหน้า
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="claim-request-container">
-      {/* 1. ส่วนหัวหน้าเว็บ */}
       <PageHeader
         backText="กลับไปรายการประกาศ"
         onBack={handleGoBack}
@@ -160,35 +262,42 @@ export default function ClaimRequestPage({
         subtitle="กรอกรายละเอียดตำหนิและแนบหลักฐานเพื่อยืนยันความเป็นเจ้าของ"
       />
 
-      {/* 2. การ์ดฟอร์มหลัก */}
       <Card className="claim-request-card">
-        {/* กล่องสรุปโพสต์ที่กำลังทำเรื่องขอคืน */}
         <div className="claim-post-summary">
           <Thumbnail
             text="รูปโพสต์"
             src={currentItem.imageUrl}
           />
+
           <div className="claim-post-info">
             <p className="claim-post-title">
               {currentItem.title}
             </p>
             <p className="claim-post-meta">
-              {currentItem.category || 'ประกาศเจอของ'} · {currentItem.location || 'S4 ชั้น 1'}
+              {currentItem.category} · {currentItem.location}
             </p>
           </div>
         </div>
 
         <hr className="ui-divider" />
 
-        {/* ฟอร์มข้อมูลยืนยันสิทธิ์ */}
-        <form onSubmit={handleSubmit} className="claim-form" noValidate>
-          <h2 className="claim-section-title">ข้อมูลเพื่อยืนยันสิทธิ์</h2>
+        <form
+          onSubmit={handleSubmit}
+          className="claim-form"
+          noValidate
+        >
+          <h2 className="claim-section-title">
+            ข้อมูลเพื่อยืนยันสิทธิ์
+          </h2>
 
-          {/* ช่องกรอกที่ 1: รายละเอียดตำหนิ */}
           <div className="claim-form-group">
-            <label className="claim-label" htmlFor="defectDetail">
+            <label
+              className="claim-label"
+              htmlFor="defectDetail"
+            >
               รายละเอียดตำหนิหรือข้อมูลเฉพาะ
             </label>
+
             <textarea
               id="defectDetail"
               rows={4}
@@ -198,9 +307,10 @@ export default function ClaimRequestPage({
                 setDefectDetail(e.target.value);
                 if (errorMessage) setErrorMessage('');
               }}
-              placeholder="ระบุตำหนิพิเศษ เช่น รอยถลอก สติกเกอร์ ข้อมูลบัตร หรือเอกสารที่อยู่ด้านใน..."
+              placeholder="ระบุตำหนิพิเศษ เช่น รอยถลอก สติกเกอร์ หรือข้อมูลเฉพาะของสิ่งของ..."
               aria-required="true"
             />
+
             {errorMessage && (
               <p className="claim-error-text" role="alert">
                 {errorMessage}
@@ -208,13 +318,11 @@ export default function ClaimRequestPage({
             )}
           </div>
 
-          {/* ช่องกรอกที่ 2: แนบรูปหลักฐาน */}
           <div className="claim-form-group">
             <label className="claim-label">
               รูปหลักฐาน (หลายรูป)
             </label>
 
-            {/* Hidden Input file จริง */}
             <input
               type="file"
               ref={fileInputRef}
@@ -225,7 +333,6 @@ export default function ClaimRequestPage({
               aria-label="เลือกไฟล์รูปหลักฐาน"
             />
 
-            {/* กล่อง Drag/Drop & Click Upload */}
             <div
               className="claim-upload-zone"
               onClick={() => fileInputRef.current?.click()}
@@ -237,20 +344,26 @@ export default function ClaimRequestPage({
                 }
               }}
             >
-              <ImagePlus size={18} className="claim-upload-icon" />
+              <ImagePlus
+                size={18}
+                className="claim-upload-icon"
+              />
               <span>แนบรูปตำหนิหรือรูปของเดิม</span>
             </div>
 
-            {/* แสดง Preview รูปที่ผู้ใช้อัปโหลด */}
             {evidenceImages.length > 0 && (
               <div className="claim-preview-grid">
                 {evidenceImages.map((img) => (
-                  <div key={img.id} className="claim-preview-item">
+                  <div
+                    key={img.id}
+                    className="claim-preview-item"
+                  >
                     <img
                       src={img.previewUrl}
                       alt={img.name}
                       className="claim-preview-img"
                     />
+
                     <button
                       type="button"
                       className="claim-preview-remove"
@@ -265,7 +378,6 @@ export default function ClaimRequestPage({
             )}
           </div>
 
-          {/* แถบล่างสุด: กล่องข้อความเตือน + ปุ่มควบคุม */}
           <div className="claim-bottom-bar">
             <div className="claim-alert">
               <AlertCallout>
@@ -279,18 +391,19 @@ export default function ClaimRequestPage({
                 type="button"
                 onClick={() => {
                   if (onCancel) onCancel();
-                  else navigate('/account');
+                  else handleGoBack();
                 }}
                 disabled={isSubmitting}
               >
                 ยกเลิก
               </Button>
+
               <Button
                 variant="primary"
                 type="submit"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'กำลังส่งข้อมูล...' : 'ส่งคำขอ'}
+                {isSubmitting ? 'กำลังตรวจสอบ...' : 'ส่งคำขอ'}
               </Button>
             </div>
           </div>

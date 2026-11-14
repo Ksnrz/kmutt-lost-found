@@ -6,6 +6,7 @@ import Map from './pages/Map.jsx';
 import CreatePost from './pages/CreatePost';
 import PostDetail from './pages/PostDetail';
 import Listpost from './pages/Listpost';
+import Editpost from './pages/Editpost';
 import ClaimRequestPage from './pages/requests/ClaimRequestPage';
 import ReviewRequestsPage from './pages/requests/ReviewRequestsPage';
 import AccountPage from './pages/requests/AccountPage';
@@ -42,6 +43,7 @@ function App() {
           <Route path="/posts" element={<Listpost />} />
           <Route path="/posts/new" element={<CreatePost />} />
           <Route path="/posts/:postId" element={<PostDetail />} />
+          <Route path="/posts/:postId/edit" element={<Editpost />} />
           <Route path="/listpost" element={<Navigate to="/posts" replace />} />
           <Route path="/claims/new" element={<ClaimRequestPage />} />
           <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />

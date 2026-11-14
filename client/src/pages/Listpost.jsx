@@ -1,86 +1,76 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { apiRequest } from '../api';
 import BackButton from '../components/BackButton';
 import './Listpost.css';
 
 function Listpost() {
-  const [activeFilter, setActiveFilter] = useState('ทั้งหมด');
+  const navigate = useNavigate();
 
-  const posts = [
-    {
-      id: 1,
-      type: 'เจอของ',
-      title: 'พบกระเป๋าสตางค์สีดำ',
-      location: 'ชั้น 1',
-      date: '23 ก.ย. 2026'
-    },
-    {
-      id: 2,
-      type: 'ของหาย',
-      title: 'ตามหากุญแจรถ',
-      location: 'ชั้น 2',
-      date: '22 ก.ย. 2026'
-    },
-    {
-      id: 3,
-      type: 'เจอของ',
-      title: 'พบหูฟังไร้สาย',
-      location: 'โถงกลาง',
-      date: '21 ก.ย. 2026'
-    },
-    {
-      id: 4,
-      type: 'ของหาย',
-      title: 'ตามหาบัตรนักศึกษา',
-      location: 'ห้องสมุดชั้น 2',
-      date: '20 ก.ย. 2026'
-    },
-    {
-      id: 5,
-      type: 'เจอของ',
-      title: 'พบขวดน้ำสแตนเลส',
-      location: 'ชั้น 3',
-      date: '19 ก.ย. 2026'
-    },
-    {
-      id: 6,
-      type: 'ของหาย',
-      title: 'ตามหากระเป๋าผ้า',
-      location: 'หอพักใน',
-      date: '18 ก.ย. 2026'
-    }
-  ];
+  const [activeFilter, setActiveFilter] = useState('ทั้งหมด');
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const data = await apiRequest('/posts');
+
+        setPosts(data.posts || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
 
   const filteredPosts =
     activeFilter === 'ทั้งหมด'
       ? posts
-      : posts.filter(post => post.type === activeFilter);
+      : posts.filter((post) =>
+          post.post_type === (activeFilter === 'ของหาย' ? 'LOST' : 'FOUND')
+        );
+
+  const formatDate = (date) => {
+    if (!date) return '-';
+
+    return new Date(date).toLocaleDateString('th-TH', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
 
   return (
     <div className="listpost-container">
-
       <BackButton text="กลับแผนที่" />
 
-      {/* Header */}
       <div className="header-flex-container">
         <div>
-          <h1 className="header-title">
-            รายการโพสต์อาคาร S4
-          </h1>
-
+          <h1 className="header-title">รายการโพสต์</h1>
           <p className="subtitle">
             ดูสิ่งของที่หายและพบในอาคารนี้
           </p>
         </div>
 
-        <button className="create-btn">
+        <button
+          className="create-btn"
+          onClick={() => navigate('/posts/new')}
+        >
           + สร้างโพสต์
         </button>
       </div>
 
-      {/* Filter */}
       <div className="filter-container">
-        {['ทั้งหมด', 'ของหาย', 'เจอของ'].map(filter => (
+        {['ทั้งหมด', 'ของหาย', 'เจอของ'].map((filter) => (
           <button
             key={filter}
             className={`filter-btn ${
@@ -93,47 +83,68 @@ function Listpost() {
         ))}
       </div>
 
-      {/* Post count */}
       <h2 className="post-count">
         พบ {filteredPosts.length} โพสต์
       </h2>
 
-      {/* Post Grid */}
-      <div className="post-grid">
-        {filteredPosts.map(post => (
-          <div className="post-card" key={post.id}>
+      {loading && <p>กำลังโหลดโพสต์...</p>}
 
+      {error && (
+        <p style={{ color: 'red' }}>
+          โหลดโพสต์ไม่สำเร็จ: {error}
+        </p>
+      )}
+
+      {!loading && !error && filteredPosts.length === 0 && (
+        <p>ยังไม่มีโพสต์ในหมวดหมู่นี้</p>
+      )}
+
+      <div className="post-grid">
+        {filteredPosts.map((post) => (
+          <div className="post-card" key={post.post_id}>
             <div className="post-image">
-              รูปสิ่งของ
+              {post.images?.length > 0 ? (
+                <img
+                  src={`http://localhost:3000${post.images[0].image_url}`}
+                  alt={post.title}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              ) : (
+                'รูปสิ่งของ'
+              )}
             </div>
 
             <div className="post-content">
-
-              <span className={`status-badge ${
-                post.type === 'เจอของ' ? 'found' : 'lost'
-              }`}>
-                {post.type}
+              <span
+                className={`status-badge ${
+                  post.post_type === 'FOUND' ? 'found' : 'lost'
+                }`}
+              >
+                {post.post_type === 'FOUND' ? 'เจอของ' : 'ของหาย'}
               </span>
 
-              <h3 className="post-title">
-                {post.title}
-              </h3>
+              <h3 className="post-title">{post.title}</h3>
 
               <div className="post-footer">
                 <p className="post-date">
-                  S4 {post.location} · {post.date}
+                  {post.building_name || '-'} · {formatDate(post.event_date)}
                 </p>
 
-                <button className="detail-btn">
+                <button
+                  className="detail-btn"
+                  onClick={() => navigate(`/posts/${post.post_id}`)}
+                >
                   ดูรายละเอียด →
                 </button>
               </div>
-
             </div>
           </div>
         ))}
       </div>
-
     </div>
   );
 }

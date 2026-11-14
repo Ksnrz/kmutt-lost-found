@@ -14,3 +14,15 @@ export async function api(path, { method = 'GET', body } = {}) {
   if (!res.ok) throw Object.assign(new Error(data.error || 'เกิดข้อผิดพลาด'), { status: res.status });
   return data;
 }
+
+// Fetch-style variant for post pages: takes raw fetch options (FormData / pre-stringified body).
+export async function apiRequest(endpoint, options = {}) {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`/api${endpoint}`, {
+    ...options,
+    headers: { ...(token && { Authorization: `Bearer ${token}` }), ...options.headers },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(data.error || data.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ'), { status: res.status });
+  return data;
+}
