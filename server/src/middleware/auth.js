@@ -1,7 +1,14 @@
-// shortcut: FAKE auth, every request is accepted. A replaces the inside with a real JWT check
-// (task A6); routes keep using req.user.user_id and need no change.
-// While testing, send header `x-test-user: 2` to act as another user.
+import jwt from 'jsonwebtoken';
+
+// Expects header `Authorization: Bearer <token>` (token comes from POST /api/auth/login).
+// Routes read req.user.user_id.
 export function requireAuth(req, res, next) {
-  req.user = { user_id: Number(req.headers['x-test-user']) || 1 };
-  next();
+  const token = req.headers.authorization?.startsWith('Bearer ') && req.headers.authorization.slice(7);
+  try {
+    const { user_id } = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = { user_id };
+    next();
+  } catch {
+    res.status(401).json({ error: 'กรุณาเข้าสู่ระบบ' });
+  }
 }

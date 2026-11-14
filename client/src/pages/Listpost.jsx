@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { Inbox, CheckCircle2, X } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import Badge from '../components/ui/Badge';
+import { apiRequest } from '../api';
 import './Listpost.css';
 
 function Listpost() {
@@ -14,7 +15,7 @@ function Listpost() {
     location.state?.successMessage || null
   );
 
-  const buildingParam = searchParams.get('building') || 'S4';
+  const buildingParam = searchParams.get('building');
   const typeParam = searchParams.get('type');
 
   // รองรับทั้ง 'พบของ' และ 'เจอของ' เพื่อความเข้ากันได้
@@ -24,55 +25,41 @@ function Listpost() {
     normalizedType && ['ของหาย', 'พบของ'].includes(normalizedType) ? normalizedType : 'ทั้งหมด'
   );
 
-  const posts = [
-    {
-      id: 1,
-      type: 'พบของ',
-      title: 'พบกระเป๋าสตางค์สีดำ',
-      location: 'ชั้น 1',
-      date: '23 ก.ย. 2026'
-    },
-    {
-      id: 2,
-      type: 'ของหาย',
-      title: 'ตามหากุญแจรถ',
-      location: 'ชั้น 2',
-      date: '22 ก.ย. 2026'
-    },
-    {
-      id: 3,
-      type: 'พบของ',
-      title: 'พบหูฟังไร้สาย',
-      location: 'โถงกลาง',
-      date: '21 ก.ย. 2026'
-    },
-    {
-      id: 4,
-      type: 'ของหาย',
-      title: 'ตามหาบัตรนักศึกษา',
-      location: 'ห้องสมุดชั้น 2',
-      date: '20 ก.ย. 2026'
-    },
-    {
-      id: 5,
-      type: 'พบของ',
-      title: 'พบขวดน้ำสแตนเลส',
-      location: 'ชั้น 3',
-      date: '19 ก.ย. 2026'
-    },
-    {
-      id: 6,
-      type: 'ของหาย',
-      title: 'ตามหากระเป๋าผ้า',
-      location: 'หอพักใน',
-      date: '18 ก.ย. 2026'
-    }
-  ];
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const filteredPosts =
-    activeFilter === 'ทั้งหมด'
-      ? posts
-      : posts.filter(post => post.type === activeFilter);
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const data = await apiRequest('/posts');
+        setPosts(data.posts || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  const typeLabel = (post) => (post.post_type === 'FOUND' ? 'พบของ' : 'ของหาย');
+
+  const formatDate = (date) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('th-TH', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  const filteredPosts = posts
+    .filter((post) => !buildingParam || post.building_name === buildingParam)
+    .filter((post) => activeFilter === 'ทั้งหมด' || typeLabel(post) === activeFilter);
 
   return (
     <div className="listpost-page">
@@ -82,7 +69,7 @@ function Listpost() {
           backText="กลับแผนที่"
           onBack={() => navigate('/map')}
           tag="CAMPUS POSTS"
-          title={`รายการโพสต์อาคาร ${buildingParam}`}
+          title={buildingParam ? `รายการโพสต์อาคาร ${buildingParam}` : 'รายการโพสต์'}
           subtitle="ดูสิ่งของที่หายและพบในอาคารนี้"
         />
 
@@ -125,18 +112,34 @@ function Listpost() {
           พบ {filteredPosts.length} โพสต์
         </h2>
 
+        {loading && <p>กำลังโหลดโพสต์...</p>}
+
+        {error && (
+          <p style={{ color: 'red' }}>
+            โหลดโพสต์ไม่สำเร็จ: {error}
+          </p>
+        )}
+
         {/* Post Grid หรือ Empty State หากไม่พบโพสต์ */}
-        {filteredPosts.length > 0 ? (
+        {loading || error ? null : filteredPosts.length > 0 ? (
           <div className="post-grid">
             {filteredPosts.map(post => (
-              <div className="post-card" key={post.id}>
+              <div className="post-card" key={post.post_id}>
                 <div className="post-image">
-                  รูปสิ่งของ
+                  {post.images?.length > 0 ? (
+                    <img
+                      src={`http://localhost:3000${post.images[0].item_image_url}`}
+                      alt={post.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    'รูปสิ่งของ'
+                  )}
                 </div>
 
                 <div className="post-content">
-                  <Badge variant={post.type === 'พบของ' ? 'found' : 'lost'}>
-                    {post.type}
+                  <Badge variant={post.post_type === 'FOUND' ? 'found' : 'lost'}>
+                    {typeLabel(post)}
                   </Badge>
 
                   <h3 className="post-title">
@@ -145,13 +148,13 @@ function Listpost() {
 
                   <div className="post-footer">
                     <p className="post-date">
-                      {buildingParam} {post.location} · {post.date}
+                      {post.building_name || '-'} · {formatDate(post.event_date)}
                     </p>
 
                     <button
                       type="button"
                       className="detail-btn"
-                      onClick={() => navigate(`/posts/${post.id}`)}
+                      onClick={() => navigate(`/posts/${post.post_id}`)}
                     >
                       ดูรายละเอียด →
                     </button>
@@ -166,10 +169,10 @@ function Listpost() {
               <Inbox size={38} className="listpost-empty-icon" />
             </div>
             <h3 className="listpost-empty-title">
-              ไม่พบประกาศ{activeFilter !== 'ทั้งหมด' ? `ประเภท "${activeFilter}"` : ''} ในอาคารนี้
+              ไม่พบประกาศ{activeFilter !== 'ทั้งหมด' ? `ประเภท "${activeFilter}"` : ''}{buildingParam ? ` ในอาคาร ${buildingParam}` : ''}
             </h3>
             <p className="listpost-empty-subtitle">
-              ยังไม่มีผู้แจ้งของหายหรือพบของที่ตรงกับเงื่อนไขในอาคาร {buildingParam} ลองสลับตัวกรอง หรือค้นหาอาคารอื่นบนแผนที่
+              ยังไม่มีผู้แจ้งของหายหรือพบของที่ตรงกับเงื่อนไข{buildingParam ? ` ในอาคาร ${buildingParam}` : ''} ลองสลับตัวกรอง หรือค้นหาอาคารอื่นบนแผนที่
             </p>
             <div className="listpost-empty-actions">
               {activeFilter !== 'ทั้งหมด' && (

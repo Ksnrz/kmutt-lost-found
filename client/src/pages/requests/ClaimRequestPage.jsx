@@ -6,7 +6,6 @@ import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
 import Thumbnail from '../../components/ui/Thumbnail';
 import AlertCallout from '../../components/ui/AlertCallout';
-import { claimService } from '../../services/claimService';
 import './ClaimRequestPage.css';
 
 /**
@@ -104,12 +103,11 @@ export default function ClaimRequestPage({
     try {
       // 2. โครงสร้าง Payload ส่งข้อมูลตาม ER Diagram
       const payload = {
-        post_id: currentItem.id || '1',
-        user_id: '2',
+        post_id: currentItem.id || 'p-101',
+        user_id: 'u-101',
         verify_status: 'PENDING',
         proof_description: defectDetail.trim(),
         created_at: new Date().toISOString(),
-        files: evidenceImages.map((img) => img.file).filter(Boolean),
         verify_images: evidenceImages.map((img, idx) => ({
           verify_image_id: `vimg-${Date.now()}-${idx}`,
           verify_image_url: img.previewUrl,
@@ -119,8 +117,10 @@ export default function ClaimRequestPage({
         evidenceCount: evidenceImages.length,
       };
 
-      // บันทึกคำขอผ่าน claimService (เชื่อมต่อ Backend API และ LocalStorage)
-      await claimService.submitClaim(payload);
+      console.log('ส่งคำขอยืนยันสิทธิ์:', payload);
+
+      // จำลอง network delay 
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       if (onSubmitSuccess) {
         onSubmitSuccess(payload);
@@ -131,7 +131,7 @@ export default function ClaimRequestPage({
       }
     } catch (err) {
       console.error(err);
-      setErrorMessage(err.message || 'เกิดข้อผิดพลาดในการส่งคำขอ กรุณาลองใหม่อีกครั้ง');
+      setErrorMessage('เกิดข้อผิดพลาดในการส่งคำขอ กรุณาลองใหม่อีกครั้ง');
     } finally {
       setIsSubmitting(false);
     }

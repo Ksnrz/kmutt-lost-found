@@ -10,6 +10,7 @@ import Editpost from './pages/Editpost';
 import ClaimRequestPage from './pages/requests/ClaimRequestPage';
 import ReviewRequestsPage from './pages/requests/ReviewRequestsPage';
 import AccountPage from './pages/requests/AccountPage';
+import Profile from './pages/Profile';
 import './App.css';
 
 // หน้าที่มี Navbar ด้านบน (หน้า login / register ไม่มี)
@@ -49,6 +50,7 @@ function App() {
           <Route path="/requests/review" element={<ReviewRequestsPage />} />
           <Route path="/posts/:postId/review" element={<ReviewRequestsPage />} />
           <Route path="/account" element={<AccountPage />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/login" replace />} />

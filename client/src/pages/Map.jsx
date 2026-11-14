@@ -53,6 +53,14 @@ export default function Map() {
   const [postType, setPostType] = useState('found'); // 'found' | 'lost'
   const [selectedBuilding, setSelectedBuilding] = useState('S1');
   const [searchQuery, setSearchQuery] = useState('');
+  const [open, setOpen] = useState(true);
+
+  // เลือกตึกแล้วปิด dropdown และล้างคำค้นหา
+  const selectBuilding = (code) => {
+    setSelectedBuilding(code);
+    setSearchQuery('');
+    setOpen(false);
+  };
 
   // Dynamic search filtering
   const query = searchQuery.trim().toLowerCase();
@@ -122,7 +130,7 @@ export default function Map() {
           <aside className="map-sidebar">
             <div className="map-filter">
               <h2 className="map-filter-heading">สถานที่ <span>*</span></h2>
-              <details className="map-location" open>
+              <details className="map-location" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
                 <summary>
                   <img src={locationIcon} alt="" aria-hidden="true" />
                   <span className="map-summary-text">
@@ -169,7 +177,7 @@ export default function Map() {
                               name="building"
                               value={building.code}
                               checked={selectedBuilding === building.code}
-                              onChange={() => setSelectedBuilding(building.code)}
+                              onChange={() => selectBuilding(building.code)}
                             />
                             <span>
                               <span className="map-building-code">{building.code}</span>
@@ -190,7 +198,7 @@ export default function Map() {
                               name="building"
                               value={building.code}
                               checked={selectedBuilding === building.code}
-                              onChange={() => setSelectedBuilding(building.code)}
+                              onChange={() => selectBuilding(building.code)}
                             />
                             <span>
                               <span className="map-building-code">{building.code}</span>

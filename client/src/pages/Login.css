@@ -243,3 +243,10 @@
     font-size: clamp(19px, 4.8vw, 26px);
   }
 }
+
+.login-error {
+  margin: 16px 0 0;
+  color: var(--color-status-danger);
+  font-size: 14px;
+  font-weight: 700;
+}
