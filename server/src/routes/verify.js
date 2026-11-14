@@ -304,15 +304,8 @@ const handleStatusUpdate = async (req, res, next) => {
          WHERE verify_id = $2`,
         [note, verifyId]
       );
-
-      // ตอบรับได้ 1 คนต่อโพสต์: คำขออื่นที่ยังรออยู่ถูกยกเลิกอัตโนมัติ
-      await client.query(
-        `UPDATE verify_items
-         SET verify_status = 'CANCELLED',
-             note = 'ระบบยกเลิกอัตโนมัติเนื่องจากผู้พบได้ตอบรับคำขออื่นในโพสต์นี้แล้ว'
-         WHERE post_id = $1 AND verify_id != $2 AND verify_status = 'PENDING'`,
-        [postId, verifyId]
-      );
+      // คำขออื่นยังเป็น PENDING เพื่อให้เจ้าของโพสต์ยกเลิกการตอบรับแล้วเลือกคนอื่นได้
+      // (ถ้าส่งมอบสำเร็จ handleDualConfirm จะยกเลิกคำขอที่เหลือให้เอง)
     } else {
       // ยกเลิกการตอบรับต้องล้างการยืนยันส่งมอบที่ค้างอยู่ด้วย
       await client.query(

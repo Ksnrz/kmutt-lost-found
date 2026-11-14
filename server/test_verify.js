@@ -144,12 +144,27 @@ test('C4: cancelling a post cancels its open claims', async () => {
   assert.equal(await claimStatus(verifyId), 'CANCELLED');
 });
 
-test('C4: accepting one claim cancels the other pending claims', async () => {
+test('accept: one claim per post, others stay PENDING so the owner can switch', async () => {
   const postId = await makePost();
-  const chosen = await makeClaim(postId);
-  const other = await makeClaim(postId, 'other');
-  assert.equal((await call(`/verify/${chosen}/status`, { token: tok.owner, method: 'PUT', body: { status: 'ACCEPTED' } })).status, 200);
-  assert.equal(await claimStatus(other), 'CANCELLED');
+  const first = await makeClaim(postId);
+  const second = await makeClaim(postId, 'other');
+  const accept = (id) => call(`/verify/${id}/status`, { token: tok.owner, method: 'PUT', body: { status: 'ACCEPTED' } });
+  assert.equal((await accept(first)).status, 200);
+  assert.equal(await claimStatus(second), 'PENDING');
+  assert.equal((await accept(second)).status, 400);
+  // hand-over fell through: owner withdraws the acceptance and picks the other claim
+  assert.equal((await call(`/verify/${first}/status`, { token: tok.owner, method: 'PUT', body: { status: 'PENDING' } })).status, 200);
+  assert.equal((await accept(second)).status, 200);
+});
+
+test('hand-over completing cancels the claims that were left pending', async () => {
+  const postId = await makePost();
+  const winner = await makeClaim(postId);
+  const loser = await makeClaim(postId, 'other');
+  await call(`/verify/${winner}/status`, { token: tok.owner, method: 'PUT', body: { status: 'ACCEPTED' } });
+  await call(`/verify/${winner}/confirm`, { token: tok.owner, method: 'PUT', body: { party: 'finder' } });
+  await call(`/verify/${winner}/confirm`, { token: tok.claimant, method: 'PUT', body: { party: 'receiver' } });
+  assert.equal(await claimStatus(loser), 'CANCELLED');
 });
 
 test('full handover: both parties confirm and the post closes', async () => {
