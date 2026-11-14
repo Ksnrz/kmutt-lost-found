@@ -123,7 +123,8 @@ export default function ReviewRequestsPage({
   const handleAccept = async () => {
     if (!activeRequest || isOtherAccepted) return;
 
-    await claimService.updateClaimStatus(activeRequest.id, 'ACCEPTED', noteText);
+    const finalNote = noteText.trim() || 'อนุมัติคำขอแล้ว กรุณานัดหมายวันเวลาและสถานที่รับมอบสิ่งของ';
+    await claimService.updateClaimStatus(activeRequest.id, 'ACCEPTED', finalNote);
     setNoteText('');
   };
 

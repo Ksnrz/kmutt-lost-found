@@ -246,12 +246,13 @@ export const claimService = {
 
     const updated = currentClaims.map(c => {
       if (String(c.id) === String(claimId)) {
+        const resolvedNote = note?.trim() || (newStatus === 'ACCEPTED' ? 'อนุมัติคำขอแล้ว กรุณานัดหมายวันเวลาและสถานที่รับมอบสิ่งของ' : (newStatus === 'PENDING' ? '' : c.note));
         return {
           ...c,
           status: newStatus,
           verify_status: newStatus,
-          note: note || c.note,
-          ownerNote: note || c.ownerNote,
+          note: resolvedNote,
+          ownerNote: resolvedNote,
           finderConfirmed: false,
           receiverConfirmed: false,
         };

@@ -124,14 +124,14 @@ export default function AccountPage({
       {
         id: 'c-01',
         verify_id: 'c-01',
-        post_id: 'p-101',
-        itemTitle: 'ขอรับกระเป๋าสตางค์สีดำ',
-        postOwner: 'นายสมเกียรติ มั่นคง (ผู้พบ)',
+        post_id: 'p-075',
+        itemTitle: 'ขอรับกุญแจรถยนต์ Honda',
+        postOwner: 'นายชินวัฒน์ อักษร (ผู้พบ)',
         date: '25 ก.ย. 2026',
         created_at: '25 ก.ย. 2026',
         status: 'ACCEPTED', // verify_status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED'
         verify_status: 'ACCEPTED',
-        proof_description: 'กระเป๋าสตางค์สีดำ Guy Laroche มีบัตรสีฟ้า',
+        proof_description: 'กุญแจรถยนต์ Honda มีพวงกุญแจสีดำ',
         ownerNote: 'ตอบรับแล้ว! นัดรับของที่โถง CB4 วันนี้เวลา 16:30 น.',
         receiverConfirmed: false,
       },
@@ -211,8 +211,8 @@ export default function AccountPage({
     claimService.getMyClaims().then((claims) => {
       if (isMounted && claims && claims.length > 0) {
         setSentClaims((prev) => {
-          return prev.map((old) => {
-            const match = claims.find(c => String(c.id) === String(old.id) || String(c.id) === '102' || String(c.id) === 'c-01');
+          const updatedPrev = prev.map((old) => {
+            const match = claims.find(c => String(c.id) === String(old.id) || String(c.verify_id) === String(old.id));
             if (match) {
               return {
                 ...old,
@@ -224,6 +224,10 @@ export default function AccountPage({
             }
             return old;
           });
+
+          // นำคำขอใหม่ที่ผู้ใช้เพิ่งสร้างส่งเข้ามาจริงมาแสดงด้านบน
+          const newClaims = claims.filter(c => !prev.some(old => String(old.id) === String(c.id) || String(old.verify_id) === String(c.id)));
+          return [...newClaims, ...updatedPrev];
         });
       }
     });
@@ -231,7 +235,7 @@ export default function AccountPage({
     const unsubscribe = claimService.subscribe((updatedClaims) => {
       setSentClaims((prev) => {
         return prev.map((old) => {
-          const match = updatedClaims.find(c => String(c.id) === String(old.id) || String(c.id) === '102' || String(c.id) === 'c-01');
+          const match = updatedClaims.find(c => String(c.id) === String(old.id) || String(c.verify_id) === String(old.id));
           if (match) {
             return {
               ...old,
