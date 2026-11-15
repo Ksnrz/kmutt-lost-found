@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Plus, User, UserCircle, LogOut } from 'lucide-react';
+import { Plus, User, UserCircle, LogOut, FileText } from 'lucide-react';
 import './Navbar.css';
 
 /**
  * Navbar Component 
  */
 export default function Navbar({
-  pendingCount = 1,
+  pendingCount = 0,
+  noticeCount = 0,
   onCreatePost,
 }) {
   const navigate = useNavigate();
@@ -102,17 +103,17 @@ export default function Navbar({
             <span>แผนที่มหาวิทยาลัย</span>
           </NavLink>
 
-          {/* เมนูที่ 2: ประกาศของฉัน */}
+          {/* เมนูที่ 2: ประกาศทั้งหมด */}
           <NavLink
-            to="/account"
+            to="/posts"
             className={({ isActive }) =>
               `navbar-link ${isActive ? 'is-active' : ''}`
             }
           >
-            <span>ประกาศของฉัน</span>
+            <span>ประกาศทั้งหมด</span>
           </NavLink>
 
-          {/* เมนูที่ 3: ขอรับคืน (มี Badge ตัวเลข 1) */}
+          {/* เมนูที่ 3: รออนุมัติ (มี Badge ตัวเลขคำขอรอตรวจ) */}
           <NavLink
             to="/requests/review"
             className={({ isActive }) =>
@@ -153,11 +154,30 @@ export default function Navbar({
               aria-expanded={isDropdownOpen}
             >
               <User size={20} className="navbar-avatar-icon" />
+              {noticeCount > 0 && (
+                <span className="navbar-avatar-dot" aria-label={`มีการแจ้งเตือน ${noticeCount} รายการ`} />
+              )}
             </button>
 
             {/* Dropdown Menu เมื่อกด Avatar */}
             {isDropdownOpen && (
               <div className="navbar-dropdown-menu" role="menu">
+                <button
+                  type="button"
+                  className="navbar-dropdown-item"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    navigate('/account');
+                  }}
+                  role="menuitem"
+                >
+                  <FileText size={18} className="dropdown-item-icon" />
+                  <span>ประกาศและคำขอของฉัน</span>
+                  {noticeCount > 0 && (
+                    <span className="navbar-dropdown-badge">{noticeCount}</span>
+                  )}
+                </button>
+
                 <button
                   type="button"
                   className="navbar-dropdown-item"

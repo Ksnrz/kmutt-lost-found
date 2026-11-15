@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import Navbar from './components/navigation/Navbar';
 import Login from './pages/Login.jsx';
@@ -11,15 +12,64 @@ import ClaimRequestPage from './pages/requests/ClaimRequestPage';
 import ReviewRequestsPage from './pages/requests/ReviewRequestsPage';
 import AccountPage from './pages/requests/AccountPage';
 import Profile from './pages/Profile';
+import { apiRequest } from './api';
+import { claimService } from './services/claimService';
 import './App.css';
 
 // หน้าที่มี Navbar ด้านบน (หน้า login / register ไม่มี)
 function WithNavbar() {
   const navigate = useNavigate();
+  const [pendingCount, setPendingCount] = useState(0);
+  const [noticeCount, setNoticeCount] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchCounts = async () => {
+      try {
+        const receivedData = await apiRequest('/verify/received');
+        if (isMounted && receivedData?.posts) {
+          const totalPending = receivedData.posts.reduce(
+            (sum, p) => sum + (Number(p.pendingCount) || 0),
+            0
+          );
+          setPendingCount(totalPending);
+        }
+      } catch {
+        // ผู้ใช้อาจยังไม่ได้ล็อกอิน
+      }
+
+      try {
+        const claims = await claimService.getMyClaims();
+        if (isMounted && claims) {
+          // แจ้งเตือนเมื่อมีคำขอที่ถูก ACCEPTED หรือ REJECTED
+          const updates = claims.filter(
+            (c) => c.verify_status === 'ACCEPTED' || c.verify_status === 'REJECTED' || c.status === 'ACCEPTED' || c.status === 'REJECTED'
+          ).length;
+          setNoticeCount(updates);
+        }
+      } catch {
+        // ละเว้นข้อผิดพลาดชั่วคราว
+      }
+    };
+
+    fetchCounts();
+
+    const unsubscribe = claimService.subscribe(() => {
+      fetchCounts();
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
+
   return (
     <div className="app-container">
       <Navbar
-        pendingCount={1}
+        pendingCount={pendingCount}
+        noticeCount={noticeCount}
         onCreatePost={() => {
           navigate('/posts/new');
         }}
