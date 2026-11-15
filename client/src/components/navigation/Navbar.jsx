@@ -155,7 +155,9 @@ export default function Navbar({
             >
               <User size={20} className="navbar-avatar-icon" />
               {noticeCount > 0 && (
-                <span className="navbar-avatar-dot" aria-label={`มีการแจ้งเตือน ${noticeCount} รายการ`} />
+                <span className="navbar-avatar-badge" aria-label={`มีการแจ้งเตือน ${noticeCount} รายการ`}>
+                  {noticeCount}
+                </span>
               )}
             </button>
 
