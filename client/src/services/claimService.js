@@ -11,12 +11,10 @@
 import { apiRequest } from '../api';
 
 const STORAGE_KEY_CLAIMS = 'kmutt_lostfound_claims';
-const STORAGE_KEY_POST_STATUS = 'kmutt_lostfound_post_status';
 
 function getStoredClaims() {
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY_CLAIMS)) || [];
-    // กรองเอา mock / dummy id ที่เคยขึ้นต้นด้วย 'v-' หรือ 'c-' ออกทั้งหมด
     return raw.filter((c) => {
       const id = String(c.id || c.verify_id || '');
       return id && !id.startsWith('v-') && !id.startsWith('c-');
@@ -29,7 +27,6 @@ function getStoredClaims() {
 
 function saveClaims(claims) {
   try {
-    // กรอง mock id ออกก่อนบันทึกเสมอ
     const cleanClaims = (claims || []).filter((c) => {
       const id = String(c.id || c.verify_id || '');
       return id && !id.startsWith('v-') && !id.startsWith('c-');
@@ -41,7 +38,6 @@ function saveClaims(claims) {
   }
 }
 
-// บันทึกคำขอจริงจาก Backend ลง cache โดยไม่นำ mock id เก่ากลับมา
 function cacheClaims(claims) {
   saveClaims(claims || []);
 }
@@ -69,45 +65,11 @@ export const claimService = {
       options = { method: 'POST', ...jsonBody({ proof_description: proof }) };
     }
 
-    // error จาก Backend (401, โพสต์ DEPOSITED, ส่งคำขอโพสต์ตัวเอง ฯลฯ) โยนต่อให้หน้าแสดงผล
     const json = await apiRequest(`/posts/${postId}/verify`, options);
     const created = json?.data || json?.verify;
 
-    this.addClaimLocal({
-      ...payload,
-      id: created?.verify_id,
-      verify_id: created?.verify_id,
-    });
-
+    window.dispatchEvent(new CustomEvent('kmutt_claims_updated'));
     return created;
-  },
-
-  /**
-   * บันทึกคำขอที่เพิ่งส่งลง cache เพื่อให้หน้า "ประกาศของฉัน" แสดงทันที
-   */
-  addClaimLocal(payload) {
-    if (!payload.id && !payload.verify_id) return null;
-    const newId = String(payload.id || payload.verify_id);
-    const newClaim = {
-      ...payload,
-      id: newId,
-      verify_id: newId,
-      post_id: String(payload.post_id || payload.postId),
-      postId: String(payload.post_id || payload.postId),
-      status: 'PENDING',
-      verify_status: 'PENDING',
-      finderConfirmed: false,
-      receiverConfirmed: false,
-      created_at: payload.created_at || new Date().toISOString(),
-      evidences: payload.evidences || (payload.verify_images ? payload.verify_images.map((img) => img.file_name || 'รูปหลักฐาน') : []),
-      requester: payload.requester || 'คุณ (ผู้ใช้ปัจจุบัน)',
-      itemTitle: payload.itemTitle || payload.title || '',
-      note: '',
-      ownerNote: '',
-    };
-
-    saveClaims([newClaim, ...getStoredClaims().filter((c) => String(c.id) !== newId)]);
-    return newClaim;
   },
 
   /**
@@ -193,11 +155,9 @@ export const claimService = {
       ...jsonBody({ party }),
     });
     const postClosed = Boolean(json?.postClosed);
-    let targetPostId = null;
 
     const updated = getStoredClaims().map(c => {
       if (String(c.id) === String(claimId)) {
-        targetPostId = c.post_id || c.postId;
         return {
           ...c,
           finderConfirmed: party === 'finder' ? true : Boolean(c.finderConfirmed),
@@ -208,14 +168,6 @@ export const claimService = {
       }
       return c;
     });
-
-    if (postClosed && targetPostId) {
-      try {
-        localStorage.setItem(`${STORAGE_KEY_POST_STATUS}_${targetPostId}`, 'CLOSED');
-      } catch (e) {
-        console.warn(e);
-      }
-    }
 
     saveClaims(updated);
     return { claims: updated, postClosed };

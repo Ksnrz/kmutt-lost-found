@@ -95,7 +95,6 @@ function App() {
           <Route path="/posts/:postId" element={<PostDetail />} />
           <Route path="/posts/:postId/edit" element={<Editpost />} />
           <Route path="/listpost" element={<Navigate to="/posts" replace />} />
-          <Route path="/claims/new" element={<ClaimRequestPage />} />
           <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
           <Route path="/requests/review" element={<ReviewRequestsPage />} />
           <Route path="/posts/:postId/review" element={<ReviewRequestsPage />} />
