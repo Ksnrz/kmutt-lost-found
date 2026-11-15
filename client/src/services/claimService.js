@@ -15,7 +15,12 @@ const STORAGE_KEY_POST_STATUS = 'kmutt_lostfound_post_status';
 
 function getStoredClaims() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY_CLAIMS)) || [];
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY_CLAIMS)) || [];
+    // กรองเอา mock / dummy id ที่เคยขึ้นต้นด้วย 'v-' หรือ 'c-' ออกทั้งหมด
+    return raw.filter((c) => {
+      const id = String(c.id || c.verify_id || '');
+      return id && !id.startsWith('v-') && !id.startsWith('c-');
+    });
   } catch (e) {
     console.warn('LocalStorage error:', e);
     return [];
@@ -24,18 +29,21 @@ function getStoredClaims() {
 
 function saveClaims(claims) {
   try {
-    localStorage.setItem(STORAGE_KEY_CLAIMS, JSON.stringify(claims));
-    window.dispatchEvent(new CustomEvent('kmutt_claims_updated', { detail: claims }));
+    // กรอง mock id ออกก่อนบันทึกเสมอ
+    const cleanClaims = (claims || []).filter((c) => {
+      const id = String(c.id || c.verify_id || '');
+      return id && !id.startsWith('v-') && !id.startsWith('c-');
+    });
+    localStorage.setItem(STORAGE_KEY_CLAIMS, JSON.stringify(cleanClaims));
+    window.dispatchEvent(new CustomEvent('kmutt_claims_updated', { detail: cleanClaims }));
   } catch (e) {
     console.warn('LocalStorage write error:', e);
   }
 }
 
-// เก็บคำขอที่ได้จาก Backend ลง cache (แทนที่รายการ id เดิม) เพื่อให้ updateClaimStatus / confirmHandover หาเจอ
+// บันทึกคำขอจริงจาก Backend ลง cache โดยไม่นำ mock id เก่ากลับมา
 function cacheClaims(claims) {
-  const ids = new Set(claims.map((c) => String(c.id ?? c.verify_id)));
-  const rest = getStoredClaims().filter((c) => !ids.has(String(c.id ?? c.verify_id)));
-  saveClaims([...claims, ...rest]);
+  saveClaims(claims || []);
 }
 
 const jsonBody = (body) => ({
@@ -78,7 +86,8 @@ export const claimService = {
    * บันทึกคำขอที่เพิ่งส่งลง cache เพื่อให้หน้า "ประกาศของฉัน" แสดงทันที
    */
   addClaimLocal(payload) {
-    const newId = String(payload.id || payload.verify_id || `v-${Date.now()}`);
+    if (!payload.id && !payload.verify_id) return null;
+    const newId = String(payload.id || payload.verify_id);
     const newClaim = {
       ...payload,
       id: newId,
@@ -97,7 +106,7 @@ export const claimService = {
       ownerNote: '',
     };
 
-    saveClaims([newClaim, ...getStoredClaims()]);
+    saveClaims([newClaim, ...getStoredClaims().filter((c) => String(c.id) !== newId)]);
     return newClaim;
   },
 

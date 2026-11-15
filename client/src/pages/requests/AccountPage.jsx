@@ -67,15 +67,21 @@ export default function AccountPage({
   // ดึงคำขอที่ฉันส่ง + subscribe real-time
   useEffect(() => {
     let isMounted = true;
+    const sanitize = (list) =>
+      (list || []).filter((c) => {
+        const id = String(c.verify_id || c.id || '');
+        return id && !id.startsWith('v-') && !id.startsWith('c-');
+      });
+
     claimService.getMyClaims()
       .then((claims) => {
-        if (isMounted) setSentClaims(claims || []);
+        if (isMounted) setSentClaims(sanitize(claims));
       })
       .catch((err) => console.error('my-claims failed:', err.message))
       .finally(() => { if (isMounted) setClaimsLoading(false); });
 
     const unsubscribe = claimService.subscribe((updatedClaims) => {
-      if (isMounted) setSentClaims(updatedClaims);
+      if (isMounted) setSentClaims(sanitize(updatedClaims));
     });
 
     return () => {

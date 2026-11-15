@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import { pool } from './src/db.js';
 
 const PORT = process.env.TEST_PORT || 3998;
-const BASE = `http://localhost:${PORT}`;
+const BASE = `http://127.0.0.1:${PORT}`;
 const tag = Date.now().toString().slice(-8);
 const userIds = [];
 const tok = {};
@@ -41,7 +41,7 @@ const claimStatus = async (verifyId) =>
   (await pool.query('SELECT verify_status FROM verify_items WHERE verify_id = $1', [verifyId])).rows[0].verify_status;
 
 before(async () => {
-  server = spawn(process.execPath, ['src/index.js'], { env: { ...process.env, PORT }, stdio: 'ignore' });
+  server = spawn(process.execPath, ['--env-file=.env', 'src/index.js'], { env: { ...process.env, PORT }, stdio: 'inherit' });
   for (let i = 0; i < 50; i++) {
     try { if ((await fetch(`${BASE}/api/health`)).ok) break; } catch { /* not up yet */ }
     await new Promise((r) => setTimeout(r, 100));
