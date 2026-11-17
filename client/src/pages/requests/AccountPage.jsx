@@ -6,7 +6,6 @@ import {
   Inbox,
   CheckCircle2,
   X,
-  Loader2,
 } from 'lucide-react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -14,17 +13,21 @@ import PageHeader from '../../components/ui/PageHeader';
 import Thumbnail from '../../components/ui/Thumbnail';
 import Badge from '../../components/ui/Badge';
 import { claimService } from '../../services/claimService';
-import { apiRequest } from '../../api';
 import './AccountPage.css';
 
 /**
  * AccountPage Component — หน้าจัดการบัญชีและกิจกรรมของฉัน (MY ACCOUNT)
  * Route URL: /account
- *
- * ใช้ข้อมูลจาก API จริงทั้งหมด:
- * - GET /api/me/posts       → ประกาศที่ฉันสร้าง
- * - GET /api/verify/my-claims → คำขอที่ฉันส่ง
- * - GET /api/verify/received  → โพสต์ของฉันที่มีคำขอเข้ามา
+ * 
+ * 🌟 สอดคล้องกับ ER Diagram:
+ * 1. Entity: POSTS & LOCATION (ความสัมพันธ์ USERS (0,N) creates (1,1) POSTS)
+ *    - post_id, post_status ('OPEN' | 'CLOSED' | 'CANCELLED'), post_type, custody_type, building_name
+ * 2. Entity: VERIFY_ITEMS (ความสัมพันธ์ USERS (0,N) submit (1,1) VERIFY_ITEMS)
+ *    - verify_id, verify_status, proof_description, created_at
+ * 3. Dual Confirmation (ฝ่ายผู้รับ): ในแท็บ "คำขอที่ฉันส่ง (My Requests)" สามารถกดยืนยันได้รับของเมื่อคำขอได้รับการ ACCEPTED
+ * 4. จัดการคำขอที่ได้รับ: มีแท็บและปุ่มตรงไปยังหน้าตรวจคำขอ /requests/review (POSTS (0,N) receives (1,1) VERIFY_ITEMS)
+ * 5. ไอคอน: ใช้ Lucide Icons ทั้งหมดตามมาตรฐานการออกแบบ
+ * 6. ZERO Inline Styles: 100% ควบคุมผ่าน CSS Classes
  */
 export default function AccountPage({
   onNavigateReview,
@@ -34,54 +37,253 @@ export default function AccountPage({
   const location = useLocation();
   const [bannerMessage, setBannerMessage] = useState(location.state?.successMessage || null);
 
-  // State 1: แท็บที่กำลังเปิด
+  // State 1: แท็บที่กำลังเปิด ('my_posts' | 'my_sent_claims' | 'my_received_claims')
   const [activeTab, setActiveTab] = useState('my_posts');
 
-  // State 2: ตัวกรองสถานะประกาศ
+  // State 2: ตัวกรองสถานะประกาศ ('all' | 'OPEN' | 'CLOSED' | 'CANCELLED')
   const [postFilter, setPostFilter] = useState('all');
 
-  // State 3: ประกาศที่ฉันสร้าง (GET /api/me/posts)
-  const [myPosts, setMyPosts] = useState([]);
-  const [postsLoading, setPostsLoading] = useState(true);
+  // State 3: ข้อมูลประกาศที่ฉันสร้าง (ดึงมาจาก Entity POSTS + LOCATION ตาม ER Diagram)
+  const [myPosts, setMyPosts] = useState(() => {
+    let posts = [
+      {
+        id: 'p-101',
+        post_id: 'p-101',
+        title: 'พบกระเป๋าสตางค์สีดำ',
+        post_type: 'ประกาศเจอของ (FOUND)',
+        custody_type: 'ผู้พบเก็บรักษาเอง',
+        building_name: 'อาคาร S4 ชั้น 1',
+        location: 'S4 ชั้น 1',
+        date: '24 ก.ย. 2026',
+        created_at: '24 ก.ย. 2026',
+        status: 'OPEN', // post_status: 'OPEN' | 'CLOSED' | 'CANCELLED'
+        post_status: 'OPEN',
+        pendingRequestsCount: 2,
+      },
+      {
+        id: 'p-102',
+        post_id: 'p-102',
+        title: 'ตามหากุญแจรถยนต์ Honda',
+        post_type: 'ตามหาของหาย (LOST)',
+        custody_type: 'เจ้าของตามหาเอง',
+        building_name: 'อาคาร CB4 ชั้น 2',
+        location: 'CB4 ชั้น 2',
+        date: '22 ก.ย. 2026',
+        created_at: '22 ก.ย. 2026',
+        status: 'OPEN',
+        post_status: 'OPEN',
+        pendingRequestsCount: 0,
+      },
+      {
+        id: 'p-103',
+        post_id: 'p-103',
+        title: 'พบหูฟังไร้สาย AirPods',
+        post_type: 'ประกาศเจอของ (FOUND)',
+        custody_type: 'ฝากจุดประชาสัมพันธ์',
+        building_name: 'หอสมุด ชั้น 3',
+        location: 'หอสมุด ชั้น 3',
+        date: '18 ก.ย. 2026',
+        created_at: '18 ก.ย. 2026',
+        status: 'CLOSED',
+        post_status: 'CLOSED',
+        pendingRequestsCount: 0,
+      },
+      {
+        id: 'p-104',
+        post_id: 'p-104',
+        title: 'พบร่มพับสีน้ำเงิน',
+        post_type: 'ประกาศเจอของ (FOUND)',
+        custody_type: 'ส่งต่อจุดรับของหาย',
+        building_name: 'โรงอาหารพระจอมเกล้า',
+        location: 'โรงอาหารพระจอมเกล้า',
+        date: '15 ก.ย. 2026',
+        created_at: '15 ก.ย. 2026',
+        status: 'CANCELLED',
+        post_status: 'CANCELLED',
+        pendingRequestsCount: 0,
+      },
+    ];
 
-  // State 4: คำขอที่ฉันส่ง (GET /api/verify/my-claims)
-  const [sentClaims, setSentClaims] = useState([]);
-  const [claimsLoading, setClaimsLoading] = useState(true);
+    if (location.state?.updatedPost) {
+      const up = location.state.updatedPost;
+      posts = posts.map((p) =>
+        p.id === up.id || p.post_id === up.id ? { ...p, ...up } : p
+      );
+    }
+    if (location.state?.deletedPostId) {
+      const delId = location.state.deletedPostId;
+      posts = posts.filter((p) => p.id !== delId && p.post_id !== delId);
+    }
+    if (location.state?.closedPostId) {
+      const closedId = String(location.state.closedPostId);
+      posts = posts.map((p) =>
+        String(p.id) === closedId || String(p.post_id) === closedId || (closedId === '1' && p.id === 'p-101') || (closedId === 'p-101' && p.id === 'p-101')
+          ? { ...p, status: 'CLOSED', post_status: 'CLOSED' }
+          : p
+      );
+    }
 
-  // State 5: โพสต์ของฉันที่มีคำขอเข้ามา (GET /api/verify/received)
-  const [receivedClaims, setReceivedClaims] = useState([]);
-  const [receivedLoading, setReceivedLoading] = useState(true);
+    // ซิงก์สถานะจาก LocalStorage จากผลการกดยืนยันส่งมอบ Dual Confirmation
+    posts = posts.map((p) => {
+      const stored =
+        localStorage.getItem(`kmutt_lostfound_post_status_${p.id}`) ||
+        localStorage.getItem(`kmutt_lostfound_post_status_${p.post_id}`) ||
+        (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_1') : null) ||
+        (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_p-101') : null);
+      if (stored) {
+        return { ...p, status: stored, post_status: stored };
+      }
+      return p;
+    });
 
-  // ดึงประกาศของฉัน
+    return posts;
+  });
+
+  // State 4: ข้อมูลคำขอที่ฉันส่ง (Entity VERIFY_ITEMS ที่ current user เป็นผู้ submit)
+  const [sentClaims, setSentClaims] = useState(() => {
+    let claims = [
+      {
+        id: 'c-01',
+        verify_id: 'c-01',
+        post_id: 'p-075',
+        itemTitle: 'ขอรับกุญแจรถยนต์ Honda',
+        postOwner: 'นายชินวัฒน์ อักษร (ผู้พบ)',
+        date: '25 ก.ย. 2026',
+        created_at: '25 ก.ย. 2026',
+        status: 'ACCEPTED', // verify_status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED'
+        verify_status: 'ACCEPTED',
+        proof_description: 'กุญแจรถยนต์ Honda มีพวงกุญแจสีดำ',
+        ownerNote: 'ตอบรับแล้ว! นัดรับของที่โถง CB4 วันนี้เวลา 16:30 น.',
+        receiverConfirmed: false,
+      },
+      {
+        id: 'c-02',
+        verify_id: 'c-02',
+        post_id: 'p-089',
+        itemTitle: 'ขอรับบัตรนักศึกษาที่ทำหาย',
+        postOwner: 'เจ้าหน้าที่ห้องทะเบียน',
+        date: '20 ก.ย. 2026',
+        created_at: '20 ก.ย. 2026',
+        status: 'COMPLETED',
+        verify_status: 'COMPLETED',
+        proof_description: 'บัตรนักศึกษาคณะวิศวกรรมศาสตร์ ภาควิชา CPE',
+        ownerNote: 'ทั้งสองฝ่ายยืนยันการส่งมอบเสร็จสิ้นแล้ว ขอบคุณครับ',
+        receiverConfirmed: true,
+      },
+      {
+        id: 'c-03',
+        verify_id: 'c-03',
+        post_id: 'p-075',
+        itemTitle: 'ขอรับหูฟังไร้สาย AirPods',
+        postOwner: 'นายชินวัฒน์ อักษร (ผู้พบ)',
+        date: '24 ก.ย. 2026',
+        created_at: '24 ก.ย. 2026',
+        status: 'PENDING',
+        verify_status: 'PENDING',
+        proof_description: 'เคสหูฟังมีสติกเกอร์รูปแมวสีส้มติดอยู่ที่ฝา',
+        ownerNote: 'กำลังตรวจสอบรูปภาพและรายละเอียดตำหนิที่ส่งมา',
+        receiverConfirmed: false,
+      },
+      {
+        id: 'c-04',
+        verify_id: 'c-04',
+        post_id: 'p-064',
+        itemTitle: 'ขอรับกระติกน้ำเก็บความเย็น',
+        postOwner: 'นายธนาคาร เจริญสุข (ผู้พบ)',
+        date: '15 ก.ย. 2026',
+        created_at: '15 ก.ย. 2026',
+        status: 'REJECTED',
+        verify_status: 'REJECTED',
+        proof_description: 'กระติกน้ำสีดำด้าน ขนาด 500ml',
+        ownerNote: 'ตำหนิตรงฝาไม่ตรงกับของจริงที่เก็บได้ ขออภัยด้วยครับ',
+        receiverConfirmed: false,
+      },
+      {
+        id: 'c-05',
+        verify_id: 'c-05',
+        post_id: 'p-055',
+        itemTitle: 'ขอรับสายชาร์จไอโฟน',
+        postOwner: 'นางสาวพิมพ์มาดา รักษ์ดี (ผู้พบ)',
+        date: '10 ก.ย. 2026',
+        created_at: '10 ก.ย. 2026',
+        status: 'CANCELLED',
+        verify_status: 'CANCELLED',
+        proof_description: 'สายชาร์จ Type-C to Lightning สีขาว มีปลอกพันสายไฟสีฟ้า',
+        ownerNote: 'โพสต์ถูกปิดเนื่องจากส่งมอบให้แก่เจ้าของท่านอื่นเรียบร้อยแล้ว',
+        receiverConfirmed: false,
+      },
+    ];
+
+    if (location.state?.confirmedClaimId) {
+      const cid = location.state.confirmedClaimId;
+      claims = claims.map((c) =>
+        c.id === cid || c.verify_id === cid
+          ? { ...c, receiverConfirmed: true, status: 'COMPLETED', verify_status: 'COMPLETED' }
+          : c
+      );
+    }
+
+    return claims;
+  });
+
+  // ซิงก์ข้อมูลสถานะคำขอที่ฉันส่งแบบ Real-time จาก claimService
   useEffect(() => {
     let isMounted = true;
-    apiRequest('/me/posts')
-      .then((data) => {
-        if (isMounted) setMyPosts(data?.posts || []);
-      })
-      .catch((err) => console.error('me/posts failed:', err.message))
-      .finally(() => { if (isMounted) setPostsLoading(false); });
-    return () => { isMounted = false; };
-  }, []);
+    claimService.getMyClaims().then((claims) => {
+      if (isMounted && claims && claims.length > 0) {
+        setSentClaims((prev) => {
+          const updatedPrev = prev.map((old) => {
+            const match = claims.find(c => String(c.id) === String(old.id) || String(c.verify_id) === String(old.id));
+            if (match) {
+              return {
+                ...old,
+                status: match.status || match.verify_status || old.status,
+                verify_status: match.status || match.verify_status || old.verify_status,
+                ownerNote: match.ownerNote || match.note || old.ownerNote,
+                receiverConfirmed: match.receiverConfirmed,
+              };
+            }
+            return old;
+          });
 
-  // ดึงคำขอที่ฉันส่ง + subscribe real-time
-  useEffect(() => {
-    let isMounted = true;
-    const sanitize = (list) =>
-      (list || []).filter((c) => {
-        const id = String(c.verify_id || c.id || '');
-        return id && !id.startsWith('v-') && !id.startsWith('c-');
-      });
-
-    claimService.getMyClaims()
-      .then((claims) => {
-        if (isMounted) setSentClaims(sanitize(claims));
-      })
-      .catch((err) => console.error('my-claims failed:', err.message))
-      .finally(() => { if (isMounted) setClaimsLoading(false); });
+          // นำคำขอใหม่ที่ผู้ใช้เพิ่งสร้างส่งเข้ามาจริงมาแสดงด้านบน
+          const newClaims = claims.filter(c => !prev.some(old => String(old.id) === String(c.id) || String(old.verify_id) === String(c.id)));
+          return [...newClaims, ...updatedPrev];
+        });
+      }
+    });
 
     const unsubscribe = claimService.subscribe((updatedClaims) => {
-      if (isMounted) setSentClaims(sanitize(updatedClaims));
+      // ซิงก์สถานะโพสต์ที่ฉันสร้างเมื่อมีการยืนยันส่งมอบครบ 2 ฝ่ายจนปิดโพสต์
+      setMyPosts((prev) =>
+        prev.map((p) => {
+          const stored =
+            localStorage.getItem(`kmutt_lostfound_post_status_${p.id}`) ||
+            localStorage.getItem(`kmutt_lostfound_post_status_${p.post_id}`) ||
+            (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_1') : null) ||
+            (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_p-101') : null);
+          if (stored) {
+            return { ...p, status: stored, post_status: stored };
+          }
+          return p;
+        })
+      );
+
+      setSentClaims((prev) => {
+        return prev.map((old) => {
+          const match = updatedClaims.find(c => String(c.id) === String(old.id) || String(c.verify_id) === String(old.id));
+          if (match) {
+            return {
+              ...old,
+              status: match.status || match.verify_status || old.status,
+              verify_status: match.status || match.verify_status || old.verify_status,
+              ownerNote: match.ownerNote || match.note || old.ownerNote,
+              receiverConfirmed: match.receiverConfirmed,
+            };
+          }
+          return old;
+        });
+      });
     });
 
     return () => {
@@ -90,22 +292,28 @@ export default function AccountPage({
     };
   }, []);
 
-  // ดึงโพสต์ที่มีคำขอเข้ามา
-  useEffect(() => {
-    let isMounted = true;
-    apiRequest('/verify/received')
-      .then((data) => {
-        if (isMounted) setReceivedClaims(data?.posts || []);
-      })
-      .catch((err) => console.error('verify/received failed:', err.message))
-      .finally(() => { if (isMounted) setReceivedLoading(false); });
-    return () => { isMounted = false; };
-  }, []);
+  // State 5: รายการประกาศของฉันที่มีคนส่งคำขอเข้ามา (POSTS ที่ receives VERIFY_ITEMS)
+  const [receivedClaims] = useState([
+    {
+      id: 'rc-101',
+      postId: 'p-101',
+      postTitle: 'พบกระเป๋าสตางค์สีดำ',
+      location: 'S4 ชั้น 1',
+      building_name: 'อาคาร S4 ชั้น 1',
+      pendingCount: 2,
+      latestClaimant: 'ภัทรพล สุขเกษม (นักศึกษา B)',
+      date: '24 ก.ย. 2026',
+    },
+  ]);
+
+
+
+
 
   // กรองประกาศตามตัวกรอง
   const filteredPosts = myPosts.filter((post) => {
     if (postFilter === 'all') return true;
-    return (post.post_status || post.status) === postFilter;
+    return post.status === postFilter;
   });
 
   return (
@@ -117,7 +325,7 @@ export default function AccountPage({
         subtitle="ติดตามประกาศที่สร้าง คำขอรับของ (My Requests) และจัดการส่งมอบสิ่งของ"
       />
 
-      {/* แบนเนอร์แจ้งเตือนสำเร็จ */}
+      {/* แบนเนอร์แจ้งเตือนสำเร็จ (ถ้ามีข้อความส่งต่อมาจากหน้าอื่น) */}
       {bannerMessage && (
         <div className="account-success-banner" role="status">
           <div className="account-banner-content">
@@ -136,7 +344,7 @@ export default function AccountPage({
       )}
 
       {/* ============================================================
-          1. การ์ดแท็บเลือกหมวดหมู่
+          1. การ์ดแท็บเลือกหมวดหมู่ข้อมูลบัญชี (Interactive Tab Cards พร้อมไอคอนและเอฟเฟกต์)
           ============================================================ */}
       <div className="account-stats-grid" role="tablist" aria-label="หมวดหมู่ข้อมูลบัญชี">
         {/* แท็บที่ 1: ประกาศที่ฉันสร้าง */}
@@ -153,13 +361,13 @@ export default function AccountPage({
             </div>
             <div className="account-stat-info">
               <span className="account-stat-label">ประกาศที่ฉันสร้าง</span>
-              <p className="account-stat-number">{postsLoading ? '...' : `${myPosts.length} รายการ`}</p>
+              <p className="account-stat-number">{myPosts.length} รายการ</p>
             </div>
           </div>
           <span className="account-stat-badge">จัดการ</span>
         </button>
 
-        {/* แท็บที่ 2: คำขอที่ฉันส่ง */}
+        {/* แท็บที่ 2: คำขอที่ฉันส่ง (My Requests) */}
         <button
           type="button"
           className={`account-stat-card ${activeTab === 'my_sent_claims' ? 'is-active' : ''}`}
@@ -173,7 +381,7 @@ export default function AccountPage({
             </div>
             <div className="account-stat-info">
               <span className="account-stat-label">คำขอที่ฉันส่ง (My Requests)</span>
-              <p className="account-stat-number">{claimsLoading ? '...' : `${sentClaims.length} รายการ`}</p>
+              <p className="account-stat-number">{sentClaims.length} รายการ</p>
             </div>
           </div>
           <span className="account-stat-badge">ตารางสถานะ</span>
@@ -193,7 +401,7 @@ export default function AccountPage({
             </div>
             <div className="account-stat-info">
               <span className="account-stat-label">คำขอที่ฉันได้รับ</span>
-              <p className="account-stat-number">{receivedLoading ? '...' : `${receivedClaims.length} รายการ`}</p>
+              <p className="account-stat-number">{receivedClaims.length} รายการ</p>
             </div>
           </div>
           <span className="account-stat-badge">ไปหน้าตรวจ</span>
@@ -201,348 +409,331 @@ export default function AccountPage({
       </div>
 
       {/* ============================================================
-          3. แท็บที่ 1: ประกาศที่ฉันสร้าง
+          3. แท็บที่ 1: ประกาศที่ฉันสร้าง (POSTS + LOCATION)
           ============================================================ */}
       {activeTab === 'my_posts' && (
         <section aria-labelledby="my-posts-heading">
           <h2 id="my-posts-heading" className="sr-only">
             รายการประกาศที่ฉันสร้าง
           </h2>
+          {/* แถบตัวกรองสถานะ */}
+          <div className="account-filter-bar">
+            <div className="account-pill-filters">
+              <button
+                type="button"
+                className={`account-filter-pill ${postFilter === 'all' ? 'is-active' : ''}`}
+                onClick={() => setPostFilter('all')}
+              >
+                ทั้งหมด ({myPosts.length})
+              </button>
+              <button
+                type="button"
+                className={`account-filter-pill ${postFilter === 'OPEN' ? 'is-active' : ''}`}
+                onClick={() => setPostFilter('OPEN')}
+              >
+                เปิดรับคำขอ (OPEN)
+              </button>
+              <button
+                type="button"
+                className={`account-filter-pill ${postFilter === 'CLOSED' ? 'is-active' : ''}`}
+                onClick={() => setPostFilter('CLOSED')}
+              >
+                ส่งมอบสำเร็จแล้ว (CLOSED)
+              </button>
+              <button
+                type="button"
+                className={`account-filter-pill ${postFilter === 'CANCELLED' ? 'is-active' : ''}`}
+                onClick={() => setPostFilter('CANCELLED')}
+              >
+                ยกเลิกโพสต์ (CANCELLED)
+              </button>
+            </div>
+          </div>
 
-          {postsLoading ? (
+          {/* รายการการ์ดโพสต์ */}
+          {filteredPosts.length === 0 ? (
             <div className="account-empty-state">
-              <Loader2 size={32} className="account-empty-icon" />
-              <p className="account-empty-title">กำลังโหลดประกาศของคุณ...</p>
+              <Inbox size={42} className="account-empty-icon" />
+              <p className="account-empty-title">ไม่พบรายการประกาศในหมวดหมู่นี้</p>
+              <p className="account-empty-desc">ลองเลือกตัวกรองอื่น หรือสร้างประกาศใหม่</p>
             </div>
           ) : (
-            <>
-              {/* แถบตัวกรองสถานะ */}
-              <div className="account-filter-bar">
-                <div className="account-pill-filters">
-                  <button
-                    type="button"
-                    className={`account-filter-pill ${postFilter === 'all' ? 'is-active' : ''}`}
-                    onClick={() => setPostFilter('all')}
+            <div className="account-posts-list">
+              {filteredPosts.map((post) => (
+                <div key={post.id} className="account-post-card">
+                  <div
+                    className="account-post-header account-clickable"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      const targetId = post.id || post.post_id;
+                      navigate(`/posts/${targetId}`, {
+                        state: {
+                          from: 'account',
+                          isOwner: true,
+                          post: post,
+                        },
+                      });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        const targetId = post.id || post.post_id;
+                        navigate(`/posts/${targetId}`, {
+                          state: {
+                            from: 'account',
+                            isOwner: true,
+                            post: post,
+                          },
+                        });
+                      }
+                    }}
                   >
-                    ทั้งหมด ({myPosts.length})
-                  </button>
-                  <button
-                    type="button"
-                    className={`account-filter-pill ${postFilter === 'OPEN' ? 'is-active' : ''}`}
-                    onClick={() => setPostFilter('OPEN')}
-                  >
-                    เปิดรับคำขอ (OPEN)
-                  </button>
-                  <button
-                    type="button"
-                    className={`account-filter-pill ${postFilter === 'CLOSED' ? 'is-active' : ''}`}
-                    onClick={() => setPostFilter('CLOSED')}
-                  >
-                    ส่งมอบสำเร็จแล้ว (CLOSED)
-                  </button>
-                  <button
-                    type="button"
-                    className={`account-filter-pill ${postFilter === 'CANCELLED' ? 'is-active' : ''}`}
-                    onClick={() => setPostFilter('CANCELLED')}
-                  >
-                    ยกเลิกโพสต์ (CANCELLED)
-                  </button>
-                </div>
-              </div>
+                    <Thumbnail text="รูปโพสต์" />
+                    <div className="account-post-details">
+                      <h3 className="account-post-title">{post.title}</h3>
+                      <p className="account-post-meta">
+                        {post.location} · {post.date}
+                      </p>
+                      <div className="account-post-badges">
+                        {/* 1. ประเภทโพสต์ตาม ER Diagram (post_type: FOUND / LOST) */}
+                        {post.post_type === 'LOST' || (post.post_type && post.post_type.includes('LOST')) ? (
+                          <Badge variant="lost">ของหาย</Badge>
+                        ) : (
+                          <Badge variant="found">พบของ</Badge>
+                        )}
 
-              {filteredPosts.length === 0 ? (
-                <div className="account-empty-state">
-                  <Inbox size={42} className="account-empty-icon" />
-                  <p className="account-empty-title">ไม่พบรายการประกาศในหมวดหมู่นี้</p>
-                  <p className="account-empty-desc">ลองเลือกตัวกรองอื่น หรือสร้างประกาศใหม่</p>
-                </div>
-              ) : (
-                <div className="account-posts-list">
-                  {filteredPosts.map((post) => {
-                    const postId = post.post_id;
-                    const postStatus = post.post_status || post.status;
-                    const postType = post.post_type;
-                    const location2 = post.building_name || post.location || '-';
-                    const dateStr = post.created_at
-                      ? new Date(post.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })
-                      : '-';
-
-                    return (
-                      <div key={postId} className="account-post-card">
-                        <div
-                          className="account-post-header account-clickable"
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => navigate(`/posts/${postId}`, {
-                            state: { from: 'account', isOwner: true, post },
-                          })}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              navigate(`/posts/${postId}`, {
-                                state: { from: 'account', isOwner: true, post },
-                              });
-                            }
-                          }}
-                        >
-                          <Thumbnail text="รูปโพสต์" />
-                          <div className="account-post-details">
-                            <h3 className="account-post-title">{post.title}</h3>
-                            <p className="account-post-meta">
-                              {location2} · {dateStr}
-                            </p>
-                            <div className="account-post-badges">
-                              {postType === 'LOST' || (postType && postType.includes('LOST')) ? (
-                                <Badge variant="lost">ของหาย</Badge>
-                              ) : (
-                                <Badge variant="found">พบของ</Badge>
-                              )}
-                              {postStatus === 'OPEN' && (
-                                <Badge variant="success">OPEN · เปิดรับคำขอ</Badge>
-                              )}
-                              {postStatus === 'CLOSED' && (
-                                <Badge variant="completed">CLOSED · ส่งมอบแล้ว</Badge>
-                              )}
-                              {postStatus === 'CANCELLED' && (
-                                <Badge variant="danger">CANCELLED · ยกเลิก</Badge>
-                              )}
-                              {Number(post.pending_count) > 0 && (
-                                <Badge variant="count">{post.pending_count} คำขอรอตรวจ</Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="account-post-actions">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                              if (onNavigateEditPost) {
-                                onNavigateEditPost(postId, post);
-                              } else {
-                                navigate(`/posts/${postId}/edit`, {
-                                  state: { post, from: 'account' },
-                                });
-                              }
-                            }}
-                          >
-                            แก้ไขโพสต์
-                          </Button>
-                        </div>
+                        {/* 2. สถานะโพสต์ (post_status: OPEN, CLOSED, CANCELLED) */}
+                        {post.status === 'OPEN' && (
+                          <Badge variant="success">OPEN · เปิดรับคำขอ</Badge>
+                        )}
+                        {post.status === 'CLOSED' && (
+                          <Badge variant="completed">CLOSED · ส่งมอบแล้ว</Badge>
+                        )}
+                        {post.status === 'CANCELLED' && (
+                          <Badge variant="danger">CANCELLED · ยกเลิก</Badge>
+                        )}
                       </div>
-                    );
-                  })}
+                    </div>
+                  </div>
+
+                  <div className="account-post-actions">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        const targetId = post.id || post.post_id;
+                        if (onNavigateEditPost) {
+                          onNavigateEditPost(targetId, post);
+                        } else {
+                          navigate(`/posts/${targetId}/edit`, {
+                            state: { post, from: 'account' },
+                          });
+                        }
+                      }}
+                    >
+                      แก้ไขโพสต์
+                    </Button>
+                  </div>
                 </div>
-              )}
-            </>
+              ))}
+            </div>
           )}
         </section>
       )}
 
       {/* ============================================================
-          4. แท็บที่ 2: ตารางคำขอที่ฉันส่ง
+          4. แท็บที่ 2: ตารางคำขอที่ฉันส่ง (VERIFY_ITEMS — รองรับ 5 สถานะ)
           ============================================================ */}
       {activeTab === 'my_sent_claims' && (
         <section aria-labelledby="sent-claims-heading">
           <h2 id="sent-claims-heading" className="sr-only">
             รายการคำขอที่ฉันส่ง (My Requests)
           </h2>
-          {claimsLoading ? (
-            <div className="account-empty-state">
-              <Loader2 size={32} className="account-empty-icon" />
-              <p className="account-empty-title">กำลังโหลดคำขอของคุณ...</p>
-            </div>
-          ) : sentClaims.length === 0 ? (
-            <div className="account-empty-state">
-              <Send size={42} className="account-empty-icon" />
-              <p className="account-empty-title">ยังไม่มีคำขอที่ส่งออกไป</p>
-              <p className="account-empty-desc">ไปที่หน้าประกาศและกดปุ่มขอรับสิ่งของ</p>
-            </div>
-          ) : (
-            <div className="account-table-wrapper">
-              <table className="account-data-table">
-                <caption className="sr-only">ตารางรายการคำขอที่ฉันส่งและสถานะ</caption>
-                <thead>
-                  <tr>
-                    <th>สิ่งของที่ส่งคำขอรับคืน</th>
-                    <th>ผู้โพสต์</th>
-                    <th>วันที่ส่ง</th>
-                    <th>สถานะคำขอ</th>
-                    <th>หมายเหตุจากผู้พบ</th>
-                    <th>การกระทำ / ยืนยันการส่งมอบ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sentClaims.map((claim) => {
-                    const claimId = claim.verify_id || claim.id;
-                    const targetPostId = claim.post_id || claim.postId;
-                    const claimStatus = claim.verify_status || claim.status;
-                    const dateStr = claim.created_at
-                      ? new Date(claim.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })
-                      : (claim.date || '-');
-
-                    return (
-                      <tr key={claimId}>
-                        <td>
-                          <div
-                            className="account-table-item account-clickable"
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => navigate(`/posts/${targetPostId}`, {
-                              state: { from: 'account', claim },
-                            })}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                navigate(`/posts/${targetPostId}`, {
-                                  state: { from: 'account', claim },
-                                });
+          <div className="account-table-wrapper">
+            <table className="account-data-table">
+              <caption className="sr-only">ตารางรายการคำขอที่ฉันส่งและสถานะ</caption>
+              <thead>
+                <tr>
+                  <th>สิ่งของที่ส่งคำขอรับคืน</th>
+                  <th>ผู้โพสต์</th>
+                  <th>วันที่ส่ง</th>
+                  <th>สถานะคำขอ</th>
+                  <th>หมายเหตุจากผู้พบ</th>
+                  <th>การกระทำ / ยืนยันการส่งมอบ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sentClaims.map((claim) => (
+                  <tr key={claim.id}>
+                    <td>
+                      <div
+                        className="account-table-item account-clickable"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          const targetPostId = claim.post_id || claim.postId || 1;
+                          navigate(`/posts/${targetPostId}`, {
+                            state: {
+                              from: 'account',
+                              claim: claim,
+                              post: {
+                                id: targetPostId,
+                                title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
+                                finderName: claim.postOwner,
+                                date: claim.date || claim.created_at,
+                                eventDate: claim.date || claim.created_at,
+                                description: claim.proof_description || `สิ่งของที่ถูกประกาศโดย ${claim.postOwner}`,
+                              },
+                            },
+                          });
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            const targetPostId = claim.post_id || claim.postId || 1;
+                            navigate(`/posts/${targetPostId}`, {
+                              state: {
+                                from: 'account',
+                                claim: claim,
+                                post: {
+                                  id: targetPostId,
+                                  title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
+                                  finderName: claim.postOwner,
+                                  date: claim.date || claim.created_at,
+                                  eventDate: claim.date || claim.created_at,
+                                  description: claim.proof_description || `สิ่งของที่ถูกประกาศโดย ${claim.postOwner}`,
+                                },
+                              },
+                            });
+                          }
+                        }}
+                      >
+                        <Thumbnail text="รูป" />
+                        <span className="account-table-item-title">
+                          {claim.itemTitle}
+                          <span className="account-table-sub-id">#{claim.verify_id}</span>
+                        </span>
+                      </div>
+                    </td>
+                    <td>{claim.postOwner}</td>
+                    <td>{claim.created_at || claim.date}</td>
+                    <td>
+                      {claim.status === 'PENDING' && (
+                        <Badge variant="pending">PENDING · รอตรวจ</Badge>
+                      )}
+                      {claim.status === 'ACCEPTED' && (
+                        <Badge variant="success">ACCEPTED · ตอบรับแล้ว</Badge>
+                      )}
+                      {claim.status === 'REJECTED' && (
+                        <Badge variant="danger">REJECTED · ปฏิเสธ</Badge>
+                      )}
+                      {claim.status === 'CANCELLED' && (
+                        <Badge variant="neutral">CANCELLED · ยกเลิก</Badge>
+                      )}
+                      {claim.status === 'COMPLETED' && (
+                        <Badge variant="completed">COMPLETED · สำเร็จ</Badge>
+                      )}
+                    </td>
+                    <td>
+                      <div className={`account-table-note ${claim.ownerNote ? 'has-note' : ''}`}>
+                        {claim.ownerNote || '— ไม่มีข้อความหมายเหตุ —'}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="account-table-actions">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            const targetPostId = claim.post_id || claim.postId || 1;
+                            navigate(`/posts/${targetPostId}`, {
+                              state: {
+                                from: 'account',
+                                claim: claim,
+                                post: {
+                                  id: targetPostId,
+                                  title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
+                                  finderName: claim.postOwner,
+                                  date: claim.date || claim.created_at,
+                                  eventDate: claim.date || claim.created_at,
+                                  description: claim.proof_description || `สิ่งของที่ถูกประกาศโดย ${claim.postOwner}`,
+                                },
+                              },
+                            });
+                          }}
+                        >
+                          ดูรายละเอียด
+                        </Button>
+                        {claim.status === 'PENDING' && (
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={async () => {
+                              if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำขอ #${claim.verify_id || claim.id}?`)) {
+                                try {
+                                  await claimService.cancelClaim(claim.verify_id || claim.id);
+                                  setBannerMessage('ยกเลิกคำขอของคุณเรียบร้อยแล้ว');
+                                } catch (err) {
+                                  alert(err.message || 'ไม่สามารถยกเลิกคำขอได้');
+                                }
                               }
                             }}
                           >
-                            <Thumbnail text="รูป" />
-                            <span className="account-table-item-title">
-                              {claim.itemTitle || claim.postTitle}
-                              <span className="account-table-sub-id">#{claimId}</span>
-                            </span>
-                          </div>
-                        </td>
-                        <td>{claim.postOwner || claim.postOwnerName || '-'}</td>
-                        <td>{dateStr}</td>
-                        <td>
-                          {claimStatus === 'PENDING' && (
-                            <Badge variant="pending">PENDING · รอตรวจ</Badge>
-                          )}
-                          {claimStatus === 'ACCEPTED' && (
-                            <Badge variant="success">ACCEPTED · ตอบรับแล้ว</Badge>
-                          )}
-                          {claimStatus === 'REJECTED' && (
-                            <Badge variant="danger">REJECTED · ปฏิเสธ</Badge>
-                          )}
-                          {claimStatus === 'CANCELLED' && (
-                            <Badge variant="neutral">CANCELLED · ยกเลิก</Badge>
-                          )}
-                          {claimStatus === 'COMPLETED' && (
-                            <Badge variant="completed">COMPLETED · สำเร็จ</Badge>
-                          )}
-                        </td>
-                        <td>
-                          <div className={`account-table-note ${(claim.ownerNote || claim.note) ? 'has-note' : ''}`}>
-                            {claim.ownerNote || claim.note || '— ไม่มีข้อความหมายเหตุ —'}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="account-table-actions">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => navigate(`/posts/${targetPostId}`, {
-                                state: { from: 'account', claim },
-                              })}
-                            >
-                              ดูรายละเอียด
-                            </Button>
-                            {claimStatus === 'PENDING' && (
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                onClick={async () => {
-                                  if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำขอ #${claimId}?`)) {
-                                    try {
-                                      await claimService.cancelClaim(claimId);
-                                      setBannerMessage('ยกเลิกคำขอของคุณเรียบร้อยแล้ว');
-                                      setSentClaims((prev) =>
-                                        prev.map((c) =>
-                                          String(c.verify_id || c.id) === String(claimId)
-                                            ? { ...c, verify_status: 'CANCELLED', status: 'CANCELLED' }
-                                            : c
-                                        )
-                                      );
-                                    } catch (err) {
-                                      alert(err.message || 'ไม่สามารถยกเลิกคำขอได้');
-                                    }
-                                  }
-                                }}
-                              >
-                                ยกเลิก
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                            ยกเลิก
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 
       {/* ============================================================
-          5. แท็บที่ 3: คำขอที่ฉันได้รับ
+          5. แท็บที่ 3: คำขอที่ฉันได้รับ (POSTS ที่ receives VERIFY_ITEMS)
           ============================================================ */}
       {activeTab === 'my_received_claims' && (
         <section aria-labelledby="received-claims-heading" className="account-received-list">
           <h2 id="received-claims-heading" className="sr-only">
             รายการคำขอตรวจสอบที่ฉันได้รับ
           </h2>
-          {receivedLoading ? (
-            <div className="account-empty-state">
-              <Loader2 size={32} className="account-empty-icon" />
-              <p className="account-empty-title">กำลังโหลดคำขอที่ได้รับ...</p>
-            </div>
-          ) : receivedClaims.length === 0 ? (
-            <div className="account-empty-state">
-              <Inbox size={42} className="account-empty-icon" />
-              <p className="account-empty-title">ยังไม่มีคำขอเข้ามายังประกาศของคุณ</p>
-              <p className="account-empty-desc">เมื่อมีผู้ส่งคำขอมายังประกาศของคุณ จะแสดงที่นี่</p>
-            </div>
-          ) : (
-            receivedClaims.map((item) => {
-              const postId = item.post_id;
-              const pendingCount = Number(item.pendingCount) || 0;
-              const totalCount = Number(item.totalCount) || 0;
-              const dateStr = item.latestDate
-                ? new Date(item.latestDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })
-                : (item.date || '-');
-
-              return (
-                <Card key={postId} className="account-received-card">
-                  <div className="account-received-left">
-                    <Thumbnail text="รูปโพสต์" />
-                    <div className="account-received-info">
-                      <h3 className="account-received-title">{item.postTitle}</h3>
-                      <p className="account-received-meta">
-                        สถานที่: {item.building_name || '-'} · คำขอล่าสุดจาก {item.latestClaimant} ({dateStr})
-                      </p>
-                      <div>
-                        <Badge variant="count">
-                          {pendingCount} คำขอรอตรวจ · {totalCount} คำขอทั้งหมด
-                        </Badge>
-                      </div>
-                    </div>
+          {receivedClaims.map((item) => (
+            <Card key={item.id} className="account-received-card">
+              <div className="account-received-left">
+                <Thumbnail text="รูปโพสต์" />
+                <div className="account-received-info">
+                  <h3 className="account-received-title">{item.postTitle}</h3>
+                  <p className="account-received-meta">
+                    สถานที่: {item.building_name || item.location} · คำขอล่าสุดจาก {item.latestClaimant} ({item.date})
+                  </p>
+                  <div>
+                    <Badge variant="count">
+                      {item.pendingCount} คำขอรอตรวจ (1 โพสต์มีผู้ได้รับการตอบรับได้เพียง 1 คน)
+                    </Badge>
                   </div>
+                </div>
+              </div>
 
-                  <div className="account-received-actions">
-                    <Button
-                      variant="primary"
-                      onClick={() => {
-                        if (onNavigateReview) {
-                          onNavigateReview(item);
-                        } else {
-                          navigate(`/posts/${postId}/review`, {
-                            state: { postId, postTitle: item.postTitle, from: '/account' },
-                          });
-                        }
-                      }}
-                    >
-                      ตรวจสอบคำขอ →
-                    </Button>
-                  </div>
-                </Card>
-              );
-            })
-          )}
+              <div className="account-received-actions">
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    if (onNavigateReview) {
+                      onNavigateReview(item);
+                    } else {
+                      navigate(`/posts/${item.post_id || item.id}/review`, {
+                        state: { postId: item.post_id || item.id, postTitle: item.postTitle, from: '/account' },
+                      });
+                    }
+                  }}
+                >
+                  ตรวจสอบคำขอ →
+                </Button>
+              </div>
+            </Card>
+          ))}
         </section>
       )}
     </div>
