@@ -606,3 +606,9 @@
   color: var(--color-status-success, #16a34a);
   flex-shrink: 0;
 }
+
+.account-load-error {
+  margin-bottom: 16px;
+  color: var(--color-primary, #fa4616);
+  font-weight: 600;
+}

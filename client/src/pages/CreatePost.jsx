@@ -4,6 +4,7 @@ import { apiRequest } from '../api';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import BuildingPicker from '../components/BuildingPicker';
 import ImageUpload from '../components/ImageUpload';
 import Line from '../components/Line';
 import PageHeader from '../components/ui/PageHeader';
@@ -25,6 +26,9 @@ function CreatePost() {
   const [images, setImages] = useState([]);
 
   const [locations, setLocations] = useState([]);
+  // the picker works with building codes (locations.building_name); the API wants location_id
+  const codeOf = (id) => locations.find((l) => String(l.location_id) === String(id))?.building_name;
+  const idOf = (code) => String(locations.find((l) => l.building_name === code)?.location_id ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -130,14 +134,11 @@ function CreatePost() {
               <h3>
                 สถานที่พบ <span className="req-star">*</span>
               </h3>
-              <select value={locationId} onChange={(e) => setLocationId(e.target.value)}>
-                <option value="">-- เลือกสถานที่ --</option>
-                {locations.map((location) => (
-                  <option key={location.location_id} value={location.location_id}>
-                    {location.building_name}
-                  </option>
-                ))}
-              </select>
+              <BuildingPicker
+                value={codeOf(locationId)}
+                onChange={(code) => setLocationId(idOf(code))}
+                placeholder="เลือกสถานที่ / ค้นหาตึก..."
+              />
 
               <h3>
                 วันที่พบ <span className="req-star">*</span>
@@ -216,14 +217,11 @@ function CreatePost() {
                   <h3>
                     สถานที่ฝาก <span className="req-star">*</span>
                   </h3>
-                  <select value={depositLocation} onChange={(e) => setDepositLocation(e.target.value)}>
-                    <option value="">-- เลือกตึกที่ฝาก --</option>
-                    {locations.map((location) => (
-                      <option key={location.location_id} value={location.location_id}>
-                        {location.building_name}
-                      </option>
-                    ))}
-                  </select>
+                  <BuildingPicker
+                    value={codeOf(depositLocation)}
+                    onChange={(code) => setDepositLocation(idOf(code))}
+                    placeholder="เลือกตึกที่ฝาก / ค้นหาตึก..."
+                  />
 
                   <h3>รายละเอียดที่รับฝาก</h3>
                   <Input

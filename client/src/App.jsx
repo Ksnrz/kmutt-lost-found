@@ -1,4 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { apiRequest } from './api';
 import Navbar from './components/navigation/Navbar';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
@@ -16,10 +18,20 @@ import './App.css';
 // หน้าที่มี Navbar ด้านบน (หน้า login / register ไม่มี)
 function WithNavbar() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // จำนวนคำขอที่รอเราตรวจ (ทุกโพสต์ของเรา) โหลดใหม่ทุกครั้งที่เปลี่ยนหน้า; ไม่ได้ login = 0
+  useEffect(() => {
+    apiRequest('/me/posts')
+      .then(({ posts }) => setPendingCount(posts.reduce((sum, p) => sum + p.pending_count, 0)))
+      .catch(() => setPendingCount(0));
+  }, [pathname]);
+
   return (
     <div className="app-container">
       <Navbar
-        pendingCount={1}
+        pendingCount={pendingCount}
         onCreatePost={() => {
           navigate('/posts/new');
         }}
@@ -47,7 +59,10 @@ function App() {
           <Route path="/listpost" element={<Navigate to="/posts" replace />} />
           <Route path="/claims/new" element={<ClaimRequestPage />} />
           <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
-          <Route path="/requests/review" element={<ReviewRequestsPage />} />
+          <Route
+            path="/requests/review"
+            element={<Navigate to="/account" replace state={{ tab: 'my_received_claims' }} />}
+          />
           <Route path="/posts/:postId/review" element={<ReviewRequestsPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/profile" element={<Profile />} />

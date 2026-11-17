@@ -11,7 +11,6 @@
 import { apiRequest } from '../api';
 
 const STORAGE_KEY_CLAIMS = 'kmutt_lostfound_claims';
-const STORAGE_KEY_POST_STATUS = 'kmutt_lostfound_post_status';
 
 function getStoredClaims() {
   try {
@@ -184,11 +183,9 @@ export const claimService = {
       ...jsonBody({ party }),
     });
     const postClosed = Boolean(json?.postClosed);
-    let targetPostId = null;
 
     const updated = getStoredClaims().map(c => {
       if (String(c.id) === String(claimId)) {
-        targetPostId = c.post_id || c.postId;
         return {
           ...c,
           finderConfirmed: party === 'finder' ? true : Boolean(c.finderConfirmed),
@@ -199,14 +196,6 @@ export const claimService = {
       }
       return c;
     });
-
-    if (postClosed && targetPostId) {
-      try {
-        localStorage.setItem(`${STORAGE_KEY_POST_STATUS}_${targetPostId}`, 'CLOSED');
-      } catch (e) {
-        console.warn(e);
-      }
-    }
 
     saveClaims(updated);
     return { claims: updated, postClosed };
@@ -225,14 +214,6 @@ export const claimService = {
       console.error('getMyClaims failed:', err.message);
       return [];
     }
-  },
-
-  /**
-   * ล้าง cache ในเครื่อง (ข้อมูลจริงอยู่ใน Backend)
-   */
-  resetAll() {
-    saveClaims([]);
-    return [];
   },
 
   subscribe(callback) {

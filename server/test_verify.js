@@ -224,3 +224,15 @@ test('DEPOSITED posts need a deposit building; other posts drop deposit fields',
   assert.equal(kept.json.post.deposit_location_id, null);
   assert.equal(kept.json.post.deposit_detail, null);
 });
+
+test('GET /me/posts returns only my own posts with their pending claim count', async () => {
+  const postId = await makePost();
+  await makeClaim(postId);
+  const mine = (await call('/me/posts', { token: tok.owner })).json.posts;
+  const row = mine.find((p) => p.post_id === postId);
+  assert.equal(row.pending_count, 1);
+  assert.ok(row.latest_claimant);
+  const theirs = (await call('/me/posts', { token: tok.stranger })).json.posts;
+  assert.equal(theirs.some((p) => p.post_id === postId), false);
+  assert.equal((await call('/me/posts')).status, 401);
+});

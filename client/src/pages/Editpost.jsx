@@ -4,6 +4,7 @@ import { apiRequest } from '../api';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import BuildingPicker from '../components/BuildingPicker';
 import PageHeader from '../components/ui/PageHeader';
 import './Editpost.css';
 
@@ -15,7 +16,6 @@ function Editpost() {
 
   const [postType, setPostType] = useState('LOST'); // 'LOST' | 'FOUND'
   const [custodyType, setCustodyType] = useState(''); // 'DEPOSITED' | 'SELF_KEPT'
-  const [postStatus, setPostStatus] = useState('OPEN');
   const [title, setTitle] = useState('');
   const [locationId, setLocationId] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -25,6 +25,9 @@ function Editpost() {
   const [depositDetail, setDepositDetail] = useState('');
 
   const [locations, setLocations] = useState([]);
+  // the picker works with building codes (locations.building_name); the API wants location_id
+  const codeOf = (id) => locations.find((l) => String(l.location_id) === String(id))?.building_name;
+  const idOf = (code) => String(locations.find((l) => l.building_name === code)?.location_id ?? '');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -45,7 +48,6 @@ function Editpost() {
 
         setPostType(post.post_type);
         setCustodyType(post.custody_type || '');
-        setPostStatus(post.post_status || 'OPEN');
         setTitle(post.title || '');
         setLocationId(String(post.location_id || ''));
         setDescription(post.description || '');
@@ -102,27 +104,7 @@ function Editpost() {
       });
 
       if (fromAccount) {
-        const buildingName =
-          locations.find((l) => String(l.location_id) === locationId)?.building_name || '';
-        navigate('/account', {
-          state: {
-            successMessage: 'บันทึกการแก้ไขโพสต์เรียบร้อยแล้ว',
-            updatedPost: {
-              id: postId,
-              post_id: postId,
-              title,
-              status: postStatus,
-              post_status: postStatus,
-              post_type: postType === 'LOST' ? 'ตามหาของหาย (LOST)' : 'ประกาศเจอของ (FOUND)',
-              custody_type: custodyType === 'SELF_KEPT' ? 'ผู้พบเก็บรักษาเอง' : 'ฝากจุดประชาสัมพันธ์',
-              building_name: buildingName,
-              location: buildingName,
-              date: eventDate,
-              description,
-              contact: contactText,
-            },
-          },
-        });
+        navigate('/account', { state: { successMessage: 'บันทึกการแก้ไขโพสต์เรียบร้อยแล้ว' } });
       } else {
         navigate(`/posts/${postId}`);
       }
@@ -143,10 +125,7 @@ function Editpost() {
       await apiRequest(`/posts/${postId}/cancel`, { method: 'PATCH' });
 
       navigate(fromAccount ? '/account' : '/posts', {
-        state: {
-          successMessage: 'ยกเลิกประกาศเรียบร้อยแล้ว',
-          ...(fromAccount && { deletedPostId: postId }),
-        },
+        state: { successMessage: 'ยกเลิกประกาศเรียบร้อยแล้ว' },
       });
     } catch (err) {
       setError(err.message);
@@ -209,14 +188,11 @@ function Editpost() {
                     <h3>
                       สถานที่พบ <span className="req-star">*</span>
                     </h3>
-                    <select value={locationId} onChange={(e) => setLocationId(e.target.value)}>
-                      <option value="">-- เลือกสถานที่ --</option>
-                      {locations.map((location) => (
-                        <option key={location.location_id} value={location.location_id}>
-                          {location.building_name}
-                        </option>
-                      ))}
-                    </select>
+                    <BuildingPicker
+                      value={codeOf(locationId)}
+                      onChange={(code) => setLocationId(idOf(code))}
+                      placeholder="เลือกสถานที่ / ค้นหาตึก..."
+                    />
                   </div>
 
                   <div>
@@ -287,14 +263,11 @@ function Editpost() {
                     <h3>
                       สถานที่ฝาก <span className="req-star">*</span>
                     </h3>
-                    <select value={depositLocation} onChange={(e) => setDepositLocation(e.target.value)}>
-                      <option value="">-- เลือกตึกที่ฝาก --</option>
-                      {locations.map((location) => (
-                        <option key={location.location_id} value={location.location_id}>
-                          {location.building_name}
-                        </option>
-                      ))}
-                    </select>
+                    <BuildingPicker
+                      value={codeOf(depositLocation)}
+                      onChange={(code) => setDepositLocation(idOf(code))}
+                      placeholder="เลือกตึกที่ฝาก / ค้นหาตึก..."
+                    />
 
                     <h3>รายละเอียดที่รับฝาก</h3>
                     <Input

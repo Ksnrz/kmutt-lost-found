@@ -329,7 +329,6 @@ function PostDetail() {
                             onClick={async () => {
                               if (window.confirm('คุณได้ตรวจเช็กและรับสิ่งของจริงถูกต้องครบถ้วนแล้วใช่หรือไม่?')) {
                                 const claimId = claim.id || claim.verify_id;
-                                const targetPostId = post.id || claim.post_id;
                                 let result;
                                 try {
                                   result = await claimService.confirmHandover(claimId, 'receiver');
@@ -339,9 +338,9 @@ function PostDetail() {
                                 }
                                 navigate('/account', {
                                   state: {
-                                    successMessage: 'ยืนยันได้รับของเรียบร้อยแล้ว การส่งมอบสำเร็จสมบูรณ์!',
-                                    confirmedClaimId: claimId,
-                                    closedPostId: result?.postClosed ? targetPostId : null,
+                                    successMessage: result?.postClosed
+                                      ? 'ยืนยันได้รับของเรียบร้อยแล้ว การส่งมอบสำเร็จสมบูรณ์!'
+                                      : 'ยืนยันได้รับของแล้ว กำลังรอผู้พบยืนยันการส่งมอบ',
                                   },
                                 });
                               }

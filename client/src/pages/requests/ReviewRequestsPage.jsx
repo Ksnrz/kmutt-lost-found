@@ -15,26 +15,25 @@ import PageHeader from '../../components/ui/PageHeader';
 import Thumbnail from '../../components/ui/Thumbnail';
 import Badge from '../../components/ui/Badge';
 import { claimService } from '../../services/claimService';
+import { apiRequest } from '../../api';
 import './ReviewRequestsPage.css';
 
 /**
  * ReviewRequestsPage Component — หน้าตรวจคำขอที่ส่งมายังประกาศของฉัน (RECEIVED REQUESTS)
  * Route URL: /requests/review
  */
-export default function ReviewRequestsPage({
-  initialRequests = [],
-  onBack,
-}) {
+export default function ReviewRequestsPage() {
   const navigate = useNavigate();
-  const { postId: routePostId } = useParams();
+  const { postId: targetPostId } = useParams();
   const location = useLocation();
-  const targetPostId = routePostId || location.state?.postId || 'p-101';
 
-  // State 1: สถานะของโพสต์ประกาศหลัก ('OPEN' | 'CLOSED' | 'CANCELLED')
-  const [postStatus, setPostStatus] = useState('OPEN');
+  // State 1: โพสต์ประกาศหลัก (ชื่อ + post_status 'OPEN' | 'CLOSED' | 'CANCELLED') โหลดจาก server
+  const [post, setPost] = useState(null);
+  const postStatus = post?.post_status;
+  const setPostStatus = (post_status) => setPost((prev) => ({ ...prev, post_status }));
 
   // State 2: รายการคำขอทั้งหมด
-  const [requests, setRequests] = useState(initialRequests);
+  const [requests, setRequests] = useState([]);
 
   // State 3: รหัสคำขอที่กำลังเลือกดูรายละเอียดอยู่
   const [selectedId, setSelectedId] = useState(null);
@@ -45,6 +44,9 @@ export default function ReviewRequestsPage({
   // เชื่อมต่อ State กลางและรับข้อมูลแบบ Real-time จาก claimService
   useEffect(() => {
     let isMounted = true;
+    apiRequest(`/posts/${targetPostId}`)
+      .then((data) => isMounted && setPost(data.post))
+      .catch(() => {});
     claimService.getClaimsByPost(targetPostId).then((data) => {
       if (isMounted && data) {
         setRequests(data);
@@ -128,23 +130,11 @@ export default function ReviewRequestsPage({
     if (await run(() => claimService.updateClaimStatus(id, 'PENDING', ''))) setPostStatus('OPEN');
   };
 
-  // 6. รีเซ็ตทั้งหมดทั้งโพสต์กลับสู่ค่าเริ่มต้น
-  const handleResetAll = () => {
-    setPostStatus('OPEN');
-    const resetData = claimService.resetAll();
-    setRequests(resetData);
-    setNoteText('');
-  };
-
   const handleGoBack = () => {
-    if (onBack) {
-      onBack();
-    } else if (location.state?.from) {
-      navigate(location.state.from);
-    } else if (targetPostId && targetPostId !== 'p-101') {
-      navigate(`/posts/${targetPostId}`);
+    if (location.state?.from === '/account') {
+      navigate('/account', { state: { tab: 'my_received_claims' } });
     } else {
-      navigate('/account');
+      navigate(`/posts/${targetPostId}`);
     }
   };
 
@@ -155,7 +145,7 @@ export default function ReviewRequestsPage({
         tag="RECEIVED REQUESTS"
         title="คำขอที่ส่งมายังประกาศของฉัน"
         subtitle="ตรวจหลักฐานและยืนยันการส่งมอบสิ่งของคืนเจ้าของตามกฎระบบ"
-        backText={location.state?.from === 'detail' ? 'กลับไปหน้ารายละเอียดโพสต์' : 'กลับไปหน้าประกาศของฉัน'}
+        backText={location.state?.from === '/account' ? 'กลับไปหน้าประกาศของฉัน' : 'กลับไปหน้ารายละเอียดโพสต์'}
         onBack={handleGoBack}
       />
 
@@ -164,7 +154,7 @@ export default function ReviewRequestsPage({
         <div className="review-post-banner-info">
           <span className="review-post-banner-label">โพสต์ที่จัดการ:</span>
           <strong className="review-post-banner-title">
-            {location.state?.post?.title || activeRequest?.itemTitle || 'พบกระเป๋าสตางค์สีดำ'} (#{targetPostId})
+            {post?.title ?? '...'} (#{targetPostId})
           </strong>
         </div>
         <div className="review-post-banner-right">
@@ -180,16 +170,6 @@ export default function ReviewRequestsPage({
               <Badge variant="danger">CANCELLED · ยกเลิกโพสต์</Badge>
             )}
           </div>
-          {postStatus === 'CLOSED' && (
-            <button
-              type="button"
-              className="review-post-reset-btn"
-              onClick={handleResetAll}
-            >
-              <RotateCcw size={13} className="review-btn-icon" />
-              <span>รีเซ็ตการทดสอบ</span>
-            </button>
-          )}
         </div>
       </div>
 
