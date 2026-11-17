@@ -8,6 +8,8 @@ import {
   XCircle,
   Ban,
   RotateCcw,
+  Loader2,
+  ListChecks,
 } from 'lucide-react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -15,6 +17,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import Thumbnail from '../../components/ui/Thumbnail';
 import Badge from '../../components/ui/Badge';
 import { claimService } from '../../services/claimService';
+import { apiRequest } from '../../api';
 import './ReviewRequestsPage.css';
 
 /**
@@ -28,7 +31,7 @@ export default function ReviewRequestsPage({
   const navigate = useNavigate();
   const { postId: routePostId } = useParams();
   const location = useLocation();
-  const targetPostId = routePostId || location.state?.postId || 'p-101';
+  const targetPostId = routePostId || location.state?.postId || null;
 
   // State 1: สถานะของโพสต์ประกาศหลัก ('OPEN' | 'CLOSED' | 'CANCELLED')
   const [postStatus, setPostStatus] = useState('OPEN');
@@ -42,8 +45,26 @@ export default function ReviewRequestsPage({
   // State 4: ข้อความในช่อง "หมายเหตุสำหรับผู้ส่ง"
   const [noteText, setNoteText] = useState('');
 
+  // State 5: รายการโพสต์ที่มีคำขอเข้ามา (แสดงเมื่อไม่มี targetPostId)
+  const [postsList, setPostsList] = useState([]);
+  const [postsLoading, setPostsLoading] = useState(!targetPostId);
+
+  // ถ้าไม่มี postId → ดึงรายการโพสต์ที่มีคำขอเข้ามาแทน
+  useEffect(() => {
+    if (targetPostId) return;
+    let isMounted = true;
+    apiRequest('/verify/received')
+      .then((data) => {
+        if (isMounted) setPostsList(data?.posts || []);
+      })
+      .catch((err) => console.error('verify/received failed:', err.message))
+      .finally(() => { if (isMounted) setPostsLoading(false); });
+    return () => { isMounted = false; };
+  }, [targetPostId]);
+
   // เชื่อมต่อ State กลางและรับข้อมูลแบบ Real-time จาก claimService
   useEffect(() => {
+    if (!targetPostId) return;
     let isMounted = true;
     claimService.getClaimsByPost(targetPostId).then((data) => {
       if (isMounted && data) {
@@ -54,7 +75,6 @@ export default function ReviewRequestsPage({
       }
     });
 
-    // ซิงก์ข้อมูลทันทีเมื่อมีการส่งคำขอใหม่จากหน้า 6 หรือมีการอัปเดตจากหน้าอื่น
     const unsubscribe = claimService.subscribe((updatedClaims) => {
       const forPost = updatedClaims.filter(c => String(c.post_id) === String(targetPostId) || String(c.postId) === String(targetPostId));
       if (forPost.length > 0) {
@@ -141,12 +161,80 @@ export default function ReviewRequestsPage({
       onBack();
     } else if (location.state?.from) {
       navigate(location.state.from);
-    } else if (targetPostId && targetPostId !== 'p-101') {
+    } else if (targetPostId) {
       navigate(`/posts/${targetPostId}`);
     } else {
       navigate('/account');
     }
   };
+
+  // ถ้าไม่มี postId → แสดงรายการโพสต์ที่มีคำขอเข้ามาให้เลือก
+  if (!targetPostId) {
+    return (
+      <div className="review-requests-container">
+        <PageHeader
+          tag="RECEIVED REQUESTS"
+          title="คำขอที่ส่งมายังประกาศของฉัน"
+          subtitle="เลือกประกาศที่ต้องการตรวจสอบคำขอ"
+          backText="กลับไปหน้าประกาศของฉัน"
+          onBack={() => navigate('/account')}
+        />
+        {postsLoading ? (
+          <div className="review-requests-container">
+            <Loader2 size={32} />
+            <p>กำลังโหลด...</p>
+          </div>
+        ) : postsList.length === 0 ? (
+          <Card className="review-list-card">
+            <div className="review-list-header">
+              <h2 className="review-list-title">ยังไม่มีคำขอเข้ามา</h2>
+            </div>
+            <p>เมื่อมีผู้ส่งคำขอมายังประกาศของคุณ จะแสดงรายการที่นี่</p>
+          </Card>
+        ) : (
+          <Card className="review-list-card">
+            <div className="review-list-header">
+              <h2 className="review-list-title">เลือกประกาศที่ต้องการตรวจสอบ</h2>
+              <Badge variant="count">{postsList.length} ประกาศ</Badge>
+            </div>
+            <div className="review-items-list">
+              {postsList.map((post) => {
+                const postId = post.post_id;
+                const pendingCount = Number(post.pendingCount) || 0;
+                return (
+                  <div
+                    key={postId}
+                    className="review-item-card"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => navigate(`/posts/${postId}/review`, {
+                      state: { postId, postTitle: post.postTitle, from: '/requests/review' },
+                    })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        navigate(`/posts/${postId}/review`, {
+                          state: { postId, postTitle: post.postTitle, from: '/requests/review' },
+                        });
+                      }
+                    }}
+                  >
+                    <ListChecks size={20} />
+                    <div className="review-item-info">
+                      <h3 className="review-item-title">{post.postTitle} · #{postId}</h3>
+                      <p className="review-item-meta">{post.building_name || '-'}</p>
+                      <div className="review-item-badge-wrap">
+                        <Badge variant="count">{pendingCount} รอตรวจ</Badge>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="review-requests-container">
@@ -272,11 +360,26 @@ export default function ReviewRequestsPage({
 
             {/* กล่องแสดงรูปหลักฐานตรงตาม Figma */}
             <div className="review-evidences-row">
-              {activeRequest.evidences.map((evText, idx) => (
-                <div key={idx} className="review-evidence-box">
-                  {evText}
-                </div>
-              ))}
+              {(activeRequest.evidences || activeRequest.verify_images || []).length === 0 ? (
+                <p className="review-no-evidence">— ไม่มีรูปหลักฐานแนบ —</p>
+              ) : (
+                (activeRequest.evidences || activeRequest.verify_images || []).map((ev, idx) => {
+                  const imgUrl = typeof ev === 'string' ? ev : ev?.verify_image_url || ev?.url;
+                  if (!imgUrl) return null;
+                  const fullUrl = imgUrl.startsWith('/uploads/') ? imgUrl : imgUrl;
+                  return (
+                    <div key={idx} className="review-evidence-box">
+                      <img
+                        src={fullUrl}
+                        alt={`หลักฐาน ${idx + 1}`}
+                        className="review-evidence-img"
+                        onError={(e) => { e.target.classList.add('review-evidence-fallback'); }}
+                      />
+                      <span className="review-evidence-fallback">หลักฐาน {idx + 1}</span>
+                    </div>
+                  );
+                })
+              )}
             </div>
 
             {/* ========================================================
