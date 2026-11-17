@@ -15,69 +15,32 @@ import PageHeader from '../../components/ui/PageHeader';
 import Thumbnail from '../../components/ui/Thumbnail';
 import Badge from '../../components/ui/Badge';
 import { claimService } from '../../services/claimService';
+import { apiRequest } from '../../api';
 import './ReviewRequestsPage.css';
+
+// only our own uploads are shown as images/links (never an arbitrary URL from a claim)
+const evidenceUrls = (claim) =>
+  (claim?.evidences || []).filter((u) => typeof u === 'string' && u.startsWith('/uploads/'));
 
 /**
  * ReviewRequestsPage Component — หน้าตรวจคำขอที่ส่งมายังประกาศของฉัน (RECEIVED REQUESTS)
  * Route URL: /requests/review
  */
-export default function ReviewRequestsPage({
-  // ข้อมูลเริ่มต้นตาม Figma
-  initialRequests = [
-    {
-      verify_id: '102',
-      id: '102',
-      post_id: 'p-101',
-      postId: 'p-101',
-      itemTitle: 'กระเป๋าสตางค์สีดำ',
-      requester: 'นักศึกษา B',
-      date: '24 ก.ย. 2026',
-      created_at: '24 ก.ย. 2026',
-      verify_status: 'PENDING',
-      status: 'PENDING',
-      proof_description: 'มีรอยถลอกเล็ก ๆ ที่มุมด้านใน และมีบัตรสีฟ้าอยู่หนึ่งใบ',
-      description: 'มีรอยถลอกเล็ก ๆ ที่มุมด้านใน และมีบัตรสีฟ้าอยู่หนึ่งใบ',
-      verify_images: ['หลักฐาน 1', 'หลักฐาน 2'],
-      evidences: ['หลักฐาน 1', 'หลักฐาน 2'],
-      finderConfirmed: false,
-      receiverConfirmed: false,
-      note: '',
-    },
-    {
-      verify_id: '103',
-      id: '103',
-      post_id: 'p-101',
-      postId: 'p-101',
-      itemTitle: 'กระเป๋าสตางค์สีดำ',
-      requester: 'นักศึกษา D',
-      date: '25 ก.ย. 2026',
-      created_at: '25 ก.ย. 2026',
-      verify_status: 'PENDING',
-      status: 'PENDING',
-      proof_description: 'กระเป๋าตังค์หนังแท้สีดำ มีช่องใส่เหรียญซิปทอง มีเศษบิลซื้อของอยู่ด้านใน',
-      description: 'กระเป๋าตังค์หนังแท้สีดำ มีช่องใส่เหรียญซิปทอง มีเศษบิลซื้อของอยู่ด้านใน',
-      verify_images: ['หลักฐาน 1'],
-      evidences: ['หลักฐาน 1'],
-      finderConfirmed: false,
-      receiverConfirmed: false,
-      note: '',
-    },
-  ],
-  onBack,
-}) {
+export default function ReviewRequestsPage() {
   const navigate = useNavigate();
-  const { postId: routePostId } = useParams();
+  const { postId: targetPostId } = useParams();
   const location = useLocation();
-  const targetPostId = routePostId || location.state?.postId || 'p-101';
 
-  // State 1: สถานะของโพสต์ประกาศหลัก ('OPEN' | 'CLOSED' | 'CANCELLED')
-  const [postStatus, setPostStatus] = useState('OPEN');
+  // State 1: โพสต์ประกาศหลัก (ชื่อ + post_status 'OPEN' | 'CLOSED' | 'CANCELLED') โหลดจาก server
+  const [post, setPost] = useState(null);
+  const postStatus = post?.post_status;
+  const setPostStatus = (post_status) => setPost((prev) => ({ ...prev, post_status }));
 
   // State 2: รายการคำขอทั้งหมด
-  const [requests, setRequests] = useState(initialRequests);
+  const [requests, setRequests] = useState([]);
 
   // State 3: รหัสคำขอที่กำลังเลือกดูรายละเอียดอยู่
-  const [selectedId, setSelectedId] = useState('102');
+  const [selectedId, setSelectedId] = useState(null);
 
   // State 4: ข้อความในช่อง "หมายเหตุสำหรับผู้ส่ง"
   const [noteText, setNoteText] = useState('');
@@ -85,8 +48,11 @@ export default function ReviewRequestsPage({
   // เชื่อมต่อ State กลางและรับข้อมูลแบบ Real-time จาก claimService
   useEffect(() => {
     let isMounted = true;
+    apiRequest(`/posts/${targetPostId}`)
+      .then((data) => isMounted && setPost(data.post))
+      .catch(() => {});
     claimService.getClaimsByPost(targetPostId).then((data) => {
-      if (isMounted && data && data.length > 0) {
+      if (isMounted && data) {
         setRequests(data);
         if (data[0]?.id || data[0]?.verify_id) {
           setSelectedId(String(data[0].id || data[0].verify_id));
@@ -96,6 +62,7 @@ export default function ReviewRequestsPage({
 
     // ซิงก์ข้อมูลทันทีเมื่อมีการส่งคำขอใหม่จากหน้า 6 หรือมีการอัปเดตจากหน้าอื่น
     const unsubscribe = claimService.subscribe((updatedClaims) => {
+      if (!isMounted || !Array.isArray(updatedClaims)) return;
       const forPost = updatedClaims.filter(c => String(c.post_id) === String(targetPostId) || String(c.postId) === String(targetPostId));
       if (forPost.length > 0) {
         setRequests(forPost);
@@ -107,6 +74,15 @@ export default function ReviewRequestsPage({
       unsubscribe();
     };
   }, [targetPostId]);
+
+  // เรียก API แล้วแจ้ง error ให้ผู้ใช้เห็น (คืนค่า undefined เมื่อไม่สำเร็จ)
+  const run = async (fn) => {
+    try {
+      return (await fn()) ?? true;
+    } catch (err) {
+      alert(err.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่');
+    }
+  };
 
   // ค้นหาข้อมูลคำขอที่กำลังถูกเลือก
   const activeRequest = requests.find((r) => r.id === selectedId) || requests[0];
@@ -124,8 +100,7 @@ export default function ReviewRequestsPage({
     if (!activeRequest || isOtherAccepted) return;
 
     const finalNote = noteText.trim() || 'อนุมัติคำขอแล้ว กรุณานัดหมายวันเวลาและสถานที่รับมอบสิ่งของ';
-    await claimService.updateClaimStatus(activeRequest.id, 'ACCEPTED', finalNote);
-    setNoteText('');
+    if (await run(() => claimService.updateClaimStatus(activeRequest.id, 'ACCEPTED', finalNote))) setNoteText('');
   };
 
   // 2. ปฏิเสธคำขอ (REJECTED)
@@ -135,13 +110,12 @@ export default function ReviewRequestsPage({
     const confirmReject = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอ #${activeRequest.id}?`);
     if (!confirmReject) return;
 
-    await claimService.updateClaimStatus(activeRequest.id, 'REJECTED', noteText);
-    setNoteText('');
+    if (await run(() => claimService.updateClaimStatus(activeRequest.id, 'REJECTED', noteText))) setNoteText('');
   };
 
   // 3. ฝ่ายผู้พบ (คุณ) กดยืนยันการส่งมอบ (Dual Confirmation)
   const handleConfirmFinder = async (id) => {
-    const result = await claimService.confirmHandover(id, 'finder');
+    const result = await run(() => claimService.confirmHandover(id, 'finder'));
     if (result?.postClosed) {
       setPostStatus('CLOSED');
     }
@@ -152,32 +126,20 @@ export default function ReviewRequestsPage({
     const confirmCancel = window.confirm('ต้องการยกเลิกการตอบรับคำขอนี้ใช่หรือไม่? (ระบบจะเปิดให้คุณสามารถเลือกคำขออื่นที่ยังรออยู่ได้)');
     if (!confirmCancel) return;
 
-    await claimService.updateClaimStatus(id, 'CANCELLED', 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ');
+    // server รับเฉพาะ ACCEPTED -> PENDING: คำขอนี้กลับไปรอตรวจ และคำขออื่นที่ยัง PENDING อยู่ก็ตอบรับแทนได้
+    await run(() => claimService.updateClaimStatus(id, 'PENDING', 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ'));
   };
 
   // 5. รีเซ็ตสถานะกลับมาเป็น PENDING 
   const handleResetStatus = async (id) => {
-    setPostStatus('OPEN');
-    await claimService.updateClaimStatus(id, 'PENDING', '');
-  };
-
-  // 6. รีเซ็ตทั้งหมดทั้งโพสต์กลับสู่ค่าเริ่มต้น
-  const handleResetAll = () => {
-    setPostStatus('OPEN');
-    const resetData = claimService.resetAll();
-    setRequests(resetData);
-    setNoteText('');
+    if (await run(() => claimService.updateClaimStatus(id, 'PENDING', ''))) setPostStatus('OPEN');
   };
 
   const handleGoBack = () => {
-    if (onBack) {
-      onBack();
-    } else if (location.state?.from) {
-      navigate(location.state.from);
-    } else if (targetPostId && targetPostId !== 'p-101') {
-      navigate(`/posts/${targetPostId}`);
+    if (location.state?.from === '/account') {
+      navigate('/account', { state: { tab: 'my_received_claims' } });
     } else {
-      navigate('/account');
+      navigate(`/posts/${targetPostId}`);
     }
   };
 
@@ -188,7 +150,7 @@ export default function ReviewRequestsPage({
         tag="RECEIVED REQUESTS"
         title="คำขอที่ส่งมายังประกาศของฉัน"
         subtitle="ตรวจหลักฐานและยืนยันการส่งมอบสิ่งของคืนเจ้าของตามกฎระบบ"
-        backText={location.state?.from === 'detail' ? 'กลับไปหน้ารายละเอียดโพสต์' : 'กลับไปหน้าประกาศของฉัน'}
+        backText={location.state?.from === '/account' ? 'กลับไปหน้าประกาศของฉัน' : 'กลับไปหน้ารายละเอียดโพสต์'}
         onBack={handleGoBack}
       />
 
@@ -197,7 +159,7 @@ export default function ReviewRequestsPage({
         <div className="review-post-banner-info">
           <span className="review-post-banner-label">โพสต์ที่จัดการ:</span>
           <strong className="review-post-banner-title">
-            {location.state?.post?.title || activeRequest?.itemTitle || 'พบกระเป๋าสตางค์สีดำ'} (#{targetPostId})
+            {post?.title ?? '...'} (#{targetPostId})
           </strong>
         </div>
         <div className="review-post-banner-right">
@@ -213,16 +175,6 @@ export default function ReviewRequestsPage({
               <Badge variant="danger">CANCELLED · ยกเลิกโพสต์</Badge>
             )}
           </div>
-          {postStatus === 'CLOSED' && (
-            <button
-              type="button"
-              className="review-post-reset-btn"
-              onClick={handleResetAll}
-            >
-              <RotateCcw size={13} className="review-btn-icon" />
-              <span>รีเซ็ตการทดสอบ</span>
-            </button>
-          )}
         </div>
       </div>
 
@@ -254,14 +206,15 @@ export default function ReviewRequestsPage({
                     if (e.key === 'Enter') setSelectedId(item.id);
                   }}
                 >
-                  <Thumbnail text="รูปโพสต์" />
+                  <Thumbnail text="ไม่มีรูป" src={evidenceUrls(item)[0]} />
 
                   <div className="review-item-info">
                     <h3 className="review-item-title">
                       {item.itemTitle} · #{item.id}
                     </h3>
                     <p className="review-item-meta">
-                      โดย {item.requester} · {item.date}
+                      โดย {item.requester} ·{' '}
+                      {new Date(item.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
 
                     <div className="review-item-badge-wrap">
@@ -305,11 +258,14 @@ export default function ReviewRequestsPage({
 
             {/* กล่องแสดงรูปหลักฐานตรงตาม Figma */}
             <div className="review-evidences-row">
-              {activeRequest.evidences.map((evText, idx) => (
-                <div key={idx} className="review-evidence-box">
-                  {evText}
-                </div>
+              {evidenceUrls(activeRequest).map((url) => (
+                <a key={url} href={url} target="_blank" rel="noreferrer" className="review-evidence-box">
+                  <img src={url} alt="รูปหลักฐาน" />
+                </a>
               ))}
+              {evidenceUrls(activeRequest).length === 0 && (
+                <div className="review-evidence-box">ไม่มีรูปหลักฐาน</div>
+              )}
             </div>
 
             {/* ========================================================
@@ -453,7 +409,7 @@ export default function ReviewRequestsPage({
 
             {/* ปุ่มกดปฏิเสธ / อนุมัติคำขอ*/}
             <div className="review-detail-actions">
-              {activeRequest.status !== 'PENDING' && (
+              {activeRequest.status === 'ACCEPTED' && (
                 <Button
                   variant="secondary"
                   size="sm"

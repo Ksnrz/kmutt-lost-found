@@ -224,3 +224,24 @@ test('DEPOSITED posts need a deposit building; other posts drop deposit fields',
   assert.equal(kept.json.post.deposit_location_id, null);
   assert.equal(kept.json.post.deposit_detail, null);
 });
+
+test('GET /me/posts returns only my own posts with their pending claim count', async () => {
+  const postId = await makePost();
+  await makeClaim(postId);
+  const mine = (await call('/me/posts', { token: tok.owner })).json.posts;
+  const row = mine.find((p) => p.post_id === postId);
+  assert.equal(row.pending_count, 1);
+  assert.ok(row.latest_claimant);
+  const theirs = (await call('/me/posts', { token: tok.stranger })).json.posts;
+  assert.equal(theirs.some((p) => p.post_id === postId), false);
+  assert.equal((await call('/me/posts')).status, 401);
+});
+
+test('claim body cannot inject arbitrary evidence URLs', async () => {
+  const postId = await makePost();
+  const { json } = await call(`/posts/${postId}/verify`, {
+    token: tok.claimant, method: 'POST', body: { proof_description: 'x', images: ['javascript:alert(1)'] },
+  });
+  const { rows } = await pool.query('SELECT 1 FROM verify_images WHERE verify_id = $1', [json.data.verify_id]);
+  assert.equal(rows.length, 0);
+});

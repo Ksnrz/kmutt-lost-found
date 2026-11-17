@@ -7,6 +7,8 @@ export default defineConfig({
   // fetch('/api/...') from the client goes to the Express server
   server: {
     proxy: {
+      // uploaded images, so pages can use relative /uploads/... URLs
+      '/uploads': 'http://localhost:3000',
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,

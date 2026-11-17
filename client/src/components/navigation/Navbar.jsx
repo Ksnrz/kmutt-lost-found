@@ -7,7 +7,7 @@ import './Navbar.css';
  * Navbar Component 
  */
 export default function Navbar({
-  pendingCount = 1,
+  pendingCount = 0,
   onCreatePost,
 }) {
   const navigate = useNavigate();

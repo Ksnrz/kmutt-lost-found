@@ -137,8 +137,9 @@ function PostDetail() {
 
           navigate('/account', {
             state: {
-              successMessage:
-                'ยืนยันได้รับของเรียบร้อยแล้ว การส่งมอบสำเร็จสมบูรณ์!',
+              successMessage: result?.postClosed
+                ? 'ยืนยันได้รับของเรียบร้อยแล้ว การส่งมอบสำเร็จสมบูรณ์!'
+                : 'ยืนยันได้รับของแล้ว กำลังรอผู้พบยืนยันการส่งมอบ',
               confirmedClaimId: claimId,
               closedPostId: result?.postClosed
                 ? targetPostId
@@ -230,7 +231,6 @@ function PostDetail() {
     imageUrl: images[0] ? imageUrl(images[0]) : null,
   };
 
-  const isDeposited = apiPost.custody_type === 'DEPOSITED' && post.status === 'open';
 
   return (
     <div className="postdetail-page">

@@ -188,14 +188,6 @@ export const claimService = {
     }
   },
 
-  /**
-   * ล้าง cache ในเครื่อง (ข้อมูลจริงอยู่ใน Backend)
-   */
-  resetAll() {
-    saveClaims([]);
-    return [];
-  },
-
   subscribe(callback) {
     const handler = (event) => callback(event.detail);
     window.addEventListener('kmutt_claims_updated', handler);

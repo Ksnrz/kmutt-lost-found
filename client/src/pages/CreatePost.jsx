@@ -1,3 +1,4 @@
+import BuildingPicker from '../components/BuildingPicker';
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -27,6 +28,8 @@ function CreatePost() {
   const [imagePreviews, setImagePreviews] = useState([]);
 
   const [locations, setLocations] = useState([]);
+  const codeOf = (id) => locations.find((location) => String(location.location_id) === String(id))?.building_name;
+  const idOf = (code) => String(locations.find((location) => location.building_name === code)?.location_id ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -249,21 +252,10 @@ function CreatePost() {
                 สถานที่พบ <span className="req-star">*</span>
               </h3>
 
-              <select
-                value={locationId}
-                onChange={(e) => setLocationId(e.target.value)}
-              >
-                <option value="">-- เลือกสถานที่ --</option>
-
-                {locations.map((location) => (
-                  <option
-                    key={location.location_id}
-                    value={location.location_id}
-                  >
-                    {location.building_name}
-                  </option>
-                ))}
-              </select>
+              <BuildingPicker
+                    value={codeOf(locationId)}
+                    onChange={(code) => setLocationId(idOf(code))}
+                  />
 
               <h3>
                 วันที่พบ <span className="req-star">*</span>
@@ -412,14 +404,10 @@ function CreatePost() {
                   <h3>
                     สถานที่ฝาก <span className="req-star">*</span>
                   </h3>
-                  <select value={depositLocation} onChange={(e) => setDepositLocation(e.target.value)}>
-                    <option value="">-- เลือกตึกที่ฝาก --</option>
-                    {locations.map((location) => (
-                      <option key={location.location_id} value={location.location_id}>
-                        {location.building_name}
-                      </option>
-                    ))}
-                  </select>
+                  <BuildingPicker
+                    value={codeOf(depositLocation)}
+                    onChange={(code) => setDepositLocation(idOf(code))}
+                  />
 
                   <h3>รายละเอียดที่รับฝาก</h3>
                   <Input
