@@ -258,7 +258,7 @@ function CreatePost() {
                   />
 
               <h3>
-                วันที่พบ <span className="req-star">*</span>
+                {postType === 'LOST' ? 'วันที่คาดว่าทำหาย' : 'วันที่พบ'} <span className="req-star">*</span>
               </h3>
 
               <Input
@@ -358,7 +358,7 @@ function CreatePost() {
           {/* ฝั่งขวา: ข้อมูลการเก็บรักษาและปุ่มส่ง */}
           <div className="form-right">
             <Card>
-              <h2>ข้อมูลการเก็บรักษา</h2>
+              <h2>{postType === 'LOST' ? 'ข้อมูลผู้ตามหา' : 'ข้อมูลการเก็บรักษา'}</h2>
 
               {postType === 'FOUND' && (
                 <>
@@ -394,7 +394,7 @@ function CreatePost() {
 
               <Input
                 type="text"
-                placeholder="เบอร์โทร"
+                placeholder="เช่น IG, Line ID หรือเบอร์โทร"
                 value={contactText}
                 onChange={(e) => setContactText(e.target.value)}
               />
