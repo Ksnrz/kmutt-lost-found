@@ -197,7 +197,7 @@ function Editpost() {
 
                   <div>
                     <h3>
-                      วันที่พบ <span className="req-star">*</span>
+                      {postType === 'LOST' ? 'วันที่คาดว่าทำหาย' : 'วันที่พบ'} <span className="req-star">*</span>
                     </h3>
                     <Input
                       type="date"
@@ -221,11 +221,12 @@ function Editpost() {
             {/* ฝั่งขวา: ข้อมูลการเก็บรักษา & ปุ่มดำเนินการ */}
             <div className="form-right">
               <Card>
-                <h2>ข้อมูลการเก็บรักษา</h2>
-                <h3>
-                  สถานะสิ่งของ <span className="req-star">*</span>
-                </h3>
-                {postType === 'FOUND' ? (
+                <h2>{postType === 'LOST' ? 'ข้อมูลผู้ตามหา' : 'ข้อมูลการเก็บรักษา'}</h2>
+                {postType === 'FOUND' && (
+                  <>
+                  <h3>
+                    สถานะสิ่งของ <span className="req-star">*</span>
+                  </h3>
                   <div className="segmented-toggle">
                     <button
                       type="button"
@@ -242,18 +243,17 @@ function Editpost() {
                       เก็บไว้เอง
                     </button>
                   </div>
-                ) : (
-                  <p>ไม่จำเป็นต้องระบุวิธีเก็บรักษาสำหรับโพสต์ของหาย</p>
-                )}
 
-                <hr className="editpost-divider" />
+                  <hr className="editpost-divider" />
+                  </>
+                )}
 
                 <h3>
                   ช่องทางติดต่อ <span className="req-star">*</span>
                 </h3>
                 <Input
                   type="text"
-                  placeholder="เบอร์โทร"
+                  placeholder="เช่น IG, Line ID หรือเบอร์โทร"
                   value={contactText}
                   onChange={(e) => setContactText(e.target.value)}
                 />
