@@ -229,6 +229,25 @@
   color: var(--color-gray);
   font-size: var(--text-meta);
   user-select: none;
+  overflow: hidden;
+  position: relative;
+}
+
+.review-evidence-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+.review-no-evidence {
+  color: var(--color-gray);
+  font-size: var(--text-meta);
+  margin: 0;
+}
+
+.review-evidence-fallback {
+  display: none;
 }
 
 /* กล่องแจ้งเตือนสถานะต่างๆ */

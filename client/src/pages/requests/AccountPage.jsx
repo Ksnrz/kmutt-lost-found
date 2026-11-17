@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -16,81 +15,35 @@ import Badge from '../../components/ui/Badge';
 import { claimService } from '../../services/claimService';
 import './AccountPage.css';
 
+/**
+ * AccountPage Component — หน้าจัดการบัญชีและกิจกรรมของฉัน (MY ACCOUNT)
+ * Route URL: /account
+ * 
+ * 🌟 สอดคล้องกับ ER Diagram:
+ * 1. Entity: POSTS & LOCATION (ความสัมพันธ์ USERS (0,N) creates (1,1) POSTS)
+ *    - post_id, post_status ('OPEN' | 'CLOSED' | 'CANCELLED'), post_type, custody_type, building_name
+ * 2. Entity: VERIFY_ITEMS (ความสัมพันธ์ USERS (0,N) submit (1,1) VERIFY_ITEMS)
+ *    - verify_id, verify_status, proof_description, created_at
+ * 3. Dual Confirmation (ฝ่ายผู้รับ): ในแท็บ "คำขอที่ฉันส่ง (My Requests)" สามารถกดยืนยันได้รับของเมื่อคำขอได้รับการ ACCEPTED
+ * 4. จัดการคำขอที่ได้รับ: มีแท็บและปุ่มตรงไปยังหน้าตรวจคำขอ /requests/review (POSTS (0,N) receives (1,1) VERIFY_ITEMS)
+ * 5. ไอคอน: ใช้ Lucide Icons ทั้งหมดตามมาตรฐานการออกแบบ
+ * 6. ZERO Inline Styles: 100% ควบคุมผ่าน CSS Classes
+ */
 export default function AccountPage({
   onNavigateReview,
   onNavigateEditPost,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
-
   const [bannerMessage, setBannerMessage] = useState(location.state?.successMessage || null);
-  const [toast, setToast] = useState(null);
-  const [confirmModal, setConfirmModal] = useState(null);
-  const [confirmLoading, setConfirmLoading] = useState(false);
 
+  // State 1: แท็บที่กำลังเปิด ('my_posts' | 'my_sent_claims' | 'my_received_claims')
   const [activeTab, setActiveTab] = useState('my_posts');
+
+  // State 2: ตัวกรองสถานะประกาศ ('all' | 'OPEN' | 'CLOSED' | 'CANCELLED')
   const [postFilter, setPostFilter] = useState('all');
 
-  // แจ้งเตือน Toast จะหายไปเองหลัง 3 วินาที
-  useEffect(() => {
-    if (!toast) return undefined;
-
-    const timer = setTimeout(() => {
-      setToast(null);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [toast]);
-
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type });
-  };
-
-  const askConfirm = (title, message, onConfirm) => {
-    setConfirmModal({ title, message, onConfirm });
-  };
-
-  const handleConfirm = async () => {
-    if (!confirmModal?.onConfirm || confirmLoading) return;
-
-    try {
-      setConfirmLoading(true);
-      await confirmModal.onConfirm();
-      setConfirmModal(null);
-    } catch (err) {
-      showToast(err.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง', 'error');
-    } finally {
-      setConfirmLoading(false);
-    }
-  };
-
-  const handleCancelClaim = (claim) => {
-    const claimId = claim.verify_id || claim.id;
-
-    askConfirm(
-      'ยืนยันการยกเลิกคำขอ',
-      `คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำขอ #${claimId}?`,
-      async () => {
-        await claimService.cancelClaim(claimId);
-
-        setSentClaims((prev) =>
-          prev.map((item) =>
-            String(item.verify_id || item.id) === String(claimId)
-              ? {
-                  ...item,
-                  status: 'CANCELLED',
-                  verify_status: 'CANCELLED',
-                }
-              : item
-          )
-        );
-
-        setBannerMessage(null);
-        showToast('ยกเลิกคำขอของคุณเรียบร้อยแล้ว', 'success');
-      }
-    );
-  };
-
+  // State 3: ข้อมูลประกาศที่ฉันสร้าง (ดึงมาจาก Entity POSTS + LOCATION ตาม ER Diagram)
   const [myPosts, setMyPosts] = useState(() => {
     let posts = [
       {
@@ -103,7 +56,7 @@ export default function AccountPage({
         location: 'S4 ชั้น 1',
         date: '24 ก.ย. 2026',
         created_at: '24 ก.ย. 2026',
-        status: 'OPEN',
+        status: 'OPEN', // post_status: 'OPEN' | 'CLOSED' | 'CANCELLED'
         post_status: 'OPEN',
         pendingRequestsCount: 2,
       },
@@ -157,41 +110,36 @@ export default function AccountPage({
         p.id === up.id || p.post_id === up.id ? { ...p, ...up } : p
       );
     }
-
     if (location.state?.deletedPostId) {
       const delId = location.state.deletedPostId;
       posts = posts.filter((p) => p.id !== delId && p.post_id !== delId);
     }
-
     if (location.state?.closedPostId) {
       const closedId = String(location.state.closedPostId);
       posts = posts.map((p) =>
-        String(p.id) === closedId ||
-        String(p.post_id) === closedId ||
-        (closedId === '1' && p.id === 'p-101') ||
-        (closedId === 'p-101' && p.id === 'p-101')
+        String(p.id) === closedId || String(p.post_id) === closedId || (closedId === '1' && p.id === 'p-101') || (closedId === 'p-101' && p.id === 'p-101')
           ? { ...p, status: 'CLOSED', post_status: 'CLOSED' }
           : p
       );
     }
 
+    // ซิงก์สถานะจาก LocalStorage จากผลการกดยืนยันส่งมอบ Dual Confirmation
     posts = posts.map((p) => {
       const stored =
         localStorage.getItem(`kmutt_lostfound_post_status_${p.id}`) ||
         localStorage.getItem(`kmutt_lostfound_post_status_${p.post_id}`) ||
         (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_1') : null) ||
         (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_p-101') : null);
-
       if (stored) {
         return { ...p, status: stored, post_status: stored };
       }
-
       return p;
     });
 
     return posts;
   });
 
+  // State 4: ข้อมูลคำขอที่ฉันส่ง (Entity VERIFY_ITEMS ที่ current user เป็นผู้ submit)
   const [sentClaims, setSentClaims] = useState(() => {
     let claims = [
       {
@@ -202,7 +150,7 @@ export default function AccountPage({
         postOwner: 'นายชินวัฒน์ อักษร (ผู้พบ)',
         date: '25 ก.ย. 2026',
         created_at: '25 ก.ย. 2026',
-        status: 'ACCEPTED',
+        status: 'ACCEPTED', // verify_status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED'
         verify_status: 'ACCEPTED',
         proof_description: 'กุญแจรถยนต์ Honda มีพวงกุญแจสีดำ',
         ownerNote: 'ตอบรับแล้ว! นัดรับของที่โถง CB4 วันนี้เวลา 16:30 น.',
@@ -278,19 +226,14 @@ export default function AccountPage({
     return claims;
   });
 
+  // ซิงก์ข้อมูลสถานะคำขอที่ฉันส่งแบบ Real-time จาก claimService
   useEffect(() => {
     let isMounted = true;
-
     claimService.getMyClaims().then((claims) => {
       if (isMounted && claims && claims.length > 0) {
         setSentClaims((prev) => {
           const updatedPrev = prev.map((old) => {
-            const match = claims.find(
-              (c) =>
-                String(c.id) === String(old.id) ||
-                String(c.verify_id) === String(old.id)
-            );
-
+            const match = claims.find(c => String(c.id) === String(old.id) || String(c.verify_id) === String(old.id));
             if (match) {
               return {
                 ...old,
@@ -300,27 +243,18 @@ export default function AccountPage({
                 receiverConfirmed: match.receiverConfirmed,
               };
             }
-
             return old;
           });
 
-          const newClaims = claims.filter(
-            (c) =>
-              !prev.some(
-                (old) =>
-                  String(old.id) === String(c.id) ||
-                  String(old.verify_id) === String(c.id)
-              )
-          );
-
+          // นำคำขอใหม่ที่ผู้ใช้เพิ่งสร้างส่งเข้ามาจริงมาแสดงด้านบน
+          const newClaims = claims.filter(c => !prev.some(old => String(old.id) === String(c.id) || String(old.verify_id) === String(c.id)));
           return [...newClaims, ...updatedPrev];
         });
       }
-    }).catch((err) => {
-      console.error('ไม่สามารถโหลดคำขอของฉันได้:', err);
     });
 
     const unsubscribe = claimService.subscribe((updatedClaims) => {
+      // ซิงก์สถานะโพสต์ที่ฉันสร้างเมื่อมีการยืนยันส่งมอบครบ 2 ฝ่ายจนปิดโพสต์
       setMyPosts((prev) =>
         prev.map((p) => {
           const stored =
@@ -328,23 +262,16 @@ export default function AccountPage({
             localStorage.getItem(`kmutt_lostfound_post_status_${p.post_id}`) ||
             (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_1') : null) ||
             (p.id === 'p-101' ? localStorage.getItem('kmutt_lostfound_post_status_p-101') : null);
-
           if (stored) {
             return { ...p, status: stored, post_status: stored };
           }
-
           return p;
         })
       );
 
-      setSentClaims((prev) =>
-        prev.map((old) => {
-          const match = updatedClaims.find(
-            (c) =>
-              String(c.id) === String(old.id) ||
-              String(c.verify_id) === String(old.id)
-          );
-
+      setSentClaims((prev) => {
+        return prev.map((old) => {
+          const match = updatedClaims.find(c => String(c.id) === String(old.id) || String(c.verify_id) === String(old.id));
           if (match) {
             return {
               ...old,
@@ -354,10 +281,9 @@ export default function AccountPage({
               receiverConfirmed: match.receiverConfirmed,
             };
           }
-
           return old;
-        })
-      );
+        });
+      });
     });
 
     return () => {
@@ -366,6 +292,7 @@ export default function AccountPage({
     };
   }, []);
 
+  // State 5: รายการประกาศของฉันที่มีคนส่งคำขอเข้ามา (POSTS ที่ receives VERIFY_ITEMS)
   const [receivedClaims] = useState([
     {
       id: 'rc-101',
@@ -379,6 +306,11 @@ export default function AccountPage({
     },
   ]);
 
+
+
+
+
+  // กรองประกาศตามตัวกรอง
   const filteredPosts = myPosts.filter((post) => {
     if (postFilter === 'all') return true;
     return post.status === postFilter;
@@ -386,12 +318,14 @@ export default function AccountPage({
 
   return (
     <div className="account-page-container">
+      {/* ส่วนหัวหน้าเว็บ */}
       <PageHeader
         tag="My Activities"
         title="ประกาศและคำขอของฉัน"
         subtitle="ติดตามประกาศที่สร้าง คำขอรับของ (My Requests) และจัดการส่งมอบสิ่งของ"
       />
 
+      {/* แบนเนอร์แจ้งเตือนสำเร็จ (ถ้ามีข้อความส่งต่อมาจากหน้าอื่น) */}
       {bannerMessage && (
         <div className="account-success-banner" role="status">
           <div className="account-banner-content">
@@ -409,7 +343,11 @@ export default function AccountPage({
         </div>
       )}
 
+      {/* ============================================================
+          1. การ์ดแท็บเลือกหมวดหมู่ข้อมูลบัญชี (Interactive Tab Cards พร้อมไอคอนและเอฟเฟกต์)
+          ============================================================ */}
       <div className="account-stats-grid" role="tablist" aria-label="หมวดหมู่ข้อมูลบัญชี">
+        {/* แท็บที่ 1: ประกาศที่ฉันสร้าง */}
         <button
           type="button"
           className={`account-stat-card ${activeTab === 'my_posts' ? 'is-active' : ''}`}
@@ -429,6 +367,7 @@ export default function AccountPage({
           <span className="account-stat-badge">จัดการ</span>
         </button>
 
+        {/* แท็บที่ 2: คำขอที่ฉันส่ง (My Requests) */}
         <button
           type="button"
           className={`account-stat-card ${activeTab === 'my_sent_claims' ? 'is-active' : ''}`}
@@ -448,6 +387,7 @@ export default function AccountPage({
           <span className="account-stat-badge">ตารางสถานะ</span>
         </button>
 
+        {/* แท็บที่ 3: คำขอที่ฉันได้รับ */}
         <button
           type="button"
           className={`account-stat-card ${activeTab === 'my_received_claims' ? 'is-active' : ''}`}
@@ -468,12 +408,15 @@ export default function AccountPage({
         </button>
       </div>
 
+      {/* ============================================================
+          3. แท็บที่ 1: ประกาศที่ฉันสร้าง (POSTS + LOCATION)
+          ============================================================ */}
       {activeTab === 'my_posts' && (
         <section aria-labelledby="my-posts-heading">
           <h2 id="my-posts-heading" className="sr-only">
             รายการประกาศที่ฉันสร้าง
           </h2>
-
+          {/* แถบตัวกรองสถานะ */}
           <div className="account-filter-bar">
             <div className="account-pill-filters">
               <button
@@ -507,6 +450,7 @@ export default function AccountPage({
             </div>
           </div>
 
+          {/* รายการการ์ดโพสต์ */}
           {filteredPosts.length === 0 ? (
             <div className="account-empty-state">
               <Inbox size={42} className="account-empty-icon" />
@@ -527,7 +471,7 @@ export default function AccountPage({
                         state: {
                           from: 'account',
                           isOwner: true,
-                          post,
+                          post: post,
                         },
                       });
                     }}
@@ -538,7 +482,7 @@ export default function AccountPage({
                           state: {
                             from: 'account',
                             isOwner: true,
-                            post,
+                            post: post,
                           },
                         });
                       }
@@ -551,13 +495,14 @@ export default function AccountPage({
                         {post.location} · {post.date}
                       </p>
                       <div className="account-post-badges">
-                        {post.post_type === 'LOST' ||
-                        (post.post_type && post.post_type.includes('LOST')) ? (
+                        {/* 1. ประเภทโพสต์ตาม ER Diagram (post_type: FOUND / LOST) */}
+                        {post.post_type === 'LOST' || (post.post_type && post.post_type.includes('LOST')) ? (
                           <Badge variant="lost">ของหาย</Badge>
                         ) : (
                           <Badge variant="found">พบของ</Badge>
                         )}
 
+                        {/* 2. สถานะโพสต์ (post_status: OPEN, CLOSED, CANCELLED) */}
                         {post.status === 'OPEN' && (
                           <Badge variant="success">OPEN · เปิดรับคำขอ</Badge>
                         )}
@@ -596,12 +541,14 @@ export default function AccountPage({
         </section>
       )}
 
+      {/* ============================================================
+          4. แท็บที่ 2: ตารางคำขอที่ฉันส่ง (VERIFY_ITEMS — รองรับ 5 สถานะ)
+          ============================================================ */}
       {activeTab === 'my_sent_claims' && (
         <section aria-labelledby="sent-claims-heading">
           <h2 id="sent-claims-heading" className="sr-only">
             รายการคำขอที่ฉันส่ง (My Requests)
           </h2>
-
           <div className="account-table-wrapper">
             <table className="account-data-table">
               <caption className="sr-only">ตารางรายการคำขอที่ฉันส่งและสถานะ</caption>
@@ -628,7 +575,7 @@ export default function AccountPage({
                           navigate(`/posts/${targetPostId}`, {
                             state: {
                               from: 'account',
-                              claim,
+                              claim: claim,
                               post: {
                                 id: targetPostId,
                                 title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
@@ -646,7 +593,7 @@ export default function AccountPage({
                             navigate(`/posts/${targetPostId}`, {
                               state: {
                                 from: 'account',
-                                claim,
+                                claim: claim,
                                 post: {
                                   id: targetPostId,
                                   title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
@@ -667,10 +614,8 @@ export default function AccountPage({
                         </span>
                       </div>
                     </td>
-
                     <td>{claim.postOwner}</td>
                     <td>{claim.created_at || claim.date}</td>
-
                     <td>
                       {claim.status === 'PENDING' && (
                         <Badge variant="pending">PENDING · รอตรวจ</Badge>
@@ -688,13 +633,11 @@ export default function AccountPage({
                         <Badge variant="completed">COMPLETED · สำเร็จ</Badge>
                       )}
                     </td>
-
                     <td>
                       <div className={`account-table-note ${claim.ownerNote ? 'has-note' : ''}`}>
                         {claim.ownerNote || '— ไม่มีข้อความหมายเหตุ —'}
                       </div>
                     </td>
-
                     <td>
                       <div className="account-table-actions">
                         <Button
@@ -705,7 +648,7 @@ export default function AccountPage({
                             navigate(`/posts/${targetPostId}`, {
                               state: {
                                 from: 'account',
-                                claim,
+                                claim: claim,
                                 post: {
                                   id: targetPostId,
                                   title: claim.itemTitle.replace(/^ขอรับ/, 'พบ'),
@@ -720,12 +663,20 @@ export default function AccountPage({
                         >
                           ดูรายละเอียด
                         </Button>
-
                         {claim.status === 'PENDING' && (
                           <Button
                             variant="danger"
                             size="sm"
-                            onClick={() => handleCancelClaim(claim)}
+                            onClick={async () => {
+                              if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำขอ #${claim.verify_id || claim.id}?`)) {
+                                try {
+                                  await claimService.cancelClaim(claim.verify_id || claim.id);
+                                  setBannerMessage('ยกเลิกคำขอของคุณเรียบร้อยแล้ว');
+                                } catch (err) {
+                                  alert(err.message || 'ไม่สามารถยกเลิกคำขอได้');
+                                }
+                              }
+                            }}
                           >
                             ยกเลิก
                           </Button>
@@ -740,15 +691,14 @@ export default function AccountPage({
         </section>
       )}
 
+      {/* ============================================================
+          5. แท็บที่ 3: คำขอที่ฉันได้รับ (POSTS ที่ receives VERIFY_ITEMS)
+          ============================================================ */}
       {activeTab === 'my_received_claims' && (
-        <section
-          aria-labelledby="received-claims-heading"
-          className="account-received-list"
-        >
+        <section aria-labelledby="received-claims-heading" className="account-received-list">
           <h2 id="received-claims-heading" className="sr-only">
             รายการคำขอตรวจสอบที่ฉันได้รับ
           </h2>
-
           {receivedClaims.map((item) => (
             <Card key={item.id} className="account-received-card">
               <div className="account-received-left">
@@ -774,11 +724,7 @@ export default function AccountPage({
                       onNavigateReview(item);
                     } else {
                       navigate(`/posts/${item.post_id || item.id}/review`, {
-                        state: {
-                          postId: item.post_id || item.id,
-                          postTitle: item.postTitle,
-                          from: '/account',
-                        },
+                        state: { postId: item.post_id || item.id, postTitle: item.postTitle, from: '/account' },
                       });
                     }
                   }}
@@ -789,111 +735,6 @@ export default function AccountPage({
             </Card>
           ))}
         </section>
-      )}
-
-      {/* Toast notification */}
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          style={{
-            position: 'fixed',
-            top: '24px',
-            right: '24px',
-            zIndex: 11000,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '14px 20px',
-            borderRadius: '10px',
-            color: '#fff',
-            backgroundColor: toast.type === 'error' ? '#dc2626' : '#16a34a',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
-            maxWidth: 'calc(100vw - 32px)',
-          }}
-        >
-          <CheckCircle2 size={20} />
-          <span>{toast.message}</span>
-          <button
-            type="button"
-            onClick={() => setToast(null)}
-            aria-label="ปิดการแจ้งเตือน"
-            style={{
-              border: 0,
-              background: 'transparent',
-              color: '#fff',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <X size={18} />
-          </button>
-        </div>
-      )}
-
-      {/* Confirmation modal */}
-      {confirmModal && (
-        <div
-          role="presentation"
-          onClick={() => {
-            if (!confirmLoading) setConfirmModal(null);
-          }}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 12000,
-            background: 'rgba(0,0,0,0.55)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="account-confirm-title"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: '#fff',
-              borderRadius: '14px',
-              padding: '24px',
-              width: '100%',
-              maxWidth: '420px',
-              boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
-            }}
-          >
-            <h3
-              id="account-confirm-title"
-              style={{ margin: '0 0 12px', fontSize: '20px', color: '#111827' }}
-            >
-              {confirmModal.title}
-            </h3>
-
-            <p style={{ margin: '0 0 24px', color: '#4b5563', lineHeight: 1.6 }}>
-              {confirmModal.message}
-            </p>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <Button
-                variant="secondary"
-                disabled={confirmLoading}
-                onClick={() => setConfirmModal(null)}
-              >
-                กลับ
-              </Button>
-
-              <Button
-                variant="danger"
-                disabled={confirmLoading}
-                onClick={handleConfirm}
-              >
-                {confirmLoading ? 'กำลังดำเนินการ...' : 'ยืนยันการยกเลิก'}
-              </Button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );
