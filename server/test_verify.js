@@ -236,3 +236,12 @@ test('GET /me/posts returns only my own posts with their pending claim count', a
   assert.equal(theirs.some((p) => p.post_id === postId), false);
   assert.equal((await call('/me/posts')).status, 401);
 });
+
+test('claim body cannot inject arbitrary evidence URLs', async () => {
+  const postId = await makePost();
+  const { json } = await call(`/posts/${postId}/verify`, {
+    token: tok.claimant, method: 'POST', body: { proof_description: 'x', images: ['javascript:alert(1)'] },
+  });
+  const { rows } = await pool.query('SELECT 1 FROM verify_images WHERE verify_id = $1', [json.data.verify_id]);
+  assert.equal(rows.length, 0);
+});

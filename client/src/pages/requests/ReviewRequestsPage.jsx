@@ -18,6 +18,10 @@ import { claimService } from '../../services/claimService';
 import { apiRequest } from '../../api';
 import './ReviewRequestsPage.css';
 
+// only our own uploads are shown as images/links (never an arbitrary URL from a claim)
+const evidenceUrls = (claim) =>
+  (claim?.evidences || []).filter((u) => typeof u === 'string' && u.startsWith('/uploads/'));
+
 /**
  * ReviewRequestsPage Component — หน้าตรวจคำขอที่ส่งมายังประกาศของฉัน (RECEIVED REQUESTS)
  * Route URL: /requests/review
@@ -201,14 +205,15 @@ export default function ReviewRequestsPage() {
                     if (e.key === 'Enter') setSelectedId(item.id);
                   }}
                 >
-                  <Thumbnail text="รูปโพสต์" />
+                  <Thumbnail text="ไม่มีรูป" src={evidenceUrls(item)[0]} />
 
                   <div className="review-item-info">
                     <h3 className="review-item-title">
                       {item.itemTitle} · #{item.id}
                     </h3>
                     <p className="review-item-meta">
-                      โดย {item.requester} · {item.date}
+                      โดย {item.requester} ·{' '}
+                      {new Date(item.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
 
                     <div className="review-item-badge-wrap">
@@ -252,11 +257,14 @@ export default function ReviewRequestsPage() {
 
             {/* กล่องแสดงรูปหลักฐานตรงตาม Figma */}
             <div className="review-evidences-row">
-              {activeRequest.evidences.map((evText, idx) => (
-                <div key={idx} className="review-evidence-box">
-                  {evText}
-                </div>
+              {evidenceUrls(activeRequest).map((url) => (
+                <a key={url} href={url} target="_blank" rel="noreferrer" className="review-evidence-box">
+                  <img src={url} alt="รูปหลักฐาน" />
+                </a>
               ))}
+              {evidenceUrls(activeRequest).length === 0 && (
+                <div className="review-evidence-box">ไม่มีรูปหลักฐาน</div>
+              )}
             </div>
 
             {/* ========================================================

@@ -229,6 +229,13 @@
   color: var(--color-gray);
   font-size: var(--text-meta);
   user-select: none;
+  overflow: hidden;
+}
+
+.review-evidence-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* กล่องแจ้งเตือนสถานะต่างๆ */

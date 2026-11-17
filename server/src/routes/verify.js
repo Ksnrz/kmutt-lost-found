@@ -100,31 +100,6 @@ router.post('/posts/:id/verify', requireAuth, upload.array('images', 5), async (
       }
     }
 
-    // รูปจาก Body images (กรณี JSON data หรือ URL ที่ส่งมา)
-    if (req.body.images) {
-      let bodyImages = req.body.images;
-      if (typeof bodyImages === 'string') {
-        try {
-          bodyImages = JSON.parse(bodyImages);
-        } catch {
-          bodyImages = [bodyImages];
-        }
-      }
-      if (Array.isArray(bodyImages)) {
-        for (const img of bodyImages) {
-          const imgUrl = typeof img === 'string' ? img : img.verify_image_url || img.previewUrl || img.url;
-          if (!imgUrl) continue;
-          const imgRes = await client.query(
-            `INSERT INTO verify_images (verify_id, verify_image_url)
-             VALUES ($1, $2)
-             RETURNING *`,
-            [newVerify.verify_id, imgUrl]
-          );
-          savedImages.push(imgRes.rows[0]);
-        }
-      }
-    }
-
     await client.query('COMMIT');
 
     res.status(201).json({
