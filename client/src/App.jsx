@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { apiRequest } from './api';
 import Navbar from './components/navigation/Navbar';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
@@ -13,6 +12,8 @@ import ClaimRequestPage from './pages/requests/ClaimRequestPage';
 import ReviewRequestsPage from './pages/requests/ReviewRequestsPage';
 import AccountPage from './pages/requests/AccountPage';
 import Profile from './pages/Profile';
+import { apiRequest } from './api';
+import { claimService } from './services/claimService';
 import './App.css';
 
 // หน้าที่มี Navbar ด้านบน (หน้า login / register ไม่มี)
@@ -20,18 +21,60 @@ function WithNavbar() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [pendingCount, setPendingCount] = useState(0);
+  const [noticeCount, setNoticeCount] = useState(0);
 
-  // จำนวนคำขอที่รอเราตรวจ (ทุกโพสต์ของเรา) โหลดใหม่ทุกครั้งที่เปลี่ยนหน้า; ไม่ได้ login = 0
   useEffect(() => {
-    apiRequest('/me/posts')
-      .then(({ posts }) => setPendingCount(posts.reduce((sum, p) => sum + p.pending_count, 0)))
-      .catch(() => setPendingCount(0));
+    let isMounted = true;
+
+    const fetchCounts = async () => {
+      try {
+        const receivedData = await apiRequest('/me/posts');
+        if (isMounted && receivedData?.posts) {
+          const totalPending = receivedData.posts.reduce(
+            (sum, p) => sum + (Number(p.pending_count) || 0),
+            0
+          );
+          setPendingCount(totalPending);
+        }
+      } catch {
+        // ผู้ใช้อาจยังไม่ได้ล็อกอิน
+      }
+
+      try {
+        const claims = await claimService.getMyClaims();
+        if (isMounted && claims) {
+          // แจ้งเตือนเมื่อมีคำขอที่ถูก ACCEPTED หรือ REJECTED
+          const updates = claims.filter(
+            (c) => c.verify_status === 'ACCEPTED' || c.verify_status === 'REJECTED' || c.status === 'ACCEPTED' || c.status === 'REJECTED'
+          ).length;
+          setNoticeCount(updates);
+        }
+      } catch {
+        // ละเว้นข้อผิดพลาดชั่วคราว
+      }
+    };
+
+    fetchCounts();
+
+    const unsubscribe = claimService.subscribe((claims) => {
+      if (isMounted && Array.isArray(claims)) {
+        setNoticeCount(claims.filter((claim) =>
+          ['ACCEPTED', 'REJECTED'].includes(claim.verify_status || claim.status)
+        ).length);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, [pathname]);
 
   return (
     <div className="app-container">
       <Navbar
         pendingCount={pendingCount}
+        noticeCount={noticeCount}
         onCreatePost={() => {
           navigate('/posts/new');
         }}
@@ -57,12 +100,8 @@ function App() {
           <Route path="/posts/:postId" element={<PostDetail />} />
           <Route path="/posts/:postId/edit" element={<Editpost />} />
           <Route path="/listpost" element={<Navigate to="/posts" replace />} />
-          <Route path="/claims/new" element={<ClaimRequestPage />} />
           <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
-          <Route
-            path="/requests/review"
-            element={<Navigate to="/account" replace state={{ tab: 'my_received_claims' }} />}
-          />
+          <Route path="/requests/review" element={<Navigate to="/account" replace state={{ tab: 'my_received_claims' }} />} />
           <Route path="/posts/:postId/review" element={<ReviewRequestsPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/profile" element={<Profile />} />

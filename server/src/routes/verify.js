@@ -544,5 +544,53 @@ router.get('/verify/my-claims', requireAuth, async (req, res, next) => {
   }
 });
 
+
+// ============================================================
+// GET /api/verify/received — โพสต์ที่ฉันสร้าง ที่มีคำขอ PENDING เข้ามา
+// (สำหรับหน้า Account: แท็บ "คำขอที่ฉันได้รับ" และ Navbar badge)
+// ============================================================
+router.get('/verify/received', requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.user.user_id;
+
+    const { rows } = await pool.query(
+      `SELECT
+         p.post_id,
+         p.title AS "postTitle",
+         p.post_status,
+         l.building_name,
+         COUNT(v.verify_id) FILTER (WHERE v.verify_status = 'PENDING') AS "pendingCount",
+         COUNT(v.verify_id) AS "totalCount",
+         COALESCE(
+           NULLIF(TRIM(CONCAT(latest_u.first_name, ' ', latest_u.last_name)), ''),
+           latest_u.student_id,
+           'นักศึกษา'
+         ) AS "latestClaimant",
+         latest_v.created_at AS "latestDate"
+       FROM posts p
+       LEFT JOIN locations l ON p.location_id = l.location_id
+       INNER JOIN verify_items v ON p.post_id = v.post_id
+       LEFT JOIN LATERAL (
+         SELECT vi.user_id, vi.created_at
+         FROM verify_items vi
+         WHERE vi.post_id = p.post_id
+         ORDER BY vi.created_at DESC
+         LIMIT 1
+       ) latest_v ON true
+       LEFT JOIN users latest_u ON latest_v.user_id = latest_u.user_id
+       WHERE p.user_id = $1
+       GROUP BY p.post_id, l.building_name, latest_u.first_name, latest_u.last_name, latest_u.student_id, latest_v.created_at
+       HAVING COUNT(v.verify_id) > 0
+       ORDER BY latest_v.created_at DESC`,
+      [userId]
+    );
+
+    res.json({ ok: true, posts: rows });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;
+
 
