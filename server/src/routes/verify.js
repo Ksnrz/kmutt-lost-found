@@ -376,10 +376,15 @@ const handleCancelClaim = async (req, res, next) => {
     const updateRes = await pool.query(
       `UPDATE verify_items
        SET verify_status = 'CANCELLED', note = $1
-       WHERE verify_id = $2
+       WHERE verify_id = $2 AND verify_status = 'PENDING'
        RETURNING *`,
       [note, verifyId]
     );
+
+    // the owner accepted it between our check and this update
+    if (updateRes.rows.length === 0) {
+      return res.status(400).json({ error: 'สามารถยกเลิกได้เฉพาะคำขอที่อยู่ในสถานะ PENDING เท่านั้น' });
+    }
 
     res.json({
       message: 'ยกเลิกคำขอสำเร็จเรียบร้อยแล้ว',
@@ -494,7 +499,7 @@ const handleDualConfirm = async (req, res, next) => {
         `UPDATE verify_items
          SET verify_status = 'CANCELLED',
              note = 'ระบบยกเลิกอัตโนมัติเนื่องจากส่งมอบสิ่งของสำเร็จเสร็จสิ้นแล้ว'
-         WHERE post_id = $1 AND verify_id != $2 AND verify_status != 'COMPLETED'`,
+         WHERE post_id = $1 AND verify_id != $2 AND verify_status = 'PENDING'`,
         [current.post_id, verifyId]
       );
     }

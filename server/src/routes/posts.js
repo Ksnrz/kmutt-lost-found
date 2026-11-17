@@ -6,6 +6,30 @@ import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
+// Shared by create and edit. Returns an error message, or null when the body is valid.
+function validatePost({ location_id, post_type, custody_type, deposit_location_id, title, description, event_date, contact_text }) {
+    if (!location_id || !post_type || !title?.trim() || !description?.trim() || !event_date || !contact_text?.trim()) {
+        return 'กรุณากรอกข้อมูลให้ครบถ้วน';
+    }
+    if (!['LOST', 'FOUND'].includes(post_type)) {
+        return 'ประเภทโพสต์ไม่ถูกต้อง';
+    }
+    if ((post_type === 'LOST' && custody_type != null) ||
+        (post_type === 'FOUND' && !['DEPOSITED', 'SELF_KEPT'].includes(custody_type))) {
+        return 'วิธีเก็บสิ่งของไม่ถูกต้อง';
+    }
+    if (custody_type === 'DEPOSITED' && !deposit_location_id) {
+        return 'กรุณาเลือกสถานที่ฝาก';
+    }
+    return null;
+}
+
+// deposit fields only belong to DEPOSITED posts; anything else is dropped
+const depositFields = ({ custody_type, deposit_location_id, deposit_detail }) =>
+    custody_type === 'DEPOSITED'
+        ? [deposit_location_id, deposit_detail?.trim() || null]
+        : [null, null];
+
 // API สำหรับสร้างโพสต์ใหม่
 router.post('/', requireAuth, upload.array('images', 5), async (req, res) => {
     const {
@@ -20,33 +44,9 @@ router.post('/', requireAuth, upload.array('images', 5), async (req, res) => {
 
     const user_id = req.user.user_id;
 
-    if (
-        !location_id ||
-        !post_type ||
-        !title?.trim() ||
-        !description?.trim() ||
-        !event_date ||
-        !contact_text?.trim()
-    ) {
-        return res.status(400).json({
-            error: 'กรุณากรอกข้อมูลให้ครบถ้วน'
-        });
-    }
-
-    if (!['LOST', 'FOUND'].includes(post_type)) {
-        return res.status(400).json({
-            error: 'ประเภทโพสต์ไม่ถูกต้อง'
-        });
-    }
-
-    if (
-        (post_type === 'LOST' && custody_type != null) ||
-        (post_type === 'FOUND' &&
-            !['DEPOSITED', 'SELF_KEPT'].includes(custody_type))
-    ) {
-        return res.status(400).json({
-            error: 'วิธีเก็บสิ่งของไม่ถูกต้อง'
-        });
+    const invalid = validatePost(req.body);
+    if (invalid) {
+        return res.status(400).json({ error: invalid });
     }
 
     const result = await pool.query(
@@ -55,18 +55,21 @@ router.post('/', requireAuth, upload.array('images', 5), async (req, res) => {
             location_id,
             post_type,
             custody_type,
+            deposit_location_id,
+            deposit_detail,
             title,
             description,
             event_date,
             contact_text
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING *`,
         [
             user_id,
             location_id,
             post_type,
             custody_type ?? null,
+            ...depositFields(req.body),
             title.trim(),
             description.trim(),
             event_date,
@@ -106,6 +109,7 @@ router.get('/', async (req, res) => {
         SELECT
             posts.*,
             locations.building_name,
+            deposit.building_name AS deposit_building_name,
             COALESCE(
                 (
                     SELECT json_agg(
@@ -122,6 +126,8 @@ router.get('/', async (req, res) => {
         FROM posts
         JOIN locations
             ON posts.location_id = locations.location_id
+        LEFT JOIN locations deposit
+            ON posts.deposit_location_id = deposit.location_id
         ORDER BY posts.created_at DESC
     `);
 
@@ -138,6 +144,7 @@ router.get('/:id', async (req, res) => {
         `SELECT
             posts.*,
             locations.building_name,
+            deposit.building_name AS deposit_building_name,
             COALESCE(
                 (
                     SELECT json_agg(
@@ -154,6 +161,8 @@ router.get('/:id', async (req, res) => {
         FROM posts
         JOIN locations
             ON posts.location_id = locations.location_id
+        LEFT JOIN locations deposit
+            ON posts.deposit_location_id = deposit.location_id
         WHERE posts.post_id = $1`,
         [id]
     );
@@ -184,33 +193,9 @@ router.patch('/:id', requireAuth, async (req, res) => {
         contact_text
     } = req.body;
 
-    if (
-        !location_id ||
-        !post_type ||
-        !title?.trim() ||
-        !description?.trim() ||
-        !event_date ||
-        !contact_text?.trim()
-    ) {
-        return res.status(400).json({
-            error: 'กรุณากรอกข้อมูลให้ครบถ้วน'
-        });
-    }
-
-    if (!['LOST', 'FOUND'].includes(post_type)) {
-        return res.status(400).json({
-            error: 'ประเภทโพสต์ไม่ถูกต้อง'
-        });
-    }
-
-    if (
-        (post_type === 'LOST' && custody_type != null) ||
-        (post_type === 'FOUND' &&
-            !['DEPOSITED', 'SELF_KEPT'].includes(custody_type))
-    ) {
-        return res.status(400).json({
-            error: 'วิธีเก็บสิ่งของไม่ถูกต้อง'
-        });
+    const invalid = validatePost(req.body);
+    if (invalid) {
+        return res.status(400).json({ error: invalid });
     }
 
     const result = await pool.query(
@@ -219,18 +204,21 @@ router.patch('/:id', requireAuth, async (req, res) => {
             location_id = $1,
             post_type = $2,
             custody_type = $3,
-            title = $4,
-            description = $5,
-            event_date = $6,
-            contact_text = $7
-         WHERE post_id = $8
-           AND user_id = $9
+            deposit_location_id = $4,
+            deposit_detail = $5,
+            title = $6,
+            description = $7,
+            event_date = $8,
+            contact_text = $9
+         WHERE post_id = $10
+           AND user_id = $11
            AND post_status = 'OPEN'
          RETURNING *`,
         [
             location_id,
             post_type,
             custody_type ?? null,
+            ...depositFields(req.body),
             title.trim(),
             description.trim(),
             event_date,

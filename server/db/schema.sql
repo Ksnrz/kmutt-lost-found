@@ -32,6 +32,8 @@ CREATE TABLE posts (
   location_id  INT          NOT NULL REFERENCES locations(location_id),
   post_type    VARCHAR(10)  NOT NULL CHECK (post_type IN ('LOST', 'FOUND')),   -- ของหาย / เจอของ
   custody_type VARCHAR(20)  CHECK (custody_type IN ('DEPOSITED', 'SELF_KEPT')), -- ฝากไว้ / เก็บไว้เอง
+  deposit_location_id INT   REFERENCES locations(location_id),                  -- ตึกที่ฝาก (DEPOSITED only)
+  deposit_detail TEXT,                                                          -- รายละเอียดที่รับฝาก เช่น ฝากแม่บ้านชั้น 1
   title        VARCHAR(200) NOT NULL,
   description  TEXT         NOT NULL,
   event_date   DATE         NOT NULL,                                           -- วันที่พบ / หาย
@@ -41,8 +43,16 @@ CREATE TABLE posts (
   created_at   TIMESTAMPTZ  NOT NULL DEFAULT now(),
   -- DEPOSITED posts stay OPEN (still listed) but take no verify requests; the poster closes it manually.
   -- only FOUND posts have custody; LOST posts must leave it empty
-  CHECK ((post_type = 'FOUND') = (custody_type IS NOT NULL))
+  CHECK ((post_type = 'FOUND') = (custody_type IS NOT NULL)),
+  -- only DEPOSITED posts have a deposit building, and they must have one
+  CONSTRAINT deposit_location_matches_custody
+    CHECK ((custody_type IS NOT DISTINCT FROM 'DEPOSITED') = (deposit_location_id IS NOT NULL))
 );
+-- Existing DB without wiping data (run once):
+--   ALTER TABLE posts ADD COLUMN deposit_location_id INT REFERENCES locations(location_id), ADD COLUMN deposit_detail TEXT;
+--   UPDATE posts SET deposit_location_id = location_id WHERE custody_type = 'DEPOSITED';
+--   ALTER TABLE posts ADD CONSTRAINT deposit_location_matches_custody
+--     CHECK ((custody_type IS NOT DISTINCT FROM 'DEPOSITED') = (deposit_location_id IS NOT NULL));
 
 CREATE TABLE item_images (
   item_image_id  SERIAL PRIMARY KEY,
