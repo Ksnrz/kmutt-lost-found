@@ -21,7 +21,8 @@ function CreatePost() {
   const [eventDate, setEventDate] = useState('');
   const [description, setDescription] = useState('');
   const [contactText, setContactText] = useState('');
-  const [depositLocation, setDepositLocation] = useState('');
+  const [depositLocation, setDepositLocation] = useState(''); // location_id of the deposit building
+  const [depositDetail, setDepositDetail] = useState('');
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
 
@@ -163,6 +164,10 @@ function CreatePost() {
 
       if (postType === 'FOUND') {
         formData.append('custody_type', custodyType);
+        if (custodyType === 'DEPOSITED') {
+          formData.append('deposit_location_id', depositLocation);
+          formData.append('deposit_detail', depositDetail);
+        }
       }
 
       formData.append('title', title.trim());
@@ -404,13 +409,24 @@ function CreatePost() {
 
               {postType === 'FOUND' && custodyType === 'DEPOSITED' && (
                 <>
-                  <h3>เลือกสถานที่ฝาก</h3>
+                  <h3>
+                    สถานที่ฝาก <span className="req-star">*</span>
+                  </h3>
+                  <select value={depositLocation} onChange={(e) => setDepositLocation(e.target.value)}>
+                    <option value="">-- เลือกตึกที่ฝาก --</option>
+                    {locations.map((location) => (
+                      <option key={location.location_id} value={location.location_id}>
+                        {location.building_name}
+                      </option>
+                    ))}
+                  </select>
 
+                  <h3>รายละเอียดที่รับฝาก</h3>
                   <Input
                     type="text"
-                    placeholder="เลือกสถานที่ / ตึก ▾"
-                    value={depositLocation}
-                    onChange={(e) => setDepositLocation(e.target.value)}
+                    placeholder="เช่น ฝากแม่บ้านชั้น 1 ห้อง S4-101 เปิด 8:00–16:00"
+                    value={depositDetail}
+                    onChange={(e) => setDepositDetail(e.target.value)}
                   />
                 </>
               )}

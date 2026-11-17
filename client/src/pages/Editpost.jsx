@@ -27,7 +27,8 @@ function Editpost() {
   const [eventDate, setEventDate] = useState('');
   const [description, setDescription] = useState('');
   const [contactText, setContactText] = useState('');
-  const [depositLocation, setDepositLocation] = useState('');
+  const [depositLocation, setDepositLocation] = useState(''); // location_id of the deposit building
+  const [depositDetail, setDepositDetail] = useState('');
 
   const [locations, setLocations] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
@@ -69,10 +70,9 @@ function Editpost() {
         setDescription(post.description || '');
         setContactText(post.contact_text || '');
 
-        if (post.event_date) {
-          const dateString = String(post.event_date).slice(0, 10);
-          setEventDate(dateString);
-        }
+        setEventDate(post.event_date || ''); // already 'YYYY-MM-DD' from the server
+        setDepositLocation(String(post.deposit_location_id || ''));
+        setDepositDetail(post.deposit_detail || '');
 
         setExistingImages(post.images || []);
         setLocations(locationData.locations || []);
@@ -219,7 +219,8 @@ function Editpost() {
       newImages.forEach((file) => {
         formData.append('images', file);
       });
-
+      formData.set('deposit_location_id', depositLocation || '');
+      formData.set('deposit_detail', depositDetail || '');
       await apiRequest(`/posts/${postId}`, {
         method: 'PATCH',
         body: formData,
@@ -253,7 +254,6 @@ function Editpost() {
               date: eventDate,
               description,
               contact: contactText,
-              depositLocation,
             },
           },
         });
@@ -582,15 +582,30 @@ function Editpost() {
 
               {postType === 'FOUND' && custodyType === 'DEPOSITED' && (
                 <>
-                  <h3>เลือกสถานที่ฝาก</h3>
-                  <Input
-                    type="text"
-                    placeholder="เลือกสถานที่ / ตึก ▾"
+                  <h3>
+                    สถานที่ฝาก <span className="req-star">*</span>
+                  </h3>
+                  <select
                     value={depositLocation}
                     onChange={(e) => setDepositLocation(e.target.value)}
-                  />
-                </>
-              )}
+                   >
+                    <option value="">-- เลือกตึกที่ฝาก --</option>
+                    {locations.map((location) => (
+                      <option key={location.location_id} value={location.location_id}>
+                        {location.building_name}
+                      </option>
+                    ))}
+                    </select>
+
+                    <h3>รายละเอียดที่รับฝาก</h3>
+                    <Input
+                      type="text"
+                      placeholder="เช่น ฝากแม่บ้านชั้น 1 ห้อง S4-101 เปิด 8:00–16:00"
+                      value={depositDetail}
+                      onChange={(e) => setDepositDetail(e.target.value)}
+                    />
+                  </>
+                )}
 
               <div className="form-description">
                 <p>ข้อมูลติดต่อจะแสดงในหน้าโพสต์</p>

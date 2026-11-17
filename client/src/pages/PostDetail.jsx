@@ -225,8 +225,12 @@ function PostDetail() {
     openHours: apiPost.open_hours || '-',
 
     contact: apiPost.contact_text || '-',
+    depositBuilding: apiPost.deposit_building_name,
+    depositDetail: apiPost.deposit_detail,
     imageUrl: images[0] ? imageUrl(images[0]) : null,
   };
+
+  const isDeposited = apiPost.custody_type === 'DEPOSITED' && post.status === 'open';
 
   return (
     <div className="postdetail-page">
@@ -260,7 +264,12 @@ function PostDetail() {
             </h1>
 
             <div className="postdetail-badge-wrap">
-              <StatusBadge status={post.status} />
+              {/* DEPOSITED posts stay OPEN so they remain listed, but take no claims: show them as done */}
+              {isDeposited ? (
+                <StatusBadge status="closed" customText={`ฝากไว้แล้ว • ติดต่อรับที่ ${post.depositBuilding}`} />
+              ) : (
+                <StatusBadge status={post.status} />
+              )}
             </div>
           </div>
 
@@ -339,6 +348,20 @@ function PostDetail() {
                     {post.custodyType}
                   </span>
                 </div>
+                {isDeposited && (
+                  <>
+                    <div className="custody-info-row">
+                      <span className="custody-label">สถานที่ฝาก:</span>
+                      <span className="custody-value">{post.depositBuilding}</span>
+                    </div>
+                    {post.depositDetail && (
+                      <div className="custody-info-row">
+                        <span className="custody-label">รายละเอียดที่รับฝาก:</span>
+                        <span className="custody-value">{post.depositDetail}</span>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               {isDeposited && (
@@ -669,7 +692,16 @@ function PostDetail() {
                       ขอขอบคุณทุกท่านที่ช่วยเหลือครับ
                     </p>
                   </div>
-
+                ) : isDeposited ? (
+                  <div className="postdetail-closed-box">
+                    <div className="postdetail-closed-badge">
+                      <Lock size={15} />
+                      <span>ปิดรับคำขอ · ฝากไว้แล้ว</span>
+                    </div>
+                    <p className="postdetail-closed-desc">
+                      สิ่งของนี้ฝากไว้ที่ {post.depositBuilding} หากเป็นของคุณ ติดต่อรับได้ที่จุดฝากโดยตรง
+                    </p>
+                  </div>
                 ) : (
                   <>
                     <button
