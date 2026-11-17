@@ -62,6 +62,7 @@ export default function ReviewRequestsPage() {
 
     // ซิงก์ข้อมูลทันทีเมื่อมีการส่งคำขอใหม่จากหน้า 6 หรือมีการอัปเดตจากหน้าอื่น
     const unsubscribe = claimService.subscribe((updatedClaims) => {
+      if (!isMounted || !Array.isArray(updatedClaims)) return;
       const forPost = updatedClaims.filter(c => String(c.post_id) === String(targetPostId) || String(c.postId) === String(targetPostId));
       if (forPost.length > 0) {
         setRequests(forPost);

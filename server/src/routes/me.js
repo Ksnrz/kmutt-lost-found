@@ -51,4 +51,36 @@ router.patch('/', async (req, res) => {
   res.json(rows[0]);
 });
 
+
+// ============================================================
+// GET /api/me/posts — ประกาศที่ฉันสร้าง พร้อมจำนวน PENDING claims
+// ============================================================
+router.get('/posts', async (req, res, next) => {
+  try {
+    const userId = req.user.user_id;
+    const { rows } = await pool.query(
+      `SELECT
+         p.post_id,
+         p.title,
+         p.post_type,
+         p.custody_type,
+         p.post_status,
+         p.created_at,
+         l.building_name,
+         COUNT(v.verify_id) FILTER (WHERE v.verify_status = 'PENDING') AS pending_count
+       FROM posts p
+       LEFT JOIN locations l ON p.location_id = l.location_id
+       LEFT JOIN verify_items v ON p.post_id = v.post_id
+       WHERE p.user_id = $1
+       GROUP BY p.post_id, l.building_name
+       ORDER BY p.created_at DESC`,
+      [userId]
+    );
+    res.json({ ok: true, posts: rows });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;
+
