@@ -713,7 +713,9 @@ function PostDetail() {
                         })
                       }
                     >
-                      นี่อาจเป็นของฉัน
+                      {post.typeEn === 'LOST'
+                        ? 'นี่อาจเป็นของคุณ'
+                        : 'นี่อาจเป็นของฉัน'}
                     </button>
 
                     <div className="custody-helper-text">

@@ -11,7 +11,6 @@ import './Editpost.css';
 
 const MAX_IMAGES = 5;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const PHONE_PATTERN = /^(0\d{8,9}|\+66\d{8,9})$/;
 const API_ORIGIN = 'http://localhost:3000';
 
 function Editpost() {
@@ -46,12 +45,14 @@ function Editpost() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const today = new Date();
+
   const todayString = [
     today.getFullYear(),
     String(today.getMonth() + 1).padStart(2, '0'),
     String(today.getDate()).padStart(2, '0'),
   ].join('-');
 
+  // โหลดข้อมูลโพสต์และสถานที่
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -91,7 +92,10 @@ function Editpost() {
 
   // สร้างและล้าง URL สำหรับตัวอย่างรูปใหม่
   useEffect(() => {
-    const urls = newImages.map((file) => URL.createObjectURL(file));
+    const urls = newImages.map((file) =>
+      URL.createObjectURL(file)
+    );
+
     setPreviewUrls(urls);
 
     return () => {
@@ -99,8 +103,12 @@ function Editpost() {
     };
   }, [newImages]);
 
-  const goBack = () => navigate(fromAccount ? '/account' : `/posts/${postId}`);
+  const goBack = () =>
+    navigate(
+      fromAccount ? '/account' : `/posts/${postId}`
+    );
 
+  // เลือกรูปภาพใหม่
   const handleImageChange = (e) => {
     const selectedFiles = Array.from(e.target.files || []);
     e.target.value = '';
@@ -143,10 +151,12 @@ function Editpost() {
     ]);
   };
 
+  // ลบรูปภาพเดิม
   const handleRemoveExistingImage = (image) => {
     setExistingImages((previous) =>
       previous.filter(
-        (item) => item.item_image_id !== image.item_image_id
+        (item) =>
+          item.item_image_id !== image.item_image_id
       )
     );
 
@@ -156,12 +166,14 @@ function Editpost() {
     ]);
   };
 
+  // ลบรูปภาพใหม่
   const handleRemoveNewImage = (index) => {
     setNewImages((previous) =>
       previous.filter((_, i) => i !== index)
     );
   };
 
+  // บันทึกการแก้ไขโพสต์
   const handleSave = async (e) => {
     e?.preventDefault();
     setError('');
@@ -182,19 +194,26 @@ function Editpost() {
       return;
     }
 
-    const normalizedPhone = contactText.replace(/[\s\-()]/g, '');
-
-    if (!PHONE_PATTERN.test(normalizedPhone)) {
-      setError('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง เช่น 0812345678');
-      return;
-    }
-
+    // ตรวจสอบวิธีเก็บรักษาสำหรับโพสต์ FOUND
     if (postType === 'FOUND' && !custodyType) {
       setError('กรุณาเลือกวิธีเก็บรักษาสิ่งของ');
       return;
     }
 
-    if (existingImages.length + newImages.length > MAX_IMAGES) {
+    // ตรวจสอบสถานที่ฝากสำหรับโพสต์ FOUND แบบ DEPOSITED
+    if (
+      postType === 'FOUND' &&
+      custodyType === 'DEPOSITED' &&
+      !depositLocation
+    ) {
+      setError('กรุณาเลือกสถานที่ฝากสิ่งของ');
+      return;
+    }
+
+    if (
+      existingImages.length + newImages.length >
+      MAX_IMAGES
+    ) {
       setError('สามารถมีรูปภาพได้ไม่เกิน 5 รูป');
       return;
     }
@@ -205,15 +224,21 @@ function Editpost() {
       const formData = new FormData();
 
       formData.append('post_type', postType);
+
       formData.append(
         'custody_type',
         postType === 'FOUND' ? custodyType : ''
       );
+
       formData.append('title', title.trim());
       formData.append('location_id', locationId);
       formData.append('event_date', eventDate);
       formData.append('description', description.trim());
+
+      // รับข้อความช่องทางติดต่อได้ทุกประเภท
+      // ไม่จำกัดเฉพาะเบอร์โทรศัพท์
       formData.append('contact_text', contactText.trim());
+
       formData.append(
         'delete_image_ids',
         JSON.stringify(deletedImageIds)
@@ -222,8 +247,23 @@ function Editpost() {
       newImages.forEach((file) => {
         formData.append('images', file);
       });
-      formData.set('deposit_location_id', depositLocation || '');
-      formData.set('deposit_detail', depositDetail || '');
+
+      formData.set(
+        'deposit_location_id',
+        postType === 'FOUND' &&
+        custodyType === 'DEPOSITED'
+          ? depositLocation
+          : ''
+      );
+
+      formData.set(
+        'deposit_detail',
+        postType === 'FOUND' &&
+        custodyType === 'DEPOSITED'
+          ? depositDetail
+          : ''
+      );
+
       await apiRequest(`/posts/${postId}`, {
         method: 'PATCH',
         body: formData,
@@ -237,21 +277,26 @@ function Editpost() {
 
         navigate('/account', {
           state: {
-            successMessage: 'บันทึกการแก้ไขโพสต์เรียบร้อยแล้ว',
+            successMessage:
+              'บันทึกการแก้ไขโพสต์เรียบร้อยแล้ว',
+
             updatedPost: {
               id: postId,
               post_id: postId,
               title,
               status: postStatus,
               post_status: postStatus,
+
               post_type:
                 postType === 'LOST'
                   ? 'ตามหาของหาย (LOST)'
                   : 'ประกาศเจอของ (FOUND)',
+
               custody_type:
                 custodyType === 'SELF_KEPT'
                   ? 'ผู้พบเก็บรักษาเอง'
                   : 'ฝากจุดประชาสัมพันธ์',
+
               building_name: buildingName,
               location: buildingName,
               date: eventDate,
@@ -270,7 +315,7 @@ function Editpost() {
     }
   };
 
-  // ยืนยันการยกเลิกประกาศด้วย Modal แทน window.confirm()
+  // ยืนยันการยกเลิกประกาศ
   const handleDelete = async () => {
     try {
       setSaving(true);
@@ -283,7 +328,9 @@ function Editpost() {
       navigate(fromAccount ? '/account' : '/posts', {
         state: {
           successMessage: 'ยกเลิกประกาศเรียบร้อยแล้ว',
-          ...(fromAccount && { deletedPostId: postId }),
+          ...(fromAccount && {
+            deletedPostId: postId,
+          }),
         },
       });
     } catch (err) {
@@ -294,6 +341,7 @@ function Editpost() {
     }
   };
 
+  // หน้ากำลังโหลด
   if (loading) {
     return (
       <div className="editpost-page">
@@ -304,6 +352,7 @@ function Editpost() {
     );
   }
 
+  // กรณีโหลดข้อมูลไม่สำเร็จ
   if (loadError) {
     return (
       <div className="editpost-page">
@@ -315,7 +364,9 @@ function Editpost() {
             title="แก้ไขโพสต์"
             subtitle="ปรับปรุงรายละเอียดข้อมูลสิ่งของหรือสถานะการเก็บรักษา"
           />
+
           <p style={{ color: 'red' }}>{loadError}</p>
+
           <Button type="button" onClick={goBack}>
             กลับ
           </Button>
@@ -327,6 +378,7 @@ function Editpost() {
   return (
     <div className="editpost-page">
       <div className="editpost-container">
+
         <PageHeader
           backText="กลับไปรายการโพสต์"
           onBack={goBack}
@@ -336,21 +388,29 @@ function Editpost() {
         />
 
         <div className="form-layout">
+
           {/* ฝั่งซ้าย: ข้อมูลสิ่งของ */}
           <div className="form-left">
             <Card>
+
               <h2>ประเภท</h2>
+
               <div className="segmented-toggle">
                 <button
                   type="button"
-                  className={`toggle-option ${postType === 'LOST' ? 'is-active' : ''}`}
+                  className={`toggle-option ${
+                    postType === 'LOST' ? 'is-active' : ''
+                  }`}
                   onClick={() => setPostType('LOST')}
                 >
                   ของหาย
                 </button>
+
                 <button
                   type="button"
-                  className={`toggle-option ${postType === 'FOUND' ? 'is-active' : ''}`}
+                  className={`toggle-option ${
+                    postType === 'FOUND' ? 'is-active' : ''
+                  }`}
                   onClick={() => setPostType('FOUND')}
                 >
                   พบของ
@@ -358,9 +418,11 @@ function Editpost() {
               </div>
 
               <h2>ข้อมูลสิ่งของ</h2>
+
               <h3>
                 ชื่อสิ่งของ <span className="req-star">*</span>
               </h3>
+
               <Input
                 type="text"
                 placeholder="เช่น กระเป๋าสตางค์สีดำ"
@@ -369,6 +431,7 @@ function Editpost() {
               />
 
               <div className="form-row">
+
                 <div>
                   <h3>
                     สถานที่พบ <span className="req-star">*</span>
@@ -383,27 +446,36 @@ function Editpost() {
                   <h3>
                     {postType === 'LOST' ? 'วันที่คาดว่าทำหาย' : 'วันที่พบ'} <span className="req-star">*</span>
                   </h3>
+
                   <Input
                     type="date"
                     value={eventDate}
                     max={todayString}
-                    onChange={(e) => setEventDate(e.target.value)}
+                    onChange={(e) =>
+                      setEventDate(e.target.value)
+                    }
                   />
                 </div>
+
               </div>
 
               <h3>
-                รายละเอียดสิ่งของ <span className="req-star">*</span>
+                รายละเอียดสิ่งของ{' '}
+                <span className="req-star">*</span>
               </h3>
+
               <textarea
                 placeholder="สี รูปทรง ตำหนิ หรือรายละเอียดที่ช่วยระบุสิ่งของ..."
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) =>
+                  setDescription(e.target.value)
+                }
               />
 
               <hr className="editpost-divider" />
 
               <h2>รูปภาพสิ่งของ</h2>
+
               <p>
                 เพิ่มรูปหรือลบรูปเดิมได้ รวมทั้งหมดไม่เกิน 5 รูป
               </p>
@@ -411,11 +483,14 @@ function Editpost() {
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
+                  gridTemplateColumns:
+                    'repeat(auto-fill, minmax(110px, 1fr))',
                   gap: '12px',
                   marginBottom: '16px',
                 }}
               >
+
+                {/* รูปภาพเดิม */}
                 {existingImages.map((image) => (
                   <div
                     key={image.item_image_id}
@@ -435,14 +510,18 @@ function Editpost() {
                         border: '1px solid #ddd',
                       }}
                     />
+
                     <button
                       type="button"
-                      onClick={() => handleRemoveExistingImage(image)}
+                      onClick={() =>
+                        handleRemoveExistingImage(image)
+                      }
                       aria-label="ลบรูปเดิม"
                       style={removeImageButtonStyle}
                     >
                       ×
                     </button>
+
                     <span
                       style={{
                         position: 'absolute',
@@ -460,6 +539,7 @@ function Editpost() {
                   </div>
                 ))}
 
+                {/* รูปภาพใหม่ */}
                 {previewUrls.map((url, index) => (
                   <div
                     key={`${url}-${index}`}
@@ -479,14 +559,18 @@ function Editpost() {
                         border: '1px solid #ddd',
                       }}
                     />
+
                     <button
                       type="button"
-                      onClick={() => handleRemoveNewImage(index)}
+                      onClick={() =>
+                        handleRemoveNewImage(index)
+                      }
                       aria-label="ลบรูปใหม่"
                       style={removeImageButtonStyle}
                     >
                       ×
                     </button>
+
                     <span
                       style={{
                         position: 'absolute',
@@ -503,9 +587,12 @@ function Editpost() {
                     </span>
                   </div>
                 ))}
+
               </div>
 
-              {existingImages.length + newImages.length < MAX_IMAGES && (
+              {/* ปุ่มเพิ่มรูปภาพ */}
+              {existingImages.length + newImages.length <
+                MAX_IMAGES && (
                 <label
                   style={{
                     display: 'inline-block',
@@ -516,6 +603,7 @@ function Editpost() {
                   }}
                 >
                   + เพิ่มรูปภาพ
+
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp,image/gif"
@@ -529,64 +617,104 @@ function Editpost() {
               <p style={{ fontSize: '13px', color: '#666' }}>
                 รองรับ JPG, PNG, WEBP และ GIF ขนาดไม่เกิน 5 MB ต่อรูป
               </p>
+
             </Card>
           </div>
 
-          {/* ฝั่งขวา: ข้อมูลการเก็บรักษาและปุ่มดำเนินการ */}
+          {/* ฝั่งขวา: ข้อมูลการเก็บรักษา */}
           <div className="form-right">
             <Card>
-              <h2>{postType === 'LOST' ? 'ข้อมูลผู้ตามหา' : 'ข้อมูลการเก็บรักษา'}</h2>
+
+              <h2>
+                {postType === 'LOST'
+                  ? 'ข้อมูลผู้ตามหา'
+                  : 'ข้อมูลการเก็บรักษา'}
+              </h2>
+
+              {/* แสดงเฉพาะโพสต์ FOUND */}
               {postType === 'FOUND' && (
                 <>
                   <h3>
-                    สถานะสิ่งของ <span className="req-star">*</span>
+                    สถานะสิ่งของ{' '}
+                    <span className="req-star">*</span>
                   </h3>
-                <div className="segmented-toggle">
-                  <button
-                    type="button"
-                    className={`toggle-option ${custodyType === 'DEPOSITED' ? 'is-active' : ''}`}
-                    onClick={() => setCustodyType('DEPOSITED')}
-                  >
-                    ฝากไว้
-                  </button>
-                  <button
-                    type="button"
-                    className={`toggle-option ${custodyType === 'SELF_KEPT' ? 'is-active' : ''}`}
-                    onClick={() => setCustodyType('SELF_KEPT')}
-                  >
-                    เก็บไว้เอง
-                  </button>
-                </div>
+
+                  <div className="segmented-toggle">
+
+                    <button
+                      type="button"
+                      className={`toggle-option ${
+                        custodyType === 'DEPOSITED'
+                          ? 'is-active'
+                          : ''
+                      }`}
+                      onClick={() =>
+                        setCustodyType('DEPOSITED')
+                      }
+                    >
+                      ฝากไว้
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`toggle-option ${
+                        custodyType === 'SELF_KEPT'
+                          ? 'is-active'
+                          : ''
+                      }`}
+                      onClick={() =>
+                        setCustodyType('SELF_KEPT')
+                      }
+                    >
+                      เก็บไว้เอง
+                    </button>
+
+                  </div>
+
                   <hr className="editpost-divider" />
                 </>
               )}
 
+              {/* ช่องทางติดต่อ */}
               <h3>
-                ช่องทางติดต่อ <span className="req-star">*</span>
+                ช่องทางติดต่อ{' '}
+                <span className="req-star">*</span>
               </h3>
+
               <Input
                 type="text"
-                placeholder="เช่น IG, Line ID หรือเบอร์โทร"
+                placeholder="เช่น Instagram, Line ID, Facebook หรือเบอร์โทร"
                 value={contactText}
-                onChange={(e) => setContactText(e.target.value)}
+                onChange={(e) =>
+                  setContactText(e.target.value)
+                }
               />
 
-              {postType === 'FOUND' && custodyType === 'DEPOSITED' && (
-                <>
-                  <h3>
-                    สถานที่ฝาก <span className="req-star">*</span>
-                  </h3>
-                  <BuildingPicker
-                    value={codeOf(depositLocation)}
-                    onChange={(code) => setDepositLocation(idOf(code))}
-                  />
+              {/* สถานที่ฝาก เฉพาะ FOUND และ DEPOSITED */}
+              {postType === 'FOUND' &&
+                custodyType === 'DEPOSITED' && (
+                  <>
+                    <h3>
+                      สถานที่ฝาก{' '}
+                      <span className="req-star">*</span>
+                    </h3>
+
+                    <BuildingPicker
+                      value={codeOf(depositLocation)}
+                      onChange={(code) =>
+                        setDepositLocation(idOf(code))
+                      }
+                    />
 
                     <h3>รายละเอียดที่รับฝาก</h3>
+
                     <Input
                       type="text"
                       placeholder="เช่น ฝากแม่บ้านชั้น 1 ห้อง S4-101 เปิด 8:00–16:00"
                       value={depositDetail}
-                      onChange={(e) => setDepositDetail(e.target.value)}
+                      onChange={(e) =>
+                        setDepositDetail(e.target.value)
+                      }
                     />
                   </>
                 )}
@@ -596,13 +724,19 @@ function Editpost() {
                 <p>ตรวจสอบข้อมูลก่อนเผยแพร่</p>
               </div>
 
+              {/* แจ้งเตือนข้อผิดพลาด */}
               {error && (
-                <p style={{ color: 'red' }} role="alert">
+                <p
+                  style={{ color: 'red' }}
+                  role="alert"
+                >
                   {error}
                 </p>
               )}
 
+              {/* ปุ่มดำเนินการ */}
               <div className="flex-button2">
+
                 <Button
                   type="button"
                   className="btn-cancel"
@@ -615,11 +749,14 @@ function Editpost() {
                 <Button
                   type="button"
                   className="btn-delete"
-                  onClick={() => setShowDeleteConfirm(true)}
+                  onClick={() =>
+                    setShowDeleteConfirm(true)
+                  }
                   disabled={saving}
                 >
                   ยกเลิกประกาศ
                 </Button>
+
               </div>
 
               <div className="submit-button-wrap">
@@ -632,15 +769,23 @@ function Editpost() {
                   {saving ? 'กำลังบันทึก...' : 'บันทึก'}
                 </Button>
               </div>
+
             </Card>
           </div>
+
         </div>
       </div>
 
+      {/* Modal ยืนยันการยกเลิกประกาศ */}
       {showDeleteConfirm && (
         <div style={modalOverlayStyle}>
-          <div style={modalStyle} role="dialog" aria-modal="true">
+          <div
+            style={modalStyle}
+            role="dialog"
+            aria-modal="true"
+          >
             <h2>ยืนยันการยกเลิกประกาศ</h2>
+
             <p>
               คุณต้องการยกเลิกประกาศนี้ใช่หรือไม่?
               การกระทำนี้ไม่สามารถย้อนกลับได้
@@ -656,23 +801,30 @@ function Editpost() {
             >
               <Button
                 type="button"
-                onClick={() => setShowDeleteConfirm(false)}
+                onClick={() =>
+                  setShowDeleteConfirm(false)
+                }
                 disabled={saving}
               >
                 กลับ
               </Button>
+
               <Button
                 type="button"
                 className="btn-delete"
                 onClick={handleDelete}
                 disabled={saving}
               >
-                {saving ? 'กำลังดำเนินการ...' : 'ยืนยันยกเลิกประกาศ'}
+                {saving
+                  ? 'กำลังดำเนินการ...'
+                  : 'ยืนยันยกเลิกประกาศ'}
               </Button>
             </div>
+
           </div>
         </div>
       )}
+
     </div>
   );
 }
