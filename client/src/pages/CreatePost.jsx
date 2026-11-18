@@ -15,9 +15,13 @@ import './CreatePost.css';
 function CreatePost() {
   const navigate = useNavigate();
 
+  // ==============================
   // State
+  // ==============================
+
   const [postType, setPostType] = useState('LOST');
   const [custodyType, setCustodyType] = useState('DEPOSITED');
+
   const [title, setTitle] = useState('');
   const [locationId, setLocationId] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -28,18 +32,42 @@ function CreatePost() {
   const [images, setImages] = useState([]);
 
   const [locations, setLocations] = useState([]);
-  const codeOf = (id) => locations.find((location) => String(location.location_id) === String(id))?.building_name;
-  const idOf = (code) => String(locations.find((location) => location.building_name === code)?.location_id ?? '');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // วันที่ปัจจุบันในรูปแบบ YYYY-MM-DD (ใช้เวลาท้องถิ่น)
+  // ==============================
+  // Location helpers
+  // ==============================
+
+  const codeOf = (id) =>
+    locations.find(
+      (location) =>
+        String(location.location_id) === String(id)
+    )?.building_name;
+
+  const idOf = (code) =>
+    String(
+      locations.find(
+        (location) => location.building_name === code
+      )?.location_id ?? ''
+    );
+
+  // ==============================
+  // Current date
+  // ==============================
+
   const now = new Date();
+
   const today = [
     now.getFullYear(),
     String(now.getMonth() + 1).padStart(2, '0'),
     String(now.getDate()).padStart(2, '0'),
   ].join('-');
+
+  // ==============================
+  // Fetch locations
+  // ==============================
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -47,7 +75,9 @@ function CreatePost() {
         const data = await apiRequest('/locations');
         setLocations(data.locations || []);
       } catch (err) {
-        setError(err.message || 'ไม่สามารถโหลดข้อมูลสถานที่ได้');
+        setError(
+          err.message || 'ไม่สามารถโหลดข้อมูลสถานที่ได้'
+        );
       }
     };
 
@@ -57,7 +87,9 @@ function CreatePost() {
   // สร้าง Preview รูปภาพ และคืนหน่วยความจำเมื่อเปลี่ยนรูปหรือออกจากหน้า
   // เลือกรูปภาพ
   const handleImageChange = (e) => {
-    const selectedImages = Array.from(e.target.files || []);
+    const selectedImages = Array.from(
+      e.target.files || []
+    );
 
     if (selectedImages.length > 5) {
       setError('สามารถเลือกรูปภาพได้สูงสุด 5 รูป');
@@ -79,22 +111,42 @@ function CreatePost() {
     setImages(selectedImages);
   };
 
-  // ลบรูปภาพที่เลือก
+  // ==============================
+  // Remove image
+  // ==============================
+
   const handleRemoveImage = (index) => {
     setImages((currentImages) =>
       currentImages.filter((_, i) => i !== index)
     );
+
     setError('');
   };
 
-  // ตรวจสอบข้อมูลก่อนเผยแพร่
+  // ==============================
+  // Validate form
+  // ==============================
+
   const validateForm = () => {
     if (!title.trim()) {
       return 'กรุณากรอกชื่อสิ่งของ';
     }
 
+    if (title.trim().length > 200) {
+      return 'ชื่อสิ่งของต้องไม่เกิน 200 ตัวอักษร';
+    }
+
     if (!locationId) {
       return 'กรุณาเลือกสถานที่พบ';
+    }
+
+    const selectedLocation = locations.find(
+      (location) =>
+        String(location.location_id) === String(locationId)
+    );
+
+    if (!selectedLocation) {
+      return 'ไม่พบข้อมูลสถานที่ที่เลือก กรุณาเลือกใหม่';
     }
 
     if (!eventDate) {
@@ -105,7 +157,9 @@ function CreatePost() {
       return 'วันที่พบต้องไม่เป็นวันในอนาคต';
     }
 
-    const selectedDate = new Date(`${eventDate}T00:00:00`);
+    const selectedDate = new Date(
+      `${eventDate}T00:00:00`
+    );
 
     if (Number.isNaN(selectedDate.getTime())) {
       return 'กรุณาระบุวันที่ให้ถูกต้อง';
@@ -116,30 +170,56 @@ function CreatePost() {
     }
 
     if (!contactText.trim()) {
-      return 'กรุณากรอกเบอร์โทรศัพท์สำหรับติดต่อ';
+      return 'กรุณากรอกช่องทางติดต่อ';
     }
 
-    // อนุญาตให้กรอกเบอร์โทรไทยโดยมีช่องว่าง ขีด หรือวงเล็บได้
-    const normalizedPhone = contactText.replace(/[\s\-()]/g, '');
-    const phonePattern = /^(0\d{8,9}|\+66\d{8,9})$/;
+    if (contactText.trim().length > 200) {
+      return 'ช่องทางติดต่อต้องไม่เกิน 200 ตัวอักษร';
+    }
 
-    if (!phonePattern.test(normalizedPhone)) {
-      return 'กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง เช่น 0812345678';
+    // FOUND + DEPOSITED ต้องมีสถานที่ฝาก
+    if (
+      postType === 'FOUND' &&
+      custodyType === 'DEPOSITED'
+    ) {
+      if (!depositLocation) {
+        return 'กรุณาเลือกสถานที่ฝาก';
+      }
+
+      const selectedDepositLocation = locations.find(
+        (location) =>
+          String(location.location_id) ===
+          String(depositLocation)
+      );
+
+      if (!selectedDepositLocation) {
+        return 'ไม่พบสถานที่ฝาก กรุณาเลือกใหม่';
+      }
     }
 
     if (images.length > 5) {
       return 'สามารถเลือกรูปภาพได้สูงสุด 5 รูป';
     }
 
-    if (images.some((image) => !image.type.startsWith('image/'))) {
+    if (
+      images.some(
+        (image) => !image.type.startsWith('image/')
+      )
+    ) {
       return 'กรุณาเลือกเฉพาะไฟล์รูปภาพเท่านั้น';
     }
 
     return '';
   };
 
+  // ==============================
+  // Submit post
+  // ==============================
+
   const handleSubmit = async (e) => {
     e?.preventDefault();
+
+    if (loading) return;
 
     const validationError = validateForm();
 
@@ -154,46 +234,85 @@ function CreatePost() {
     try {
       const formData = new FormData();
 
+      // Post type
       formData.append('post_type', postType);
 
+      // Custody information
       if (postType === 'FOUND') {
         formData.append('custody_type', custodyType);
+
         if (custodyType === 'DEPOSITED') {
-          formData.append('deposit_location_id', depositLocation);
-          formData.append('deposit_detail', depositDetail);
+          formData.append(
+            'deposit_location_id',
+            depositLocation
+          );
+
+          formData.append(
+            'deposit_detail',
+            depositDetail.trim()
+          );
         }
       }
 
+      // Post information
       formData.append('title', title.trim());
-      formData.append('location_id', locationId);
-      formData.append('event_date', eventDate);
-      formData.append('description', description.trim());
-      formData.append('contact_text', contactText.trim());
 
+      formData.append('location_id', locationId);
+
+      formData.append('event_date', eventDate);
+
+      formData.append(
+        'description',
+        description.trim()
+      );
+
+      // Accept any contact text:
+      // Instagram, Line ID, Facebook, phone number, etc.
+      formData.append(
+        'contact_text',
+        contactText.trim()
+      );
+
+      // Images
       images.forEach((image) => {
         formData.append('images', image);
       });
 
+      // Send API request
       await apiRequest('/posts', {
         method: 'POST',
         body: formData,
       });
 
+      // Success
       navigate('/posts', {
         state: {
-          successMessage: 'เผยแพร่ประกาศใหม่สำเร็จเรียบร้อยแล้ว!',
+          successMessage:
+            'เผยแพร่ประกาศใหม่สำเร็จเรียบร้อยแล้ว!',
         },
       });
+
     } catch (err) {
-      setError(err.message || 'เกิดข้อผิดพลาดในการเผยแพร่โพสต์');
+      console.error('Create post error:', err);
+
+      setError(
+        err.message ||
+        'เกิดข้อผิดพลาดในการเผยแพร่โพสต์'
+      );
+
     } finally {
       setLoading(false);
     }
   };
 
+  // ==============================
+  // Render
+  // ==============================
+
   return (
     <div className="createpost-page">
       <div className="createpost-container">
+
         <PageHeader
           backText="กลับไปรายการโพสต์"
           onBack={() => navigate('/posts')}
@@ -203,27 +322,42 @@ function CreatePost() {
         />
 
         <div className="form-layout">
-          {/* ฝั่งซ้าย: ข้อมูลสิ่งของ */}
+
+          {/* LEFT: Item information */}
+
           <div className="form-left">
             <Card>
+
               <h2>ประเภท</h2>
 
               <div className="segmented-toggle">
+
                 <button
                   type="button"
-                  className={`toggle-option ${postType === 'LOST' ? 'is-active' : ''}`}
-                  onClick={() => setPostType('LOST')}
+                  className={`toggle-option ${
+                    postType === 'LOST' ? 'is-active' : ''
+                  }`}
+                  onClick={() => {
+                    setPostType('LOST');
+                    setError('');
+                  }}
                 >
                   ของหาย
                 </button>
 
                 <button
                   type="button"
-                  className={`toggle-option ${postType === 'FOUND' ? 'is-active' : ''}`}
-                  onClick={() => setPostType('FOUND')}
+                  className={`toggle-option ${
+                    postType === 'FOUND' ? 'is-active' : ''
+                  }`}
+                  onClick={() => {
+                    setPostType('FOUND');
+                    setError('');
+                  }}
                 >
                   พบของ
                 </button>
+
               </div>
 
               <h2>ข้อมูลสิ่งของ</h2>
@@ -244,30 +378,43 @@ function CreatePost() {
               </h3>
 
               <BuildingPicker
-                    value={codeOf(locationId)}
-                    onChange={(code) => setLocationId(idOf(code))}
-                  />
+                value={codeOf(locationId)}
+                onChange={(code) => {
+                  setLocationId(idOf(code));
+                  setError('');
+                }}
+              />
 
               <h3>
-                {postType === 'LOST' ? 'วันที่คาดว่าทำหาย' : 'วันที่พบ'} <span className="req-star">*</span>
+                {postType === 'LOST'
+                  ? 'วันที่คาดว่าทำหาย'
+                  : 'วันที่พบ'}
+                {' '}
+                <span className="req-star">*</span>
               </h3>
 
               <Input
                 type="date"
                 max={today}
                 value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
+                onChange={(e) =>
+                  setEventDate(e.target.value)
+                }
               />
 
               <h3>
-                รายละเอียดสิ่งของ <span className="req-star">*</span>
+                รายละเอียดสิ่งของ
+                {' '}
+                <span className="req-star">*</span>
               </h3>
 
               <Input
                 type="text"
                 placeholder="สี รูปทรง ตำหนิ หรือรายละเอียดที่ช่วยระบุสิ่งของ..."
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) =>
+                  setDescription(e.target.value)
+                }
               />
 
               <h3>รูปภาพสิ่งของ</h3>
@@ -286,7 +433,10 @@ function CreatePost() {
               {/* Image Preview */}
               {images.length > 0 && (
                 <div style={{ marginTop: '16px' }}>
-                  <h3>ตัวอย่างรูปภาพ ({images.length}/5)</h3>
+
+                  <h3>
+                    ตัวอย่างรูปภาพ ({images.length}/5)
+                  </h3>
 
                   <div
                     style={{
@@ -318,7 +468,9 @@ function CreatePost() {
 
                         <button
                           type="button"
-                          onClick={() => handleRemoveImage(index)}
+                          onClick={() =>
+                            handleRemoveImage(index)
+                          }
                           aria-label={`ลบรูปภาพที่ ${index + 1}`}
                           style={{
                             position: 'absolute',
@@ -338,82 +490,142 @@ function CreatePost() {
                         >
                           ×
                         </button>
+
                       </div>
                     ))}
+
                   </div>
                 </div>
               )}
+
             </Card>
           </div>
 
-          {/* ฝั่งขวา: ข้อมูลการเก็บรักษาและปุ่มส่ง */}
+          {/* RIGHT: Contact and custody information */}
+
           <div className="form-right">
             <Card>
               <h2>{postType === 'LOST' ? 'ข้อมูลผู้ตามหา' : 'ข้อมูลการเก็บรักษา'}</h2>
 
               {postType === 'FOUND' && (
                 <>
+
                   <h3>
-                    สถานะสิ่งของ <span className="req-star">*</span>
+                    สถานะสิ่งของ
+                    {' '}
+                    <span className="req-star">*</span>
                   </h3>
 
                   <div className="segmented-toggle">
+
                     <button
                       type="button"
-                      className={`toggle-option ${custodyType === 'DEPOSITED' ? 'is-active' : ''}`}
-                      onClick={() => setCustodyType('DEPOSITED')}
+                      className={`toggle-option ${
+                        custodyType === 'DEPOSITED'
+                          ? 'is-active'
+                          : ''
+                      }`}
+                      onClick={() => {
+                        setCustodyType('DEPOSITED');
+                        setError('');
+                      }}
                     >
                       ฝากไว้
                     </button>
 
                     <button
                       type="button"
-                      className={`toggle-option ${custodyType === 'SELF_KEPT' ? 'is-active' : ''}`}
-                      onClick={() => setCustodyType('SELF_KEPT')}
+                      className={`toggle-option ${
+                        custodyType === 'SELF_KEPT'
+                          ? 'is-active'
+                          : ''
+                      }`}
+                      onClick={() => {
+                        setCustodyType('SELF_KEPT');
+                        setError('');
+                      }}
                     >
                       เก็บไว้เอง
                     </button>
+
                   </div>
 
                   <Line />
+
                 </>
               )}
 
+              {/* Contact information */}
+
               <h3>
-                ช่องทางติดต่อ <span className="req-star">*</span>
+                ช่องทางติดต่อ
+                {' '}
+                <span className="req-star">*</span>
               </h3>
 
               <Input
                 type="text"
-                placeholder="เช่น IG, Line ID หรือเบอร์โทร"
+                placeholder="เช่น @instagram, Line ID, Facebook หรือเบอร์โทร"
                 value={contactText}
-                onChange={(e) => setContactText(e.target.value)}
+                onChange={(e) =>
+                  setContactText(e.target.value)
+                }
               />
 
-              {postType === 'FOUND' && custodyType === 'DEPOSITED' && (
-                <>
-                  <h3>
-                    สถานที่ฝาก <span className="req-star">*</span>
-                  </h3>
-                  <BuildingPicker
-                    value={codeOf(depositLocation)}
-                    onChange={(code) => setDepositLocation(idOf(code))}
-                  />
+              <p
+                style={{
+                  fontSize: '13px',
+                  color: '#888',
+                  marginTop: '8px',
+                  lineHeight: '1.6',
+                }}
+              >
+                สามารถกรอกช่องทางติดต่อได้อย่างอิสระ
+                เช่น Instagram, Line ID, Facebook หรือเบอร์โทรศัพท์
+              </p>
 
-                  <h3>รายละเอียดที่รับฝาก</h3>
-                  <Input
-                    type="text"
-                    placeholder="เช่น ฝากแม่บ้านชั้น 1 ห้อง S4-101 เปิด 8:00–16:00"
-                    value={depositDetail}
-                    onChange={(e) => setDepositDetail(e.target.value)}
-                  />
-                </>
-              )}
+              {/* Deposit information */}
+
+              {postType === 'FOUND' &&
+                custodyType === 'DEPOSITED' && (
+                  <>
+
+                    <h3>
+                      สถานที่ฝาก
+                      {' '}
+                      <span className="req-star">*</span>
+                    </h3>
+
+                    <BuildingPicker
+                      value={codeOf(depositLocation)}
+                      onChange={(code) => {
+                        setDepositLocation(idOf(code));
+                        setError('');
+                      }}
+                    />
+
+                    <h3>รายละเอียดที่รับฝาก</h3>
+
+                    <Input
+                      type="text"
+                      placeholder="เช่น ฝากแม่บ้านชั้น 1 ห้อง S4-101 เปิด 8:00–16:00"
+                      value={depositDetail}
+                      onChange={(e) =>
+                        setDepositDetail(e.target.value)
+                      }
+                    />
+
+                  </>
+                )}
+
+              {/* Description */}
 
               <div className="form-description">
                 <p>ข้อมูลติดต่อจะแสดงในหน้าโพสต์</p>
                 <p>ตรวจสอบข้อมูลก่อนเผยแพร่</p>
               </div>
+
+              {/* Error message */}
 
               {error && (
                 <p
@@ -430,11 +642,15 @@ function CreatePost() {
                 </p>
               )}
 
+              {/* Buttons */}
+
               <div className="flex-button2">
+
                 <Button
                   type="button"
                   className="btn-cancel"
                   onClick={() => navigate('/posts')}
+                  disabled={loading}
                 >
                   ยกเลิก
                 </Button>
@@ -445,11 +661,16 @@ function CreatePost() {
                   onClick={handleSubmit}
                   disabled={loading}
                 >
-                  {loading ? 'กำลังเผยแพร่...' : 'เผยแพร่โพสต์'}
+                  {loading
+                    ? 'กำลังเผยแพร่...'
+                    : 'เผยแพร่โพสต์'}
                 </Button>
+
               </div>
+
             </Card>
           </div>
+
         </div>
       </div>
     </div>
