@@ -137,8 +137,9 @@ function PostDetail() {
 
           navigate('/account', {
             state: {
-              successMessage:
-                'ยืนยันได้รับของเรียบร้อยแล้ว การส่งมอบสำเร็จสมบูรณ์!',
+              successMessage: result?.postClosed
+                ? 'ยืนยันได้รับของเรียบร้อยแล้ว การส่งมอบสำเร็จสมบูรณ์!'
+                : 'ยืนยันได้รับของแล้ว กำลังรอผู้พบยืนยันการส่งมอบ',
               confirmedClaimId: claimId,
               closedPostId: result?.postClosed
                 ? targetPostId
@@ -225,6 +226,8 @@ function PostDetail() {
     openHours: apiPost.open_hours || '-',
 
     contact: apiPost.contact_text || '-',
+    depositBuilding: apiPost.deposit_building_name,
+    depositDetail: apiPost.deposit_detail,
     imageUrl: images[0] ? imageUrl(images[0]) : null,
   };
 
@@ -260,7 +263,14 @@ function PostDetail() {
             </h1>
 
             <div className="postdetail-badge-wrap">
-              <StatusBadge status={post.status} />
+              {isDeposited ? (
+                <StatusBadge
+                  status="closed"
+                  customText={`ฝากไว้แล้ว • ติดต่อรับที่ ${post.depositBuilding}`}
+                />
+              ) : (
+                <StatusBadge status={post.status} />
+              )}
             </div>
           </div>
 
@@ -339,6 +349,28 @@ function PostDetail() {
                     {post.custodyType}
                   </span>
                 </div>
+
+                {isDeposited && (
+                  <>
+                    <div className="custody-info-row">
+                      <span className="custody-label">สถานที่ฝาก:</span>
+                      <span className="custody-value">
+                        {post.depositBuilding}
+                      </span>
+                    </div>
+
+                    {post.depositDetail && (
+                      <div className="custody-info-row">
+                        <span className="custody-label">
+                          รายละเอียดที่รับฝาก:
+                        </span>
+                        <span className="custody-value">
+                          {post.depositDetail}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               {isDeposited && (
@@ -669,7 +701,16 @@ function PostDetail() {
                       ขอขอบคุณทุกท่านที่ช่วยเหลือครับ
                     </p>
                   </div>
-
+                ) : isDeposited ? (
+                  <div className="postdetail-closed-box">
+                    <div className="postdetail-closed-badge">
+                      <Lock size={15} />
+                      <span>ปิดรับคำขอ · ฝากไว้แล้ว</span>
+                    </div>
+                    <p className="postdetail-closed-desc">
+                      สิ่งของนี้ฝากไว้ที่ {post.depositBuilding} หากเป็นของคุณ ติดต่อรับได้ที่จุดฝากโดยตรง
+                    </p>
+                  </div>
                 ) : (
                   <>
                     <button
@@ -681,7 +722,9 @@ function PostDetail() {
                         })
                       }
                     >
-                      นี่อาจเป็นของฉัน
+                      {post.typeEn === 'LOST'
+                        ? 'นี่อาจเป็นของคุณ'
+                        : 'นี่อาจเป็นของฉัน'}
                     </button>
 
                     <div className="custody-helper-text">
