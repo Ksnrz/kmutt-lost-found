@@ -155,7 +155,6 @@ export default function Profile() {
         </section>
 
         <form className="profile-card" onSubmit={handleSubmit} noValidate>
-          <div className="profile-icon-badge" aria-hidden="true"><UserPen size={22} /></div>
           <div className="profile-icon-badge" aria-hidden="true">
             <UserPen size={22} />
           </div>

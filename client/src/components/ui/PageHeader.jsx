@@ -24,7 +24,7 @@ export default function PageHeader({
 }) {
   return (
     <header className={`page-header ${className}`}>
-      {backText && (
+      {backText && onBack && (
         <div className="page-header-back-row">
           <button type="button" className="page-header-back-btn" onClick={onBack}>
             <img src={arrowBackIcon} alt="" className="page-header-back-icon" aria-hidden="true" />

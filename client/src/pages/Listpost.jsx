@@ -168,8 +168,8 @@ function PostList() {
       <div className="listpost-container">
         <PageHeader
           className="listpost-page-header"
-          backText="กลับแผนที่"
-          onBack={() => navigate('/map')}
+          backText={buildingParam ? 'กลับแผนที่' : undefined}
+          onBack={buildingParam ? () => navigate('/map') : undefined}
           tag="CAMPUS POSTS"
           title={
             buildingParam
