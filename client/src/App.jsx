@@ -16,6 +16,11 @@ import { apiRequest } from './api';
 import useClaimNotifications from './services/useClaimNotifications';
 import './App.css';
 
+// ยังไม่ล็อกอิน → ไปหน้า login (เข้าได้แค่ login / register)
+function RequireAuth() {
+  return localStorage.getItem('token') ? <Outlet /> : <Navigate to="/login" replace />;
+}
+
 // หน้าที่มี Navbar ด้านบน (หน้า login / register ไม่มี)
 function WithNavbar() {
   const navigate = useNavigate();
@@ -78,18 +83,20 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route element={<WithNavbar />}>
-          <Route path="/map" element={<Map />} />
-          <Route path="/posts" element={<Listpost />} />
-          <Route path="/posts/new" element={<CreatePost />} />
-          <Route path="/posts/:postId" element={<PostDetail />} />
-          <Route path="/posts/:postId/edit" element={<Editpost />} />
-          <Route path="/listpost" element={<Navigate to="/posts" replace />} />
-          <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
-          <Route path="/requests/review" element={<ReceivedRequestsPage />} />
-          <Route path="/posts/:postId/review" element={<ReviewRequestsPage />} />
-          <Route path="/account" element={<AccountRedirect />} />
-          <Route path="/profile" element={<Profile />} />
+        <Route element={<RequireAuth />}>
+          <Route element={<WithNavbar />}>
+            <Route path="/map" element={<Map />} />
+            <Route path="/posts" element={<Listpost />} />
+            <Route path="/posts/new" element={<CreatePost />} />
+            <Route path="/posts/:postId" element={<PostDetail />} />
+            <Route path="/posts/:postId/edit" element={<Editpost />} />
+            <Route path="/listpost" element={<Navigate to="/posts" replace />} />
+            <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
+            <Route path="/requests/review" element={<ReceivedRequestsPage />} />
+            <Route path="/posts/:postId/review" element={<ReviewRequestsPage />} />
+            <Route path="/account" element={<AccountRedirect />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
         </Route>
 
         <Route path="/" element={<Navigate to="/login" replace />} />

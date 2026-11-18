@@ -69,6 +69,12 @@
   color: var(--color-orange, #FA4616);
 }
 
+.navbar-link:focus-visible {
+  outline: 2px solid var(--color-orange, #FA4616);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
 /* เมนูที่กำลังเปิดอยู่ (Active เป็นสีส้ม + มีเส้นใต้สีส้ม) */
 .navbar-link.is-active,
 .navbar-link.active {
@@ -327,9 +333,14 @@
   }
 
   .navbar-link {
-    padding: 10px 4px;
+    padding: 10px 2px;
     font-size: 14px;
     white-space: normal;
+  }
+
+  .navbar-link.is-active::after,
+  .navbar-link.active::after {
+    bottom: 0;
   }
 
   .navbar-btn-create span {

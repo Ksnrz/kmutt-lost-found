@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
-import { CheckCircle2, Info, Lock, X } from 'lucide-react';
+import { CheckCircle2, Info, Lock, UserCircle, UserPen, X } from 'lucide-react';
 import Button from '../components/ui/Button';
 import mascot from '../assets/login/login-mascot.png';
 import AccountPage from './requests/AccountPage';
@@ -140,6 +140,7 @@ export default function Profile() {
 
       <div className="profile-grid">
         <section className="profile-card">
+          <div className="profile-icon-badge" aria-hidden="true"><UserCircle size={22} /></div>
           <h2 className="profile-card-title">ข้อมูลบัญชี</h2>
           <dl className="profile-rows">
             <div className="profile-row">
@@ -154,6 +155,10 @@ export default function Profile() {
         </section>
 
         <form className="profile-card" onSubmit={handleSubmit} noValidate>
+          <div className="profile-icon-badge" aria-hidden="true"><UserPen size={22} /></div>
+          <div className="profile-icon-badge" aria-hidden="true">
+            <UserPen size={22} />
+          </div>
           <h2 className="profile-card-title">ข้อมูลส่วนตัว</h2>
           <div className="profile-fields">
             <div className="profile-field">
