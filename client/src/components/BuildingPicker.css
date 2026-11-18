@@ -230,13 +230,6 @@
   background-color: var(--color-gray-light, #f7f7f7);
 }
 
-.map-empty-buildings {
-  padding: 24px 12px;
-  text-align: center;
-  color: var(--color-gray, #7b8189);
-  font-size: 13px;
-}
-
 .map-location img {
   display: block;
   flex-shrink: 0;

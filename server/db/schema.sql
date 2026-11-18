@@ -2,7 +2,7 @@
 -- Run: psql -U postgres -d lostfound -f server/db/schema.sql
 -- Rerunning drops all data (dev only).
 
-DROP TABLE IF EXISTS verify_images, verify_items, item_images, posts, locations, users CASCADE;
+DROP TABLE IF EXISTS claim_notifications, verify_images, verify_items, item_images, posts, locations, users CASCADE;
 
 CREATE TABLE users (
   user_id       SERIAL PRIMARY KEY,
@@ -74,6 +74,18 @@ CREATE TABLE verify_items (
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (post_id, user_id)                              -- one request per person per post
 );
+
+CREATE TABLE claim_notifications (
+  notification_id SERIAL PRIMARY KEY,
+  verify_id INT NOT NULL REFERENCES verify_items(verify_id) ON DELETE CASCADE,
+  recipient_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  outcome VARCHAR(20) NOT NULL CHECK (outcome IN ('ACCEPTED', 'REJECTED', 'HANDOVER_CONFIRMED', 'HANDOVER_CANCELLED')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  read_at TIMESTAMPTZ
+);
+
+CREATE INDEX claim_notifications_recipient_created
+  ON claim_notifications (recipient_id, created_at DESC, notification_id DESC);
 
 CREATE TABLE verify_images (
   verify_image_id  SERIAL PRIMARY KEY,

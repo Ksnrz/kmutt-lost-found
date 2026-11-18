@@ -1,3 +1,4 @@
+import EmptyState from './ui/EmptyState';
 import { useId, useState } from 'react';
 import locationIcon from '../assets/map/location.svg';
 import chevronIcon from '../assets/map/chevron.svg';
@@ -143,7 +144,7 @@ export default function BuildingPicker({
           )}
 
           {zones.every((z) => z.buildings.length === 0) && (
-            <div className="map-empty-buildings">ไม่พบอาคารที่ตรงกับ "{searchQuery}"</div>
+            <EmptyState compact as="p" title={`ไม่พบอาคารที่ตรงกับ “${searchQuery}”`} />
           )}
         </div>
       </div>

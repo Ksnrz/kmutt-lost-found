@@ -9,7 +9,6 @@
 .listpost-page {
   min-height: calc(100vh - 72px);
   width: 100%;
-  background-color: var(--color-bg-page, #f8fafc);
   color: var(--color-gray-dark, #1e2022);
 }
 
@@ -116,6 +115,67 @@
 /* ============================================================
    Empty State Box
    ============================================================ */
+.listpost-page-header {
+  padding-bottom: 44px;
+}
+
+.listpost-tools {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: -44px clamp(12px, 4vw, 72px) 16px;
+  padding: 8px;
+  border: 1px solid var(--color-gray-border);
+  border-radius: 14px;
+  background: var(--color-white);
+  box-shadow: var(--shadow-sm);
+}
+
+.listpost-search,
+.listpost-tools select {
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--color-gray-border);
+  border-radius: 10px;
+  background: var(--color-white);
+  font: inherit;
+  font-size: 14px;
+}
+
+.listpost-search {
+  display: flex;
+  flex: 1 1 220px;
+  align-items: center;
+  gap: 8px;
+  color: #626b77;
+}
+
+.listpost-search svg {
+  flex-shrink: 0;
+}
+
+.listpost-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+}
+
+@media (max-width: 640px) {
+  .listpost-tools {
+    margin: 0 0 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .listpost-tools select {
+    width: 100%;
+  }
+}
+
 .listpost-empty-box {
   background-color: var(--color-white, #ffffff);
   border: 1.5px dashed var(--color-gray-border, #d9d9d9);
@@ -141,8 +201,9 @@
   margin-bottom: 16px;
 }
 
-.listpost-empty-icon {
-  color: var(--color-orange, #fa4616);
+.listpost-empty-box > .empty-state {
+  width: 100%;
+  padding: 0;
 }
 
 .listpost-empty-title {

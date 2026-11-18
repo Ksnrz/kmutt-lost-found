@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, Info, Lock, UserCircle, X } from 'lucide-react';
-import PageHeader from '../components/ui/PageHeader';
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
+import { CheckCircle2, Info, Lock, X } from 'lucide-react';
 import Button from '../components/ui/Button';
+import mascot from '../assets/login/login-mascot.png';
+import AccountPage from './requests/AccountPage';
 import { api } from '../api';
 import './Profile.css';
 
@@ -31,11 +32,14 @@ function phoneError(d) {
  */
 export default function Profile() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const claimNotifications = useOutletContext();
   const phoneRef = useRef(null);
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({ first_name: '', last_name: '', phone: '' });
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [nudgeClosed, setNudgeClosed] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [status, setStatus] = useState(''); // 'saved' | error message
 
   useEffect(() => {
@@ -80,6 +84,7 @@ export default function Profile() {
       });
       setProfile(me);
       setStatus('saved');
+      setIsEditing(false);
     } catch (err) {
       setStatus(err.message);
     }
@@ -88,15 +93,41 @@ export default function Profile() {
   if (!profile) return <div className="profile-page">{status}</div>;
 
   const incomplete = !profile.first_name || !profile.last_name || !profile.phone_number;
+  const displayName = [profile.first_name, profile.last_name].map((name) => name?.trim()).filter(Boolean).join(' ');
+  const initial = Array.from(displayName || profile.email || '?')[0].toLocaleUpperCase();
 
   return (
     <div className="profile-page">
-      <PageHeader
-        tag="My Account"
-        title="บัญชีของฉัน"
-        subtitle="จัดการข้อมูลส่วนตัวที่ใช้ติดต่อเวลานัดรับของ"
-      />
+      <header className="profile-header">
+        <div className="profile-banner">
+          <img src={mascot} alt="" />
+        </div>
+        <div className="profile-summary">
+          <span className="profile-avatar" aria-hidden="true">{initial}</span>
+          <div className="profile-summary-details">
+            <h1>{displayName || 'บัญชีของฉัน'}</h1>
+            <p className="profile-email">{profile.email}</p>
+          </div>
+          <Button
+            variant="secondary"
+            className="profile-edit-button"
+            aria-expanded={isEditing}
+            aria-controls="profile-editor"
+            onClick={() => {
+              setStatus('');
+              setIsEditing((open) => !open);
+            }}
+          >
+            {isEditing ? 'ปิดการแก้ไข' : 'แก้ไขโปรไฟล์'}
+          </Button>
+        </div>
+      </header>
 
+      {status === 'saved' && (
+        <p className="profile-saved" role="status"><CheckCircle2 size={16} aria-hidden="true" /> บันทึกแล้ว</p>
+      )}
+
+      <div id="profile-editor" hidden={!isEditing}>
       {incomplete && !nudgeClosed && (
         <div className="profile-nudge" role="status">
           <Info size={18} aria-hidden="true" />
@@ -109,9 +140,6 @@ export default function Profile() {
 
       <div className="profile-grid">
         <section className="profile-card">
-          <div className="profile-icon-badge" aria-hidden="true">
-            <UserCircle size={22} />
-          </div>
           <h2 className="profile-card-title">ข้อมูลบัญชี</h2>
           <dl className="profile-rows">
             <div className="profile-row">
@@ -160,13 +188,12 @@ export default function Profile() {
 
           <div className="profile-actions">
             <Button type="submit" variant="primary">บันทึก</Button>
-            {status === 'saved' && (
-              <span className="profile-saved" role="status"><CheckCircle2 size={16} aria-hidden="true" /> บันทึกแล้ว</span>
-            )}
             {status && status !== 'saved' && <span className="profile-error" role="alert">{status}</span>}
           </div>
         </form>
       </div>
+      </div>
+      <AccountPage key={location.key} claimNotifications={claimNotifications} />
     </div>
   );
 }

@@ -1,0 +1,21 @@
+.brand-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.brand-wordmark-kmutt {
+  color: var(--color-primary);
+}
+
+.brand-wordmark-label {
+  color: #151515;
+  font-size: 0.68em;
+  line-height: 0.98;
+  letter-spacing: 0.04em;
+  text-align: left;
+}

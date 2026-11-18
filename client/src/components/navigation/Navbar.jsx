@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Plus, User, UserCircle, LogOut } from 'lucide-react';
+import { Menu, Plus, User, UserCircle, LogOut, X } from 'lucide-react';
+import BrandWordmark from '../BrandWordmark';
+import ConfirmModal from '../ui/ConfirmModal';
 import './Navbar.css';
 
 /**
@@ -9,11 +11,17 @@ import './Navbar.css';
 export default function Navbar({
   pendingCount = 0,
   onCreatePost,
+  claimNotifications,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const dropdownRef = useRef(null);
+  const navRef = useRef(null);
+  const menuButtonRef = useRef(null);
+  const { unreadCount, loadNotifications } = claimNotifications;
 
   // ตรวจสอบว่าหน้าปัจจุบันอยู่ในหมวด "ขอรับคืน" หรือไม่ (/claims/* หรือ /requests/*)
   const isClaimsSection =
@@ -23,21 +31,26 @@ export default function Navbar({
   // ตรวจจับการคลิกนอก Dropdown เพื่อปิดอัตโนมัติ
   useEffect(() => {
     function handleClickOutside(event) {
+      if (showLogoutConfirm) return;
+      if (!navRef.current?.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
       }
     }
 
-    if (isDropdownOpen) {
+    if (isDropdownOpen || isMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isDropdownOpen]);
+  }, [isDropdownOpen, isMenuOpen, showLogoutConfirm]);
 
   // จัดการเมื่อกดปุ่มสร้างโพสต์
   const handleCreatePost = () => {
+    setIsMenuOpen(false);
     if (onCreatePost) {
       onCreatePost();
     } else {
@@ -47,54 +60,52 @@ export default function Navbar({
 
   // จัดการเมื่อกดออกจากระบบ
   const handleLogout = () => {
-    setIsDropdownOpen(false);
-    const confirmLogout = window.confirm('คุณต้องการออกจากระบบใช่หรือไม่?');
-    if (confirmLogout) {
-      localStorage.removeItem('token');
-      alert('ออกจากระบบเรียบร้อยแล้ว');
-      navigate('/login');
-    }
+    localStorage.removeItem('token');
+    navigate('/login');
   };
 
   return (
     <header className="navbar-wrapper">
-      <nav className="navbar-card" aria-label="แถบนำทางหลัก">
+      <nav
+        className="navbar-card"
+        aria-label="แถบนำทางหลัก"
+        ref={navRef}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape' && isMenuOpen) {
+            setIsMenuOpen(false);
+            menuButtonRef.current?.focus();
+          }
+        }}
+      >
         {/* ============================================================
             1. ซ้าย: โลโก้ KMUTT Lost & Found
             ============================================================ */}
-        <NavLink to="/map" className="navbar-brand" title="แผนที่มหาวิทยาลัย">
-          <div className="navbar-brand-badge" aria-hidden="true">
-            {/* ไอคอนแว่นขยายที่มีเครื่องหมาย ? ด้านในตรงตามดีไซน์ */}
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="navbar-brand-svg"
-            >
-              <circle cx="11" cy="11" r="7.5" />
-              <line x1="21" y1="21" x2="16.5" y2="16.5" />
-              <path d="M9.8 9.2a1.4 1.4 0 0 1 2.4.9c0 .9-1.2 1-1.2 1.8" strokeWidth="2" />
-              <circle cx="11" cy="13.8" r="0.4" fill="currentColor" />
-            </svg>
-          </div>
-          <span className="navbar-brand-text">
-            <span className="brand-kmutt">KMUTT</span>{' '}
-            <span className="brand-lostfound">Lost & Found</span>
-          </span>
+        <NavLink to="/map" className="navbar-brand" title="แผนที่มหาวิทยาลัย" onClick={() => setIsMenuOpen(false)}>
+          <BrandWordmark />
         </NavLink>
 
         {/* ============================================================
             2. ตรงกลาง: เมนู 3 รายการ
             ============================================================ */}
-        <div className="navbar-menu">
+        <button
+          type="button"
+          className="navbar-menu-toggle"
+          ref={menuButtonRef}
+          aria-label="เมนูหลัก"
+          aria-controls="navbar-main-menu"
+          aria-expanded={isMenuOpen}
+          onClick={() => {
+            setIsDropdownOpen(false);
+            setIsMenuOpen((open) => !open);
+          }}
+        >
+          {isMenuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+        </button>
+        <div id="navbar-main-menu" className={`navbar-menu${isMenuOpen ? ' is-open' : ''}`}>
           {/* เมนูที่ 1: แผนที่มหาวิทยาลัย */}
           <NavLink
             to="/map"
+            onClick={() => setIsMenuOpen(false)}
             className={({ isActive }) =>
               `navbar-link ${isActive ? 'is-active' : ''}`
             }
@@ -102,19 +113,22 @@ export default function Navbar({
             <span>แผนที่มหาวิทยาลัย</span>
           </NavLink>
 
-          {/* เมนูที่ 2: ประกาศของฉัน */}
+          {/* เมนูที่ 2: ประกาศทั้งหมด */}
           <NavLink
-            to="/account"
+            to="/posts"
+            onClick={() => setIsMenuOpen(false)}
+            end
             className={({ isActive }) =>
               `navbar-link ${isActive ? 'is-active' : ''}`
             }
           >
-            <span>ประกาศของฉัน</span>
+            <span>ประกาศทั้งหมด</span>
           </NavLink>
 
           {/* เมนูที่ 3: ขอรับคืน (มี Badge ตัวเลข 1) */}
           <NavLink
             to="/requests/review"
+            onClick={() => setIsMenuOpen(false)}
             className={({ isActive }) =>
               `navbar-link ${isActive || isClaimsSection ? 'is-active' : ''}`
             }
@@ -136,6 +150,7 @@ export default function Navbar({
           <button
             type="button"
             className="navbar-btn-create"
+            aria-label="สร้างโพสต์"
             onClick={handleCreatePost}
           >
             <Plus size={16} strokeWidth={2.6} aria-hidden="true" />
@@ -147,28 +162,33 @@ export default function Navbar({
             <button
               type="button"
               className={`navbar-avatar-btn ${isDropdownOpen ? 'is-active' : ''}`}
-              onClick={() => setIsDropdownOpen((prev) => !prev)}
-              aria-label="เมนูผู้ใช้งาน"
-              aria-haspopup="menu"
+              onClick={() => {
+                setIsMenuOpen(false);
+                if (!isDropdownOpen) loadNotifications();
+                setIsDropdownOpen((prev) => !prev);
+              }}
+              aria-label={unreadCount ? `เมนูผู้ใช้งาน การแจ้งเตือนที่ยังไม่อ่าน ${unreadCount} รายการ` : 'เมนูผู้ใช้งาน'}
+              aria-controls="navbar-account-panel"
               aria-expanded={isDropdownOpen}
             >
               <User size={20} className="navbar-avatar-icon" />
+              {unreadCount > 0 && <span className="navbar-avatar-badge" aria-hidden="true">{unreadCount}</span>}
             </button>
 
             {/* Dropdown Menu เมื่อกด Avatar */}
             {isDropdownOpen && (
-              <div className="navbar-dropdown-menu" role="menu">
+              <div className="navbar-dropdown-menu" id="navbar-account-panel">
                 <button
                   type="button"
                   className="navbar-dropdown-item"
                   onClick={() => {
                     setIsDropdownOpen(false);
-                    navigate('/profile');
+                    navigate(unreadCount > 0 ? '/profile?tab=claims' : '/profile');
                   }}
-                  role="menuitem"
                 >
                   <UserCircle size={18} className="dropdown-item-icon" />
                   <span>บัญชีของฉัน</span>
+                  {unreadCount > 0 && <span className="navbar-dropdown-badge">{unreadCount}</span>}
                 </button>
 
                 <div className="navbar-dropdown-divider" role="separator" />
@@ -176,8 +196,7 @@ export default function Navbar({
                 <button
                   type="button"
                   className="navbar-dropdown-item is-logout"
-                  onClick={handleLogout}
-                  role="menuitem"
+                  onClick={() => setShowLogoutConfirm(true)}
                 >
                   <LogOut size={18} className="dropdown-item-icon" />
                   <span>ออกจากระบบ</span>
@@ -187,6 +206,16 @@ export default function Navbar({
           </div>
         </div>
       </nav>
+      {showLogoutConfirm && (
+        <ConfirmModal
+          title="ยืนยันการออกจากระบบ"
+          description="ต้องการออกจากระบบใช่หรือไม่?"
+          confirmText="ออกจากระบบ"
+          icon={LogOut}
+          onConfirm={handleLogout}
+          onClose={() => setShowLogoutConfirm(false)}
+        />
+      )}
     </header>
   );
 }

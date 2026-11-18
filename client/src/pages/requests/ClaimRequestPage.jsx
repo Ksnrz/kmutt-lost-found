@@ -214,6 +214,7 @@ export default function ClaimRequestPage({
           onBack={handleGoBack}
           tag="VERIFICATION REQUEST"
           title="ส่งคำขอตรวจสอบ"
+          subtitle="ตรวจสอบประกาศก่อนส่งคำขอรับคืน"
         />
         <Card className="claim-request-card">
           <p className="claim-error-text">

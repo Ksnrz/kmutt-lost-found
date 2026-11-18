@@ -13,6 +13,11 @@ main {
   width: 100%;
 }
 
+.app-container > main {
+  container-type: inline-size;
+  background: linear-gradient(to bottom, #fff0e6, var(--color-bg-page, #f8fafc) 220px);
+}
+
 /* พื้นที่หน้าแผนที่มหาวิทยาลัย (เว้นว่างไว้สำหรับโมดูลของเพื่อนร่วมทีม) */
 .map-view-empty {
   width: 100%;

@@ -1,4 +1,5 @@
 import arrowBackIcon from '../../assets/icons_arrow-back.png';
+import mascot from '../../assets/login/login-mascot.png';
 import './PageHeader.css';
 
 /**
@@ -18,6 +19,7 @@ export default function PageHeader({
   onBack,
   actions,
   children,
+  status,
   className = '',
 }) {
   return (
@@ -33,14 +35,20 @@ export default function PageHeader({
       <div className="page-header-main-row">
         <div className="page-header-text-group">
           {tag && <div className="page-header-tag">{tag}</div>}
-          <h1 className="page-header-title">{title}</h1>
-          {subtitle && <p className="page-header-subtitle">{subtitle}</p>}
+          <div className="page-header-heading">
+            <h1 className="page-header-title">{title}</h1>
+            {subtitle && <p className="page-header-subtitle">{subtitle}</p>}
+          </div>
+          {status && <div className="page-header-status">{status}</div>}
         </div>
         {(actions || children) && (
           <div className="page-header-actions">
             {actions || children}
           </div>
         )}
+      </div>
+      <div className="page-header-art" aria-hidden="true">
+        <img src={mascot} alt="" />
       </div>
     </header>
   );

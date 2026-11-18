@@ -6,7 +6,6 @@
 .editpost-page {
   min-height: calc(100vh - 72px);
   width: 100%;
-  background-color: var(--color-bg-page, #f8fafc);
   color: var(--color-gray-dark, #1e2022);
 }
 

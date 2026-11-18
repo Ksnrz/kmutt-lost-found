@@ -76,15 +76,10 @@ export const claimService = {
    * C3: ดึงรายการคำขอทั้งหมดของโพสต์นั้นๆ (GET /api/posts/:id/verify)
    */
   async getClaimsByPost(postId) {
-    try {
-      const json = await apiRequest(`/posts/${postId}/verify`);
-      const claims = json?.requests || json?.data || [];
-      cacheClaims(claims);
-      return claims;
-    } catch (err) {
-      console.error('getClaimsByPost failed:', err.message);
-      return [];
-    }
+    const json = await apiRequest(`/posts/${postId}/verify`);
+    const claims = json?.requests || json?.data || [];
+    cacheClaims(claims);
+    return claims;
   },
 
   /**
@@ -177,15 +172,10 @@ export const claimService = {
    * ดึงประวัติคำขอที่ฉันส่ง (GET /api/verify/my-claims)
    */
   async getMyClaims() {
-    try {
-      const json = await apiRequest('/verify/my-claims');
-      const claims = json?.requests || json?.data || [];
-      cacheClaims(claims);
-      return claims;
-    } catch (err) {
-      console.error('getMyClaims failed:', err.message);
-      return [];
-    }
+    const json = await apiRequest('/verify/my-claims');
+    const claims = json?.requests || json?.data || [];
+    cacheClaims(claims);
+    return claims;
   },
 
   subscribe(callback) {
