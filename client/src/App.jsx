@@ -16,6 +16,11 @@ import { apiRequest } from './api';
 import { claimService } from './services/claimService';
 import './App.css';
 
+// ยังไม่ล็อกอิน → ไปหน้า login (เข้าได้แค่ login / register)
+function RequireAuth() {
+  return localStorage.getItem('token') ? <Outlet /> : <Navigate to="/login" replace />;
+}
+
 // หน้าที่มี Navbar ด้านบน (หน้า login / register ไม่มี)
 function WithNavbar() {
   const navigate = useNavigate();
@@ -93,6 +98,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
+        <Route element={<RequireAuth />}>
         <Route element={<WithNavbar />}>
           <Route path="/map" element={<Map />} />
           <Route path="/posts" element={<Listpost />} />
@@ -105,6 +111,7 @@ function App() {
           <Route path="/posts/:postId/review" element={<ReviewRequestsPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/profile" element={<Profile />} />
+        </Route>
         </Route>
 
         <Route path="/" element={<Navigate to="/login" replace />} />
