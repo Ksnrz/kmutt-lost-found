@@ -1,4 +1,3 @@
-
 import BuildingPicker from '../components/BuildingPicker';
 
 import { useState, useEffect } from 'react';
@@ -27,10 +26,8 @@ function CreatePost() {
   const [eventDate, setEventDate] = useState('');
   const [description, setDescription] = useState('');
   const [contactText, setContactText] = useState('');
-
-  const [depositLocation, setDepositLocation] = useState('');
+  const [depositLocation, setDepositLocation] = useState(''); // location_id of the deposit building
   const [depositDetail, setDepositDetail] = useState('');
-
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
 
@@ -531,14 +528,7 @@ function CreatePost() {
 
           <div className="form-right">
             <Card>
-
-              <h2>
-                {postType === 'LOST'
-                  ? 'ข้อมูลผู้ตามหา'
-                  : 'ข้อมูลการเก็บรักษา'}
-              </h2>
-
-              {/* Custody type */}
+              <h2>{postType === 'LOST' ? 'ข้อมูลผู้ตามหา' : 'ข้อมูลการเก็บรักษา'}</h2>
 
               {postType === 'FOUND' && (
                 <>

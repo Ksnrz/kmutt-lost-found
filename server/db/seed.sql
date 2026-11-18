@@ -30,13 +30,15 @@ VALUES (
 ON CONFLICT (post_id) DO NOTHING;
 
 -- Post 2: FOUND (DEPOSITED) -> ต้องถูกปฏิเสธเมื่อส่งคำขอ verify (กฎ C2)
-INSERT INTO posts (post_id, user_id, location_id, post_type, custody_type, title, description, event_date, contact_text, post_status)
+INSERT INTO posts (post_id, user_id, location_id, post_type, custody_type, deposit_location_id, deposit_detail, title, description, event_date, contact_text, post_status)
 VALUES (
   2,
   1,
   (SELECT location_id FROM locations WHERE building_name = 'S1' LIMIT 1),
   'FOUND',
   'DEPOSITED',
+  (SELECT location_id FROM locations WHERE building_name = 'S1' LIMIT 1),
+  'เคาน์เตอร์ รปภ. ชั้น 1',
   'พบกุญแจรถมอเตอร์ไซค์ Honda',
   'กุญแจพร้อมพวงกุญแจหมี ฝากไว้ที่เคาน์เตอร์ รปภ. อาคารเรียนรวม 1 เรียบร้อยแล้ว ไปติดต่อรับได้เลย',
   '2026-09-25',

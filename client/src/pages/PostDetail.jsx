@@ -231,6 +231,7 @@ function PostDetail() {
     imageUrl: images[0] ? imageUrl(images[0]) : null,
   };
 
+
   return (
     <div className="postdetail-page">
       <div className="postdetail-container">
@@ -263,11 +264,9 @@ function PostDetail() {
             </h1>
 
             <div className="postdetail-badge-wrap">
+              {/* DEPOSITED posts stay OPEN so they remain listed, but take no claims: show them as done */}
               {isDeposited ? (
-                <StatusBadge
-                  status="closed"
-                  customText={`ฝากไว้แล้ว • ติดต่อรับที่ ${post.depositBuilding}`}
-                />
+                <StatusBadge status="closed" customText={`ฝากไว้แล้ว • ติดต่อรับที่ ${post.depositBuilding}`} />
               ) : (
                 <StatusBadge status={post.status} />
               )}
@@ -349,24 +348,16 @@ function PostDetail() {
                     {post.custodyType}
                   </span>
                 </div>
-
                 {isDeposited && (
                   <>
                     <div className="custody-info-row">
                       <span className="custody-label">สถานที่ฝาก:</span>
-                      <span className="custody-value">
-                        {post.depositBuilding}
-                      </span>
+                      <span className="custody-value">{post.depositBuilding}</span>
                     </div>
-
                     {post.depositDetail && (
                       <div className="custody-info-row">
-                        <span className="custody-label">
-                          รายละเอียดที่รับฝาก:
-                        </span>
-                        <span className="custody-value">
-                          {post.depositDetail}
-                        </span>
+                        <span className="custody-label">รายละเอียดที่รับฝาก:</span>
+                        <span className="custody-value">{post.depositDetail}</span>
                       </div>
                     )}
                   </>

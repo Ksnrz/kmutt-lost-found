@@ -100,31 +100,6 @@ router.post('/posts/:id/verify', requireAuth, upload.array('images', 5), async (
       }
     }
 
-    // รูปจาก Body images (กรณี JSON data หรือ URL ที่ส่งมา)
-    if (req.body.images) {
-      let bodyImages = req.body.images;
-      if (typeof bodyImages === 'string') {
-        try {
-          bodyImages = JSON.parse(bodyImages);
-        } catch {
-          bodyImages = [bodyImages];
-        }
-      }
-      if (Array.isArray(bodyImages)) {
-        for (const img of bodyImages) {
-          const imgUrl = typeof img === 'string' ? img : img.verify_image_url || img.previewUrl || img.url;
-          if (!imgUrl) continue;
-          const imgRes = await client.query(
-            `INSERT INTO verify_images (verify_id, verify_image_url)
-             VALUES ($1, $2)
-             RETURNING *`,
-            [newVerify.verify_id, imgUrl]
-          );
-          savedImages.push(imgRes.rows[0]);
-        }
-      }
-    }
-
     await client.query('COMMIT');
 
     res.status(201).json({
@@ -376,10 +351,15 @@ const handleCancelClaim = async (req, res, next) => {
     const updateRes = await pool.query(
       `UPDATE verify_items
        SET verify_status = 'CANCELLED', note = $1
-       WHERE verify_id = $2
+       WHERE verify_id = $2 AND verify_status = 'PENDING'
        RETURNING *`,
       [note, verifyId]
     );
+
+    // the owner accepted it between our check and this update
+    if (updateRes.rows.length === 0) {
+      return res.status(400).json({ error: 'สามารถยกเลิกได้เฉพาะคำขอที่อยู่ในสถานะ PENDING เท่านั้น' });
+    }
 
     res.json({
       message: 'ยกเลิกคำขอสำเร็จเรียบร้อยแล้ว',
@@ -494,7 +474,7 @@ const handleDualConfirm = async (req, res, next) => {
         `UPDATE verify_items
          SET verify_status = 'CANCELLED',
              note = 'ระบบยกเลิกอัตโนมัติเนื่องจากส่งมอบสิ่งของสำเร็จเสร็จสิ้นแล้ว'
-         WHERE post_id = $1 AND verify_id != $2 AND verify_status != 'COMPLETED'`,
+         WHERE post_id = $1 AND verify_id != $2 AND verify_status = 'PENDING'`,
         [current.post_id, verifyId]
       );
     }

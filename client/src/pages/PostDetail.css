@@ -659,9 +659,11 @@
 
   .postdetail-layout {
     flex-direction: column;
+    align-items: stretch; /* flex-start made the stacked main column shrink to its content */
   }
 
   .postdetail-sidebar {
+    min-width: 0;
     max-width: 100%;
     width: 100%;
   }

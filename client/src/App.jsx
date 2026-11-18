@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from './components/navigation/Navbar';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
@@ -16,9 +16,15 @@ import { apiRequest } from './api';
 import { claimService } from './services/claimService';
 import './App.css';
 
+// ยังไม่ล็อกอิน → ไปหน้า login (เข้าได้แค่ login / register)
+function RequireAuth() {
+  return localStorage.getItem('token') ? <Outlet /> : <Navigate to="/login" replace />;
+}
+
 // หน้าที่มี Navbar ด้านบน (หน้า login / register ไม่มี)
 function WithNavbar() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [pendingCount, setPendingCount] = useState(0);
   const [noticeCount, setNoticeCount] = useState(0);
 
@@ -27,10 +33,10 @@ function WithNavbar() {
 
     const fetchCounts = async () => {
       try {
-        const receivedData = await apiRequest('/verify/received');
+        const receivedData = await apiRequest('/me/posts');
         if (isMounted && receivedData?.posts) {
           const totalPending = receivedData.posts.reduce(
-            (sum, p) => sum + (Number(p.pendingCount) || 0),
+            (sum, p) => sum + (Number(p.pending_count) || 0),
             0
           );
           setPendingCount(totalPending);
@@ -55,15 +61,19 @@ function WithNavbar() {
 
     fetchCounts();
 
-    const unsubscribe = claimService.subscribe(() => {
-      fetchCounts();
+    const unsubscribe = claimService.subscribe((claims) => {
+      if (isMounted && Array.isArray(claims)) {
+        setNoticeCount(claims.filter((claim) =>
+          ['ACCEPTED', 'REJECTED'].includes(claim.verify_status || claim.status)
+        ).length);
+      }
     });
 
     return () => {
       isMounted = false;
       unsubscribe();
     };
-  }, []);
+  }, [pathname]);
 
   return (
     <div className="app-container">
@@ -88,6 +98,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
+        <Route element={<RequireAuth />}>
         <Route element={<WithNavbar />}>
           <Route path="/map" element={<Map />} />
           <Route path="/posts" element={<Listpost />} />
@@ -96,10 +107,11 @@ function App() {
           <Route path="/posts/:postId/edit" element={<Editpost />} />
           <Route path="/listpost" element={<Navigate to="/posts" replace />} />
           <Route path="/posts/:postId/claim" element={<ClaimRequestPage />} />
-          <Route path="/requests/review" element={<ReviewRequestsPage />} />
+          <Route path="/requests/review" element={<Navigate to="/account" replace state={{ tab: 'my_received_claims' }} />} />
           <Route path="/posts/:postId/review" element={<ReviewRequestsPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/profile" element={<Profile />} />
+        </Route>
         </Route>
 
         <Route path="/" element={<Navigate to="/login" replace />} />

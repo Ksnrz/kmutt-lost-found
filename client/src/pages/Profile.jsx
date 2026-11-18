@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, Info, Lock, UserCircle, X } from 'lucide-react';
+import { CheckCircle2, Info, Lock, UserCircle, UserPen, X } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import { api } from '../api';
@@ -126,6 +126,9 @@ export default function Profile() {
         </section>
 
         <form className="profile-card" onSubmit={handleSubmit} noValidate>
+          <div className="profile-icon-badge" aria-hidden="true">
+            <UserPen size={22} />
+          </div>
           <h2 className="profile-card-title">ข้อมูลส่วนตัว</h2>
           <div className="profile-fields">
             <div className="profile-field">

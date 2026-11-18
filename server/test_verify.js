@@ -25,6 +25,7 @@ async function call(path, { token, method = 'GET', body, form } = {}) {
 async function makePost({ custody_type = 'SELF_KEPT' } = {}) {
   const f = new FormData();
   const fields = { post_type: 'FOUND', custody_type, title: 'test wallet', location_id: locationId, event_date: '2026-11-14', description: 'd', contact_text: '0812345678' };
+  if (custody_type === 'DEPOSITED') fields.deposit_location_id = locationId;
   Object.entries(fields).forEach(([k, v]) => f.append(k, v));
   const { status, json } = await call('/posts', { token: tok.owner, method: 'POST', form: f });
   assert.equal(status, 201);
@@ -176,4 +177,71 @@ test('full handover: both parties confirm and the post closes', async () => {
   const done = await call(`/verify/${verifyId}/confirm`, { token: tok.claimant, method: 'PUT', body: { party: 'receiver' } });
   assert.equal(done.json.postClosed, true);
   assert.equal((await call(`/posts/${postId}`)).json.post.post_status, 'CLOSED');
+});
+
+test('rejected claims keep their status and reason after the hand-over completes', async () => {
+  const postId = await makePost();
+  const winner = await makeClaim(postId);
+  const rejected = await makeClaim(postId, 'other');
+  await call(`/verify/${rejected}/status`, { token: tok.owner, method: 'PUT', body: { status: 'REJECTED', note: 'scratch does not match' } });
+  await call(`/verify/${winner}/status`, { token: tok.owner, method: 'PUT', body: { status: 'ACCEPTED' } });
+  await call(`/verify/${winner}/confirm`, { token: tok.owner, method: 'PUT', body: { party: 'finder' } });
+  await call(`/verify/${winner}/confirm`, { token: tok.claimant, method: 'PUT', body: { party: 'receiver' } });
+  const { rows } = await pool.query('SELECT verify_status, note FROM verify_items WHERE verify_id = $1', [rejected]);
+  assert.deepEqual(rows[0], { verify_status: 'REJECTED', note: 'scratch does not match' });
+});
+
+test('requester cannot cancel a claim that is already accepted', async () => {
+  const postId = await makePost();
+  const verifyId = await makeClaim(postId);
+  await call(`/verify/${verifyId}/status`, { token: tok.owner, method: 'PUT', body: { status: 'ACCEPTED' } });
+  assert.equal((await call(`/verify/${verifyId}/cancel`, { token: tok.claimant, method: 'PATCH', body: {} })).status, 400);
+  assert.equal(await claimStatus(verifyId), 'ACCEPTED');
+});
+
+test('event_date round-trips unchanged (no timezone shift)', async () => {
+  const postId = await makePost();
+  assert.equal((await call(`/posts/${postId}`)).json.post.event_date, '2026-11-14');
+});
+
+test('DEPOSITED posts need a deposit building; other posts drop deposit fields', async () => {
+  const create = (fields) => {
+    const f = new FormData();
+    Object.entries({ post_type: 'FOUND', title: 't', location_id: locationId, event_date: '2026-11-14', description: 'd', contact_text: '0812345678', ...fields })
+      .forEach(([k, v]) => f.append(k, v));
+    return call('/posts', { token: tok.owner, method: 'POST', form: f });
+  };
+  assert.equal((await create({ custody_type: 'DEPOSITED' })).status, 400);
+
+  const ok = await create({ custody_type: 'DEPOSITED', deposit_location_id: locationId, deposit_detail: ' แม่บ้านชั้น 1 ' });
+  assert.equal(ok.status, 201);
+  const { post } = (await call(`/posts/${ok.json.post.post_id}`)).json;
+  assert.equal(post.deposit_detail, 'แม่บ้านชั้น 1');
+  assert.ok(post.deposit_building_name);
+
+  const kept = await create({ custody_type: 'SELF_KEPT', deposit_location_id: locationId, deposit_detail: 'x' });
+  assert.equal(kept.status, 201);
+  assert.equal(kept.json.post.deposit_location_id, null);
+  assert.equal(kept.json.post.deposit_detail, null);
+});
+
+test('GET /me/posts returns only my own posts with their pending claim count', async () => {
+  const postId = await makePost();
+  await makeClaim(postId);
+  const mine = (await call('/me/posts', { token: tok.owner })).json.posts;
+  const row = mine.find((p) => p.post_id === postId);
+  assert.equal(row.pending_count, 1);
+  assert.ok(row.latest_claimant);
+  const theirs = (await call('/me/posts', { token: tok.stranger })).json.posts;
+  assert.equal(theirs.some((p) => p.post_id === postId), false);
+  assert.equal((await call('/me/posts')).status, 401);
+});
+
+test('claim body cannot inject arbitrary evidence URLs', async () => {
+  const postId = await makePost();
+  const { json } = await call(`/posts/${postId}/verify`, {
+    token: tok.claimant, method: 'POST', body: { proof_description: 'x', images: ['javascript:alert(1)'] },
+  });
+  const { rows } = await pool.query('SELECT 1 FROM verify_images WHERE verify_id = $1', [json.data.verify_id]);
+  assert.equal(rows.length, 0);
 });

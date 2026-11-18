@@ -1,4 +1,3 @@
-
 import BuildingPicker from '../components/BuildingPicker';
 
 import { useEffect, useState } from 'react';
@@ -28,24 +27,12 @@ function Editpost() {
   const [eventDate, setEventDate] = useState('');
   const [description, setDescription] = useState('');
   const [contactText, setContactText] = useState('');
-  const [depositLocation, setDepositLocation] = useState('');
+  const [depositLocation, setDepositLocation] = useState(''); // location_id of the deposit building
   const [depositDetail, setDepositDetail] = useState('');
 
   const [locations, setLocations] = useState([]);
-
-  const codeOf = (id) =>
-    locations.find(
-      (location) =>
-        String(location.location_id) === String(id)
-    )?.building_name;
-
-  const idOf = (code) =>
-    String(
-      locations.find(
-        (location) => location.building_name === code
-      )?.location_id ?? ''
-    );
-
+  const codeOf = (id) => locations.find((location) => String(location.location_id) === String(id))?.building_name;
+  const idOf = (code) => String(locations.find((location) => location.building_name === code)?.location_id ?? '');
   const [existingImages, setExistingImages] = useState([]);
   const [deletedImageIds, setDeletedImageIds] = useState([]);
   const [newImages, setNewImages] = useState([]);
@@ -87,10 +74,8 @@ function Editpost() {
         setDescription(post.description || '');
         setContactText(post.contact_text || '');
 
-        setEventDate(post.event_date || '');
-        setDepositLocation(
-          String(post.deposit_location_id || '')
-        );
+        setEventDate(post.event_date || ''); // already 'YYYY-MM-DD' from the server
+        setDepositLocation(String(post.deposit_location_id || ''));
         setDepositDetail(post.deposit_detail || '');
 
         setExistingImages(post.images || []);
@@ -451,21 +436,15 @@ function Editpost() {
                   <h3>
                     สถานที่พบ <span className="req-star">*</span>
                   </h3>
-
                   <BuildingPicker
                     value={codeOf(locationId)}
-                    onChange={(code) =>
-                      setLocationId(idOf(code))
-                    }
+                    onChange={(code) => setLocationId(idOf(code))}
                   />
                 </div>
 
                 <div>
                   <h3>
-                    {postType === 'LOST'
-                      ? 'วันที่คาดว่าทำหาย'
-                      : 'วันที่พบ'}{' '}
-                    <span className="req-star">*</span>
+                    {postType === 'LOST' ? 'วันที่คาดว่าทำหาย' : 'วันที่พบ'} <span className="req-star">*</span>
                   </h3>
 
                   <Input
