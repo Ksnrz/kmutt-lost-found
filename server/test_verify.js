@@ -318,3 +318,18 @@ test('claim body cannot inject arbitrary evidence URLs', async () => {
   const { rows } = await pool.query('SELECT 1 FROM verify_images WHERE verify_id = $1', [json.data.verify_id]);
   assert.equal(rows.length, 0);
 });
+
+test('the poster sees the claimant contact only after accepting the claim', async () => {
+  const postId = await makePost();
+  const verifyId = await makeClaim(postId);
+  await call('/me', { token: tok.claimant, method: 'PATCH', body: { phone_number: '0812345678' } });
+  const contact = async () => {
+    const { requesterPhone, requesterEmail } = (await call(`/posts/${postId}/verify`, { token: tok.owner })).json.requests[0];
+    return { requesterPhone, requesterEmail };
+  };
+  assert.deepEqual(await contact(), { requesterPhone: null, requesterEmail: null });
+  await call(`/verify/${verifyId}/status`, { token: tok.owner, method: 'PUT', body: { status: 'ACCEPTED' } });
+  const shown = await contact();
+  assert.equal(shown.requesterPhone, '0812345678');
+  assert.match(shown.requesterEmail, /@test\.local$/);
+});

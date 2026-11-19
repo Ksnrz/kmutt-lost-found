@@ -166,7 +166,9 @@ router.get('/posts/:id/verify', requireAuth, async (req, res, next) => {
         p.title AS "itemTitle",
         COALESCE(NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), u.student_id, 'นักศึกษา') AS requester,
         u.student_id,
-        u.phone_number AS "requesterPhone",
+        -- the claimant's contact is shared with the poster only once the claim is accepted
+        CASE WHEN v.verify_status IN ('ACCEPTED', 'COMPLETED') THEN u.phone_number END AS "requesterPhone",
+        CASE WHEN v.verify_status IN ('ACCEPTED', 'COMPLETED') THEN u.email END AS "requesterEmail",
         COALESCE(
           (SELECT json_agg(vi.verify_image_url) 
            FROM verify_images vi 

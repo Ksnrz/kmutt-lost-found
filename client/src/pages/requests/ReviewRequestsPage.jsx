@@ -113,7 +113,11 @@ export default function ReviewRequestsPage() {
     if (!activeRequest || isOtherAccepted) return;
 
     const finalNote = noteText.trim() || 'อนุมัติคำขอแล้ว กรุณานัดหมายวันเวลาและสถานที่รับมอบสิ่งของ';
-    if (await run(() => claimService.updateClaimStatus(activeRequest.id, 'ACCEPTED', finalNote))) setNoteText('');
+    if (await run(() => claimService.updateClaimStatus(activeRequest.id, 'ACCEPTED', finalNote))) {
+      setNoteText('');
+      // reload: the claimant's contact is only sent once the claim is accepted
+      claimService.getClaimsByPost(targetPostId).then(setRequests).catch(() => {});
+    }
   };
 
   // 2. ปฏิเสธคำขอ (REJECTED)
@@ -322,6 +326,12 @@ export default function ReviewRequestsPage() {
                 <p className="review-handover-sub">
                   เมื่อทั้ง{roles.owner}และ{roles.claimant}ยืนยันแล้ว ระบบจะปิดประกาศอัตโนมัติ
                 </p>
+
+                <div className="receiver-handover-note">
+                  <strong>ช่องทางติดต่อ{roles.claimant} ({activeRequest.requester}):</strong>
+                  {activeRequest.requesterPhone && <p>โทร {activeRequest.requesterPhone}</p>}
+                  {activeRequest.requesterEmail && <p>อีเมล {activeRequest.requesterEmail}</p>}
+                </div>
 
                 <div className="review-handover-steps-grid">
                   {/* ฝ่ายที่ 1: เจ้าของโพสต์ (คุณ) */}
