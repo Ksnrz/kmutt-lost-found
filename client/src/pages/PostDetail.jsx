@@ -12,6 +12,7 @@ import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 
 import { claimService } from '../services/claimService';
+import { handoverRoles } from '../services/handoverRoles';
 import { api, apiRequest } from '../api';
 
 import './PostDetail.css';
@@ -23,14 +24,14 @@ function PostDetail() {
   const { markClaimRead } = useOutletContext();
 
   const navPost = locationState?.state?.post;
-  const claim = locationState?.state?.claim;
+  const navClaim = locationState?.state?.claim;
   const from = locationState.state?.from;
   const fromAccount = from === 'account';
   const backTo = fromAccount
-    ? claim ? `/profile?claim=${claim.verify_id}` : '/account'
+    ? navClaim ? `/profile?claim=${navClaim.verify_id}` : '/account'
     : typeof from === 'string' && from.startsWith('/posts?') ? from : '/posts';
   const backText = fromAccount
-    ? (claim ? 'กลับไปหน้าคำขอของฉัน' : 'กลับไปหน้าประกาศของฉัน')
+    ? (navClaim ? 'กลับไปหน้าคำขอของฉัน' : 'กลับไปหน้าประกาศของฉัน')
     : 'กลับไปรายการประกาศ';
 
   const [apiPost, setApiPost] = useState(null);
@@ -39,6 +40,9 @@ function PostDetail() {
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null);
+  const [myClaim, setMyClaim] = useState(null);
+  // the server copy wins: the one passed in navigation state is a snapshot and goes stale
+  const claim = (String(myClaim?.post_id) === String(postId) && myClaim) || navClaim;
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -60,20 +64,26 @@ function PostDetail() {
     api('/api/me')
       .then(setMe)
       .catch(() => setMe(null));
+
+    apiRequest('/verify/my-claims')
+      .then((data) => setMyClaim(
+        (data.requests || []).find((c) => String(c.post_id) === String(postId)) || null
+      ))
+      .catch(() => setMyClaim(null));
   }, [postId]);
 
   useEffect(() => {
-    if (loading || !locationState.state?.readClaimOnOpen || !claim) return;
+    if (loading || !locationState.state?.readClaimOnOpen || !navClaim) return;
     navigate(locationState.pathname + locationState.search, {
       replace: true,
       state: { ...locationState.state, readClaimOnOpen: false },
     });
-    if (error || String(apiPost?.post_id) !== String(postId) || String(claim.post_id) !== String(postId)) return;
+    if (error || String(apiPost?.post_id) !== String(postId) || String(navClaim.post_id) !== String(postId)) return;
 
-    markClaimRead(claim.verify_id).catch(() => {
+    markClaimRead(navClaim.verify_id).catch(() => {
       setToast({ message: 'ไม่สามารถบันทึกว่าอ่านแล้วได้ กรุณาเปิดคำขออีกครั้ง', type: 'error' });
     });
-  }, [loading, error, apiPost, postId, claim, locationState, markClaimRead, navigate]);
+  }, [loading, error, apiPost, postId, navClaim, locationState, markClaimRead, navigate]);
 
   useEffect(() => {
     if (!toast) return;
@@ -110,9 +120,9 @@ function PostDetail() {
 
   const handleReceiverConfirm = () => {
     setConfirmModal({
-      title: 'ยืนยันการรับสิ่งของ',
-      description: 'คุณตรวจสอบและได้รับสิ่งของครบถ้วนแล้วใช่หรือไม่?',
-      confirmText: 'ยืนยันการรับ',
+      title: roles.claimantConfirm,
+      description: roles.claimantQuestion,
+      confirmText: roles.claimantConfirm,
       icon: CheckCircle2,
       onConfirm: async () => {
         const claimId = claim.id || claim.verify_id;
@@ -122,8 +132,8 @@ function PostDetail() {
         navigate('/account', {
           state: {
             successMessage: result?.postClosed
-              ? 'ยืนยันได้รับของเรียบร้อยแล้ว การส่งมอบสำเร็จสมบูรณ์!'
-              : 'ยืนยันได้รับของแล้ว กำลังรอผู้พบยืนยันการส่งมอบ',
+              ? 'ยืนยันเรียบร้อยแล้ว การส่งมอบสำเร็จสมบูรณ์!'
+              : `ยืนยันแล้ว กำลังรอ${roles.owner}ยืนยัน`,
             confirmedClaimId: claimId,
             closedPostId: result?.postClosed ? targetPostId : null,
           },
@@ -168,6 +178,7 @@ function PostDetail() {
     `http://localhost:3000${img.item_image_url}`;
 
   const isDeposited = apiPost.custody_type === 'DEPOSITED';
+  const roles = handoverRoles(apiPost.post_type);
 
   const post = {
     id: apiPost.post_id,
@@ -187,6 +198,7 @@ function PostDetail() {
     finderName:
       navPost?.finderName ||
       navPost?.postOwner ||
+      claim?.postOwner ||
       'นักศึกษา มจธ.',
 
     custodyType:
@@ -220,7 +232,7 @@ function PostDetail() {
           subtitle={`โพสต์เมื่อ ${post.date}`}
           status={isDeposited
             ? <StatusBadge status="closed" customText={`ฝากไว้แล้ว • ติดต่อรับที่ ${post.depositBuilding}`} />
-            : <StatusBadge status={post.status} />}
+            : <StatusBadge status={post.status} customText={post.status === 'open' ? roles.openLabel : undefined} />}
         />
 
         <div className="postdetail-layout">
@@ -261,7 +273,7 @@ function PostDetail() {
               </p>
 
               <div className="postdetail-desc-meta">
-                <span>สถานที่พบ: {post.location}</span>
+                <span>{roles.placeLabel}: {post.location}</span>
                 <span className="postdetail-meta-sep">|</span>
                 <span>วันที่: {post.eventDate}</span>
               </div>
@@ -277,20 +289,22 @@ function PostDetail() {
 
               <div className="custody-info-list">
                 <div className="custody-info-row">
-                  <span className="custody-label">ผู้พบ:</span>
+                  <span className="custody-label">{roles.owner}:</span>
                   <span className="custody-value">
                     {post.finderName}
                   </span>
                 </div>
 
-                <div className="custody-info-row">
-                  <span className="custody-label">
-                    สถานะการเก็บ:
-                  </span>
-                  <span className="custody-value">
-                    {post.custodyType}
-                  </span>
-                </div>
+                {apiPost.post_type === 'FOUND' && (
+                  <div className="custody-info-row">
+                    <span className="custody-label">
+                      สถานะการเก็บ:
+                    </span>
+                    <span className="custody-value">
+                      {post.custodyType}
+                    </span>
+                  </div>
+                )}
                 {isDeposited && (
                   <>
                     <div className="custody-info-row">
@@ -433,27 +447,27 @@ function PostDetail() {
 
                       <span
                         className={`review-handover-badge ${
-                          claim.status === 'COMPLETED' ||
-                          claim.receiverConfirmed
-                            ? 'is-completed'
-                            : ''
+                          claim.status === 'COMPLETED' ? 'is-completed' : ''
                         }`}
                       >
-                        {claim.status === 'COMPLETED' ||
-                        claim.receiverConfirmed
+                        {claim.status === 'COMPLETED'
                           ? 'ส่งมอบสำเร็จ'
-                          : 'รอทั้ง 2 ฝ่ายยืนยัน'}
+                          : claim.receiverConfirmed
+                            ? `รอ${roles.owner}ยืนยัน`
+                            : claim.finderConfirmed
+                              ? 'รอคุณยืนยัน'
+                              : 'รอทั้ง 2 ฝ่ายยืนยัน'}
                       </span>
                     </div>
 
                     <p className="review-handover-sub">
-                      เมื่อทั้งผู้พบและผู้รับยืนยันการส่งมอบแล้ว ระบบจะปิดประกาศอัตโนมัติ
+                      เมื่อทั้ง{roles.owner}และ{roles.claimant}ยืนยันแล้ว ระบบจะปิดประกาศอัตโนมัติ
                     </p>
 
                     {claim.ownerNote && (
                       <div className="receiver-handover-note">
                         <strong>
-                          สถานที่ / ข้อมูลนัดรับจากผู้พบ:
+                          สถานที่ / ข้อมูลนัดรับจาก{roles.owner}:
                         </strong>
                         <p>{claim.ownerNote}</p>
                       </div>
@@ -461,28 +475,47 @@ function PostDetail() {
 
                     <div className="review-handover-steps-grid">
 
-                      <div className="handover-step-card is-done">
+                      {/* the poster's card shows whether they confirmed the hand-over, not just that they accepted */}
+                      <div
+                        className={`handover-step-card ${
+                          claim.status === 'COMPLETED' || claim.finderConfirmed
+                            ? 'is-done'
+                            : ''
+                        }`}
+                      >
                         <div className="handover-step-header">
                           <span className="step-num">
-                            <Check size={14} />
+                            {claim.status === 'COMPLETED' || claim.finderConfirmed ? (
+                              <Check size={14} />
+                            ) : (
+                              '1'
+                            )}
                           </span>
 
                           <span
                             className="step-label"
-                            title={`ฝ่ายผู้พบ (${post.finderName})`}
+                            title={`ฝ่าย${roles.owner} (${post.finderName})`}
                           >
-                            ฝ่ายผู้พบ ({post.finderName})
+                            ฝ่าย{roles.owner} ({post.finderName})
                           </span>
                         </div>
 
-                        <p className="step-status-text">
-                          อนุมัติคำขอแล้ว
-                        </p>
-
-                        <span className="handover-confirmed-tag">
-                          <CheckCircle2 size={13} />
-                          <span>อนุมัติแล้ว</span>
-                        </span>
+                        {claim.status === 'COMPLETED' || claim.finderConfirmed ? (
+                          <>
+                            <p className="step-status-text">{roles.ownerConfirm}</p>
+                            <span className="handover-confirmed-tag">
+                              <CheckCircle2 size={13} />
+                              <span>ยืนยันแล้ว</span>
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <p className="step-status-text">อนุมัติคำขอแล้ว</p>
+                            <span className="handover-waiting-tag">
+                              <span>รอ{roles.owner}ยืนยัน</span>
+                            </span>
+                          </>
+                        )}
                       </div>
 
                       <div
@@ -504,15 +537,15 @@ function PostDetail() {
                           </span>
 
                           <span className="step-label">
-                            ฝ่ายผู้รับ (คุณ)
+                            ฝ่าย{roles.claimant} (คุณ)
                           </span>
                         </div>
 
                         <p className="step-status-text">
                           {claim.status === 'COMPLETED' ||
                           claim.receiverConfirmed
-                            ? 'ยืนยันได้รับของแล้ว'
-                            : 'รอยืนยันการรับสิ่งของ'}
+                            ? 'ยืนยันแล้ว'
+                            : roles.claimantWaiting}
                         </p>
 
                         {claim.status !== 'COMPLETED' &&
@@ -523,7 +556,7 @@ function PostDetail() {
                             className="btn-handover-action"
                             onClick={handleReceiverConfirm}
                           >
-                            ยืนยันการรับมอบ
+                            {roles.claimantConfirm}
                           </Button>
                         ) : (
                           <span className="handover-confirmed-tag">
@@ -537,8 +570,9 @@ function PostDetail() {
                     {claim.status !== 'COMPLETED' &&
                       !claim.receiverConfirmed && (
                         <p className="receiver-confirm-warning">
-                          * เมื่อกดยืนยันแล้ว การส่งมอบจะเสร็จสิ้นสมบูรณ์
-                          และโพสต์จะปิดโดยอัตโนมัติ
+                          {claim.finderConfirmed
+                            ? `* ${roles.owner}ยืนยันแล้ว เมื่อคุณกดยืนยัน การส่งมอบจะเสร็จสิ้นและโพสต์จะปิดโดยอัตโนมัติ`
+                            : `* กดยืนยันหลังส่งมอบจริงเท่านั้น โพสต์จะปิดเมื่อ${roles.owner}ยืนยันด้วย`}
                         </p>
                       )}
                   </div>
@@ -574,14 +608,14 @@ function PostDetail() {
                       {claim.status === 'PENDING' && (
                         <div className="claim-pending-box">
                           <p className="claim-status-desc">
-                            คำขอของคุณอยู่ระหว่างรอผู้พบตรวจสอบ
+                            คำขอของคุณอยู่ระหว่างรอ{roles.owner}ตรวจสอบ
                             ความถูกต้องของหลักฐาน
                           </p>
 
                           <p className="claim-pending-hint">
                             ⏳{' '}
                             <em>
-                              ปุ่มยืนยันรับของจะแสดงหลังจากผู้พบ
+                              ปุ่ม{roles.claimantConfirm}จะแสดงหลังจาก{roles.owner}
                               อนุมัติคำขอของคุณแล้วเท่านั้น
                             </em>
                           </p>
@@ -591,7 +625,7 @@ function PostDetail() {
                       {claim.status === 'REJECTED' && (
                         <div className="claim-rejected-box">
                           <p className="claim-status-desc">
-                            ผู้พบได้ปฏิเสธคำขอนี้
+                            {roles.owner}ได้ปฏิเสธคำขอนี้
                           </p>
 
                           {claim.ownerNote && (
@@ -653,13 +687,11 @@ function PostDetail() {
                         })
                       }
                     >
-                      {post.typeEn === 'LOST'
-                        ? 'นี่อาจเป็นของคุณ'
-                        : 'นี่อาจเป็นของฉัน'}
+                      {roles.claimButton}
                     </button>
 
                     <div className="custody-helper-text">
-                      <p>หากเป็นสิ่งของของคุณส่งคำขอ</p>
+                      <p>{post.typeEn === 'LOST' ? 'หากคุณเจอของชิ้นนี้ ส่งคำขอ' : 'หากเป็นสิ่งของของคุณส่งคำขอ'}</p>
                       <p>พร้อมรายละเอียดเฉพาะเพื่อยืนยัน</p>
                     </div>
                   </>

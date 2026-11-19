@@ -340,3 +340,8 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.profile-field .req-star {
+  color: var(--color-primary, #fa4616);
+  margin-left: 2px;
+}

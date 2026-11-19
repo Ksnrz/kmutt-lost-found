@@ -18,9 +18,9 @@ function formatPhone(d) {
   return d;
 }
 
-// Same rule as the server (routes/me.js). Empty is fine: the phone is optional.
+// Same rule as the server (routes/me.js). The phone is required.
 function phoneError(d) {
-  if (d === '') return '';
+  if (d === '') return 'กรุณากรอกเบอร์โทร';
   if (!/^0[689]/.test(d)) return 'เบอร์ต้องขึ้นต้นด้วย 0';
   if (d.length < 10) return `เบอร์โทรต้องมี 10 หลัก (ตอนนี้ ${d.length} หลัก)`;
   return '';
@@ -36,7 +36,7 @@ export default function Profile() {
   const claimNotifications = useOutletContext();
   const phoneRef = useRef(null);
   const [profile, setProfile] = useState(null);
-  const [form, setForm] = useState({ first_name: '', last_name: '', phone: '' });
+  const [form, setForm] = useState({ first_name: '', last_name: '', phone: '', contact_info: '' });
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [nudgeClosed, setNudgeClosed] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -50,6 +50,7 @@ export default function Profile() {
           first_name: me.first_name ?? '',
           last_name: me.last_name ?? '',
           phone: formatPhone(me.phone_number ?? ''),
+          contact_info: me.contact_info ?? '',
         });
       })
       .catch((err) => (err.status === 401 ? navigate('/login') : setStatus(err.message)));
@@ -80,6 +81,7 @@ export default function Profile() {
           first_name: form.first_name.trim(),
           last_name: form.last_name.trim(),
           phone_number: phoneDigits,
+          contact_info: form.contact_info.trim(),
         },
       });
       setProfile(me);
@@ -169,7 +171,7 @@ export default function Profile() {
               <input id="last_name" value={form.last_name} maxLength={100} placeholder="กรอกนามสกุล" onChange={(e) => update('last_name', e.target.value)} />
             </div>
             <div className="profile-field profile-field-wide">
-              <label htmlFor="phone">เบอร์โทร</label>
+              <label htmlFor="phone">เบอร์โทร <span className="req-star">*</span></label>
               <input
                 id="phone"
                 ref={phoneRef}
@@ -186,6 +188,20 @@ export default function Profile() {
               />
               <p id="phone-hint" className={`profile-hint ${showError ? 'is-invalid' : phoneValid ? 'is-valid' : ''}`}>
                 {showError ? error : phoneValid ? 'รูปแบบถูกต้อง' : PHONE_HELP}
+              </p>
+            </div>
+            <div className="profile-field profile-field-wide">
+              <label htmlFor="contact_info">ช่องทางติดต่ออื่น</label>
+              <input
+                id="contact_info"
+                value={form.contact_info}
+                maxLength={200}
+                placeholder="เช่น @instagram, Line ID, Facebook"
+                aria-describedby="contact-hint"
+                onChange={(e) => update('contact_info', e.target.value)}
+              />
+              <p id="contact-hint" className="profile-hint">
+                แสดงให้อีกฝ่ายเห็นหลังจากคำขอได้รับการอนุมัติเท่านั้น
               </p>
             </div>
           </div>
