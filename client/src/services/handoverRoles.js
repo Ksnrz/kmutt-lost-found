@@ -22,7 +22,7 @@ export function handoverRoles(postType) {
         claimant: 'ผู้รับ',
         ownerConfirm: 'ยืนยันการส่งมอบ',
         ownerWaiting: 'รอยืนยันการส่งของ',
-        claimantConfirm: 'ยืนยันการรับมอบ',
+        claimantConfirm: 'ยืนยันได้รับของคืน',
         claimantWaiting: 'รอยืนยันการรับสิ่งของ',
         claimantQuestion: 'คุณตรวจสอบและได้รับสิ่งของครบถ้วนแล้วใช่หรือไม่?',
         ownerCancel: 'ยกเลิกการส่งมอบ',

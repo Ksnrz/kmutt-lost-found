@@ -330,6 +330,7 @@ export default function ReviewRequestsPage() {
                 <div className="receiver-handover-note">
                   <strong>ช่องทางติดต่อ{roles.claimant} ({activeRequest.requester}):</strong>
                   {activeRequest.requesterPhone && <p>โทร {activeRequest.requesterPhone}</p>}
+                  {activeRequest.requesterContact && <p>อื่น ๆ {activeRequest.requesterContact}</p>}
                   {activeRequest.requesterEmail && <p>อีเมล {activeRequest.requesterEmail}</p>}
                 </div>
 
