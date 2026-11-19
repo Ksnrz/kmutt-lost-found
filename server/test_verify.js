@@ -324,14 +324,13 @@ test('the poster sees the claimant contact only after accepting the claim', asyn
   const verifyId = await makeClaim(postId);
   await call('/me', { token: tok.claimant, method: 'PATCH', body: { phone_number: '0812345678', contact_info: ' IG: @claimant ' } });
   const contact = async () => {
-    const { requesterPhone, requesterEmail, requesterContact } = (await call(`/posts/${postId}/verify`, { token: tok.owner })).json.requests[0];
-    return { requesterPhone, requesterEmail, requesterContact };
+    const { requesterPhone, requesterContact } = (await call(`/posts/${postId}/verify`, { token: tok.owner })).json.requests[0];
+    return { requesterPhone, requesterContact };
   };
-  assert.deepEqual(await contact(), { requesterPhone: null, requesterEmail: null, requesterContact: null });
+  assert.deepEqual(await contact(), { requesterPhone: null, requesterContact: null });
   await call(`/verify/${verifyId}/status`, { token: tok.owner, method: 'PUT', body: { status: 'ACCEPTED' } });
   const shown = await contact();
   assert.equal(shown.requesterPhone, '0812345678');
-  assert.match(shown.requesterEmail, /@test\.local$/);
   assert.equal(shown.requesterContact, 'IG: @claimant');
 });
 

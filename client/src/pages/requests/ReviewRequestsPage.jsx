@@ -7,6 +7,9 @@ import {
   AlertTriangle,
   XCircle,
   Ban,
+  Phone,
+  MessageCircle,
+  Copy,
 } from 'lucide-react';
 import Card from '../../components/ui/Card';
 import ConfirmModal from '../../components/ui/ConfirmModal';
@@ -49,6 +52,17 @@ export default function ReviewRequestsPage() {
 
   // State 4: ข้อความในช่อง "หมายเหตุสำหรับผู้ส่ง"
   const [noteText, setNoteText] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const copyContact = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      alert('คัดลอกไม่สำเร็จ กรุณาคัดลอกเอง');
+    }
+  };
 
   // เชื่อมต่อ State กลางและรับข้อมูลแบบ Real-time จาก claimService
   useEffect(() => {
@@ -327,11 +341,54 @@ export default function ReviewRequestsPage() {
                   เมื่อทั้ง{roles.owner}และ{roles.claimant}ยืนยันแล้ว ระบบจะปิดประกาศอัตโนมัติ
                 </p>
 
-                <div className="receiver-handover-note">
-                  <strong>ช่องทางติดต่อ{roles.claimant} ({activeRequest.requester}):</strong>
-                  {activeRequest.requesterPhone && <p>โทร {activeRequest.requesterPhone}</p>}
-                  {activeRequest.requesterContact && <p>อื่น ๆ {activeRequest.requesterContact}</p>}
-                  {activeRequest.requesterEmail && <p>อีเมล {activeRequest.requesterEmail}</p>}
+                <div className="handover-contact-card">
+                  <p className="handover-contact-title">
+                    ติดต่อ{roles.claimant} · {activeRequest.requester}
+                  </p>
+
+                  {activeRequest.requesterPhone && (
+                    <div className="handover-contact-row">
+                      <span className="handover-contact-icon" aria-hidden="true"><Phone size={16} /></span>
+                      <div className="handover-contact-text">
+                        <span className="handover-contact-label">เบอร์โทร</span>
+                        <span className="handover-contact-value">
+                          {activeRequest.requesterPhone.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3')}
+                        </span>
+                      </div>
+                      <a
+                        className="btn btn-secondary btn-sm handover-contact-action"
+                        href={`tel:${activeRequest.requesterPhone}`}
+                        aria-label={`โทรหา${roles.claimant}`}
+                      >
+                        <Phone size={14} aria-hidden="true" />
+                        <span className="handover-contact-action-text">โทร</span>
+                      </a>
+                    </div>
+                  )}
+
+                  {activeRequest.requesterContact && (
+                    <div className="handover-contact-row">
+                      <span className="handover-contact-icon" aria-hidden="true"><MessageCircle size={16} /></span>
+                      <div className="handover-contact-text">
+                        <span className="handover-contact-label">ช่องทางอื่น</span>
+                        <span className="handover-contact-value">{activeRequest.requesterContact}</span>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="handover-contact-action"
+                        onClick={() => copyContact(activeRequest.requesterContact)}
+                        aria-label={copied ? 'คัดลอกแล้ว' : 'คัดลอกช่องทางติดต่อ'}
+                      >
+                        {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+                        <span className="handover-contact-action-text">{copied ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
+                      </Button>
+                    </div>
+                  )}
+
+                  {!activeRequest.requesterPhone && !activeRequest.requesterContact && (
+                    <p className="handover-contact-empty">{roles.claimant}ยังไม่ได้ระบุช่องทางติดต่อในโปรไฟล์</p>
+                  )}
                 </div>
 
                 <div className="review-handover-steps-grid">

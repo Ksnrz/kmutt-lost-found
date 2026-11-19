@@ -561,3 +561,86 @@
     justify-content: center;
   }
 }
+
+/* Claimant contact in the handover box (shown after the claim is accepted) */
+.handover-contact-card {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+
+.handover-contact-title {
+  margin: 0 0 4px;
+  font-size: var(--text-meta);
+  font-weight: var(--fw-bold);
+  color: var(--color-gray-dark);
+}
+
+.handover-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.handover-contact-row + .handover-contact-row {
+  border-top: 1px solid var(--color-gray-light);
+}
+
+.handover-contact-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--color-orange-subtle);
+  color: var(--color-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.handover-contact-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.handover-contact-label {
+  font-size: var(--text-helper-status);
+  color: var(--color-gray);
+}
+
+.handover-contact-value {
+  font-size: var(--text-body);
+  font-weight: var(--fw-medium);
+  color: var(--color-gray-dark);
+  overflow-wrap: anywhere;
+}
+
+.handover-contact-action {
+  gap: 6px;
+  min-height: 40px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.handover-contact-empty {
+  margin: 4px 0 0;
+  font-size: var(--text-meta);
+  color: var(--color-gray);
+}
+
+/* phones: icon-only actions (aria-label keeps the name) so the contact text gets the width */
+@media (max-width: 480px) {
+  .handover-contact-action {
+    min-width: 40px;
+    padding: 6px 10px;
+  }
+
+  .handover-contact-action-text {
+    display: none;
+  }
+}

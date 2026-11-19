@@ -168,7 +168,6 @@ router.get('/posts/:id/verify', requireAuth, async (req, res, next) => {
         u.student_id,
         -- the claimant's contact is shared with the poster only once the claim is accepted
         CASE WHEN v.verify_status IN ('ACCEPTED', 'COMPLETED') THEN u.phone_number END AS "requesterPhone",
-        CASE WHEN v.verify_status IN ('ACCEPTED', 'COMPLETED') THEN u.email END AS "requesterEmail",
         CASE WHEN v.verify_status IN ('ACCEPTED', 'COMPLETED') THEN NULLIF(u.contact_info, '') END AS "requesterContact",
         COALESCE(
           (SELECT json_agg(vi.verify_image_url) 
