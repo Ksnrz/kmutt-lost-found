@@ -346,6 +346,26 @@
   background-color: #fafbfd;
 }
 
+.account-data-table tbody tr.account-unread-claim {
+  background-color: #fff1e8;
+}
+
+.account-claim-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.account-unread-label {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ffdfca;
+  color: #913114;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .account-data-table tbody tr:last-child td {
   border-bottom: none;
 }
@@ -576,9 +596,6 @@
   opacity: 0.7;
 }
 
-/* ============================================================
-   กล่องแสดงเมื่อไม่มีข้อมูล (Empty State)
-   ============================================================ */
 .account-empty-state {
   padding: 56px 24px;
   text-align: center;
@@ -588,23 +605,8 @@
   margin-top: 8px;
 }
 
-.account-empty-icon {
-  font-size: 38px;
-  display: block;
-  margin-bottom: 12px;
-}
-
-.account-empty-title {
-  color: var(--color-gray-dark);
-  font-size: 17px;
-  font-weight: var(--fw-bold);
-  margin: 0 0 6px 0;
-}
-
-.account-empty-desc {
-  color: var(--color-gray);
-  font-size: var(--text-meta);
-  margin: 0;
+.account-empty-state > .empty-state {
+  padding: 0;
 }
 
 .account-tab-icon {

@@ -8,6 +8,7 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import ImageUpload from '../components/ImageUpload';
 import Line from '../components/Line';
+import LocalImagePreview from '../components/ui/LocalImagePreview';
 import PageHeader from '../components/ui/PageHeader';
 import './CreatePost.css';
 
@@ -29,7 +30,6 @@ function CreatePost() {
   const [depositLocation, setDepositLocation] = useState(''); // location_id of the deposit building
   const [depositDetail, setDepositDetail] = useState('');
   const [images, setImages] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
 
   const [locations, setLocations] = useState([]);
 
@@ -84,28 +84,8 @@ function CreatePost() {
     fetchLocations();
   }, []);
 
-  // ==============================
-  // Image preview
-  // ==============================
-
-  useEffect(() => {
-    const previewUrls = images.map((image) =>
-      URL.createObjectURL(image)
-    );
-
-    setImagePreviews(previewUrls);
-
-    return () => {
-      previewUrls.forEach((url) =>
-        URL.revokeObjectURL(url)
-      );
-    };
-  }, [images]);
-
-  // ==============================
-  // Handle image selection
-  // ==============================
-
+  // สร้าง Preview รูปภาพ และคืนหน่วยความจำเมื่อเปลี่ยนรูปหรือออกจากหน้า
+  // เลือกรูปภาพ
   const handleImageChange = (e) => {
     const selectedImages = Array.from(
       e.target.files || []
@@ -338,7 +318,7 @@ function CreatePost() {
           onBack={() => navigate('/posts')}
           tag="CREATE POST"
           title="สร้างโพสต์"
-          subtitle="กรอกรายละเอียดสิ่งของเพื่อลงประกาศหาเจ้าของหรือตามหาของที่หาย"
+          subtitle="กรอกรายละเอียดสิ่งของเพื่อประกาศหาเจ้าของหรือตามหาของที่หาย"
         />
 
         <div className="form-layout">
@@ -451,8 +431,7 @@ function CreatePost() {
               />
 
               {/* Image Preview */}
-
-              {imagePreviews.length > 0 && (
+              {images.length > 0 && (
                 <div style={{ marginTop: '16px' }}>
 
                   <h3>
@@ -466,19 +445,17 @@ function CreatePost() {
                       gap: '12px',
                     }}
                   >
-
-                    {imagePreviews.map((preview, index) => (
+                    {images.map((file, index) => (
                       <div
-                        key={`${preview}-${index}`}
+                        key={`${file.name}-${index}`}
                         style={{
                           position: 'relative',
                           width: '110px',
                           height: '110px',
                         }}
                       >
-
-                        <img
-                          src={preview}
+                        <LocalImagePreview
+                          file={file}
                           alt={`ตัวอย่างรูปภาพ ${index + 1}`}
                           style={{
                             width: '100%',

@@ -89,6 +89,10 @@
   align-items: start;
 }
 
+.review-requests-grid.is-empty {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 @media (max-width: 860px) {
   .review-requests-grid {
     grid-template-columns: 1fr;
@@ -236,6 +240,25 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.review-evidence-box > .empty-state {
+  gap: 4px;
+  padding: 4px;
+}
+
+.review-evidence-box .empty-state-icon {
+  width: 32px;
+  margin: 0;
+}
+
+.review-evidence-box .empty-state-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.review-evidence-box .empty-state-title {
+  font-size: 12px;
 }
 
 /* กล่องแจ้งเตือนสถานะต่างๆ */
@@ -429,30 +452,32 @@
 
 .review-handover-cancel-row {
   margin-top: 10px;
-  text-align: right;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.review-cancel-link {
-  background: none;
-  border: none;
-  color: #dc2626;
-  font-size: var(--text-helper-status);
-  text-decoration: underline;
-  cursor: pointer;
-  padding: 4px 0;
-  font-family: inherit;
-  transition: color 0.15s;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.review-cancel-link:hover {
+.review-handover-cancel-row .review-cancel-handover {
+  gap: 8px;
+  background: #fff;
+  border-color: #fecaca;
   color: #991b1b;
+  white-space: normal;
 }
 
-.review-cancel-icon {
-  flex-shrink: 0;
+.review-handover-cancel-row .review-cancel-handover:hover {
+  background: #fff1f2;
+  border-color: #fca5a5;
+}
+
+.review-cancel-handover:focus-visible {
+  outline: 2px solid #991b1b;
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .review-cancel-handover {
+    width: 100%;
+  }
 }
 
 /* ส่วนหมายเหตุสำหรับผู้ส่ง */

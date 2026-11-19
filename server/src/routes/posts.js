@@ -120,7 +120,7 @@ router.get('/', async (req, res) => {
                             json_build_object(
                                 'item_image_id', item_image_id,
                                 'item_image_url', item_image_url
-                            )
+                            ) ORDER BY item_image_id
                         )
                         FROM item_images
                         WHERE item_images.post_id = posts.post_id

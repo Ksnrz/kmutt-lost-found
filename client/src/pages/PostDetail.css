@@ -6,7 +6,6 @@
 .postdetail-page {
   min-height: calc(100vh - 72px);
   width: 100%;
-  background-color: var(--color-bg-page, #f8fafc);
   color: var(--color-gray-dark, #1e2022);
 }
 
@@ -17,63 +16,8 @@
   padding: clamp(20px, 3vw, 40px) clamp(16px, 3.5vw, 48px);
   box-sizing: border-box;
   text-align: left;
+  overflow-wrap: anywhere;
   font-family: var(--font-family-base, 'Noto Sans Thai', sans-serif);
-}
-
-/* ============================================================
-   Back Row
-   ============================================================ */
-.postdetail-back-row {
-  margin-bottom: 16px;
-}
-
-/* ============================================================
-   Header Section
-   ============================================================ */
-.postdetail-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 20px;
-  margin-bottom: 24px;
-}
-
-.postdetail-header-left {
-  flex: 1;
-  min-width: 0;
-}
-
-.postdetail-tag {
-  color: var(--color-primary, #fa4616);
-  font-size: var(--text-helper-status, 12px);
-  font-weight: var(--fw-bold, 700);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.postdetail-title {
-  color: var(--color-gray-dark, #1e2022);
-  font-size: var(--text-h1-page, 28px);
-  font-weight: var(--fw-bold, 700);
-  line-height: 1.3;
-  margin: 0 0 10px 0;
-}
-
-.postdetail-badge-wrap {
-  display: flex;
-  align-items: center;
-}
-
-.postdetail-header-right {
-  flex-shrink: 0;
-  padding-bottom: 6px;
-}
-
-.postdetail-date-text {
-  font-size: var(--text-meta, 14px);
-  color: var(--color-gray, #7b8189);
-  font-weight: var(--fw-medium, 500);
 }
 
 /* ============================================================
@@ -650,21 +594,58 @@
 /* ============================================================
    Responsive Breakpoints
    ============================================================ */
-@media (max-width: 960px) {
-  .postdetail-header-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
+@media (max-width: 1024px) {
   .postdetail-layout {
-    flex-direction: column;
-    align-items: stretch; /* flex-start made the stacked main column shrink to its content */
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: start;
+    gap: 24px;
   }
 
   .postdetail-sidebar {
     min-width: 0;
-    max-width: 100%;
-    width: 100%;
+    max-width: none;
+  }
+
+  .postdetail-page .page-header-main-row {
+    padding-inline-end: clamp(48px, 14vw, 144px);
+  }
+
+  .postdetail-page .page-header-art {
+    width: clamp(48px, 14vw, 136px);
+  }
+
+  .postdetail-page .custody-info-row {
+    align-items: baseline;
+    flex-wrap: wrap;
+  }
+
+  .postdetail-page .btn-handover-action {
+    white-space: normal;
+  }
+
+  .postdetail-thumb {
+    min-width: 0;
+  }
+}
+
+@media (width < 640px) {
+  .postdetail-layout,
+  .postdetail-page .review-handover-steps-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .postdetail-main-image {
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+
+  .postdetail-main-image img {
+    object-fit: contain;
+  }
+
+  .postdetail-desc-card,
+  .postdetail-sidebar-card {
+    padding: 16px;
   }
 }

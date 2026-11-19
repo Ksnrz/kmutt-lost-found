@@ -7,13 +7,14 @@ import {
   AlertTriangle,
   XCircle,
   Ban,
-  RotateCcw,
 } from 'lucide-react';
 import Card from '../../components/ui/Card';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
 import Thumbnail from '../../components/ui/Thumbnail';
 import Badge from '../../components/ui/Badge';
+import EmptyState from '../../components/ui/EmptyState';
 import { claimService } from '../../services/claimService';
 import { apiRequest } from '../../api';
 import './ReviewRequestsPage.css';
@@ -24,7 +25,7 @@ const evidenceUrls = (claim) =>
 
 /**
  * ReviewRequestsPage Component — หน้าตรวจคำขอที่ส่งมายังประกาศของฉัน (RECEIVED REQUESTS)
- * Route URL: /requests/review
+ * Route URL: /posts/:postId/review
  */
 export default function ReviewRequestsPage() {
   const navigate = useNavigate();
@@ -38,6 +39,8 @@ export default function ReviewRequestsPage() {
 
   // State 2: รายการคำขอทั้งหมด
   const [requests, setRequests] = useState([]);
+  const [confirmation, setConfirmation] = useState(null);
+  const [requestsStatus, setRequestsStatus] = useState(null);
 
   // State 3: รหัสคำขอที่กำลังเลือกดูรายละเอียดอยู่
   const [selectedId, setSelectedId] = useState(null);
@@ -54,10 +57,16 @@ export default function ReviewRequestsPage() {
     claimService.getClaimsByPost(targetPostId).then((data) => {
       if (isMounted && data) {
         setRequests(data);
+        setRequestsStatus({ postId: targetPostId });
         if (data[0]?.id || data[0]?.verify_id) {
           setSelectedId(String(data[0].id || data[0].verify_id));
         }
       }
+    }).catch((err) => {
+      if (isMounted) setRequestsStatus({
+        postId: targetPostId,
+        error: err.message || 'ไม่สามารถโหลดคำขอได้',
+      });
     });
 
     // ซิงก์ข้อมูลทันทีเมื่อมีการส่งคำขอใหม่จากหน้า 6 หรือมีการอัปเดตจากหน้าอื่น
@@ -86,6 +95,8 @@ export default function ReviewRequestsPage() {
 
   // ค้นหาข้อมูลคำขอที่กำลังถูกเลือก
   const activeRequest = requests.find((r) => r.id === selectedId) || requests[0];
+  const hasRequests = requests.length > 0;
+  const currentRequestsStatus = requestsStatus?.postId === targetPostId ? requestsStatus : null;
 
   // ค้นหาว่ามีคำขออื่นในโพสต์นี้ที่ได้รับการ ACCEPTED อยู่แล้วหรือไม่ (กฎ 1 คนต่อโพสต์)
   const acceptedClaim = requests.find((r) => r.status === 'ACCEPTED');
@@ -104,13 +115,19 @@ export default function ReviewRequestsPage() {
   };
 
   // 2. ปฏิเสธคำขอ (REJECTED)
-  const handleReject = async () => {
+  const handleReject = () => {
     if (!activeRequest) return;
 
-    const confirmReject = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอ #${activeRequest.id}?`);
-    if (!confirmReject) return;
-
-    if (await run(() => claimService.updateClaimStatus(activeRequest.id, 'REJECTED', noteText))) setNoteText('');
+    setConfirmation({
+      title: 'ยืนยันการปฏิเสธคำขอ',
+      description: `ต้องการปฏิเสธคำขอ #${activeRequest.id} ใช่หรือไม่?`,
+      confirmText: 'ปฏิเสธคำขอ',
+      icon: XCircle,
+      onConfirm: async () => {
+        await claimService.updateClaimStatus(activeRequest.id, 'REJECTED', noteText);
+        setNoteText('');
+      },
+    });
   };
 
   // 3. ฝ่ายผู้พบ (คุณ) กดยืนยันการส่งมอบ (Dual Confirmation)
@@ -122,22 +139,19 @@ export default function ReviewRequestsPage() {
   };
 
   // 4. ส่งมอบไม่สำเร็จ ➔ ยกเลิกการตอบรับ (CANCELLED) เพื่อให้กลับไปเลือกคำขออื่นที่รออยู่ได้
-  const handleCancelAccepted = async (id) => {
-    const confirmCancel = window.confirm('ต้องการยกเลิกการตอบรับคำขอนี้ใช่หรือไม่? (ระบบจะเปิดให้คุณสามารถเลือกคำขออื่นที่ยังรออยู่ได้)');
-    if (!confirmCancel) return;
+  const handleCancelAccepted = (id) => setConfirmation({
+    title: 'ยืนยันการยกเลิกการส่งมอบ',
+    description: 'ต้องการยกเลิกการส่งมอบใช่หรือไม่? คำขอนี้จะกลับไปอยู่ในสถานะรอตรวจ และคุณสามารถเลือกคำขออื่นได้',
+    confirmText: 'ยืนยันการยกเลิก',
+    icon: XCircle,
+    onConfirm: () => claimService.updateClaimStatus(id, 'PENDING', 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ'),
+  });
 
-    // server รับเฉพาะ ACCEPTED -> PENDING: คำขอนี้กลับไปรอตรวจ และคำขออื่นที่ยัง PENDING อยู่ก็ตอบรับแทนได้
-    await run(() => claimService.updateClaimStatus(id, 'PENDING', 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ'));
-  };
-
-  // 5. รีเซ็ตสถานะกลับมาเป็น PENDING 
-  const handleResetStatus = async (id) => {
-    if (await run(() => claimService.updateClaimStatus(id, 'PENDING', ''))) setPostStatus('OPEN');
-  };
+  const fromReceivedRequests = ['/requests/review', '/account'].includes(location.state?.from);
 
   const handleGoBack = () => {
-    if (location.state?.from === '/account') {
-      navigate('/account', { state: { tab: 'my_received_claims' } });
+    if (fromReceivedRequests) {
+      navigate('/requests/review');
     } else {
       navigate(`/posts/${targetPostId}`);
     }
@@ -149,10 +163,11 @@ export default function ReviewRequestsPage() {
       <PageHeader
         tag="RECEIVED REQUESTS"
         title="คำขอที่ส่งมายังประกาศของฉัน"
-        subtitle="ตรวจหลักฐานและยืนยันการส่งมอบสิ่งของคืนเจ้าของตามกฎระบบ"
-        backText={location.state?.from === '/account' ? 'กลับไปหน้าประกาศของฉัน' : 'กลับไปหน้ารายละเอียดโพสต์'}
+        subtitle="ตรวจหลักฐานและยืนยันการส่งมอบสิ่งของคืนเจ้าของ"
+        backText={fromReceivedRequests ? 'กลับไปหน้ารออนุมัติ' : 'กลับไปหน้ารายละเอียดโพสต์'}
         onBack={handleGoBack}
       />
+      {confirmation && <ConfirmModal {...confirmation} onClose={() => setConfirmation(null)} />}
 
       {/* แบนเนอร์แสดงสถานะโพสต์ */}
       <div className="review-post-banner">
@@ -179,7 +194,10 @@ export default function ReviewRequestsPage() {
       </div>
 
       {/* เลย์เอาต์แบ่ง 2 คอลัมน์ตาม Figma */}
-      <div className="review-requests-grid">
+      {!currentRequestsStatus && <p role="status">กำลังโหลดคำขอ…</p>}
+      {currentRequestsStatus?.error && <p role="alert">{currentRequestsStatus.error}</p>}
+      {currentRequestsStatus && !currentRequestsStatus.error && (
+      <div className={`review-requests-grid${hasRequests ? '' : ' is-empty'}`}>
         {/* ========================================================
             คอลัมน์ซ้าย: การ์ดรายการคำขอที่ได้รับ 
             ======================================================== */}
@@ -192,6 +210,7 @@ export default function ReviewRequestsPage() {
           </div>
 
           <div className="review-items-list">
+            {!hasRequests && <EmptyState title="ยังไม่มีคำขอสำหรับประกาศนี้" />}
             {requests.map((item) => {
               const isSelected = item.id === activeRequest?.id;
 
@@ -264,7 +283,9 @@ export default function ReviewRequestsPage() {
                 </a>
               ))}
               {evidenceUrls(activeRequest).length === 0 && (
-                <div className="review-evidence-box">ไม่มีรูปหลักฐาน</div>
+                <div className="review-evidence-box">
+                  <EmptyState compact as="p" title="ไม่มีรูปหลักฐาน" />
+                </div>
               )}
             </div>
 
@@ -274,9 +295,7 @@ export default function ReviewRequestsPage() {
             {isOtherAccepted && activeRequest.status === 'PENDING' && (
               <div className="review-status-alert is-blocked">
                 <AlertTriangle size={18} className="review-alert-icon" />
-                <div>
-                  มีคำขอ <strong>#{acceptedClaim.id} ({acceptedClaim.requester})</strong> ได้รับการตอบรับอยู่แล้ว — ระบบจำกัดตอบรับได้เพียง 1 คนต่อโพสต์ในเวลาเดียวกัน
-                </div>
+                <div>มีคำขอที่ได้รับการอนุมัติแล้ว</div>
               </div>
             )}
 
@@ -293,7 +312,7 @@ export default function ReviewRequestsPage() {
                   <span className="review-handover-badge">รอทั้ง 2 ฝ่ายยืนยัน</span>
                 </div>
                 <p className="review-handover-sub">
-                  ตามกฎระบบ: ทั้งผู้พบและผู้รับต้องยืนยันการส่งมอบ เมื่อยืนยันครบ โพสต์จะเปลี่ยนเป็น <strong>CLOSED</strong> และคำขออื่นที่ค้างอยู่จะถูกยกเลิกอัตโนมัติ
+                  เมื่อทั้งผู้พบและผู้รับยืนยันการส่งมอบแล้ว ระบบจะปิดประกาศอัตโนมัติ
                 </p>
 
                 <div className="review-handover-steps-grid">
@@ -350,14 +369,14 @@ export default function ReviewRequestsPage() {
 
                 {/* กฎข้อที่ 4: ส่งมอบไม่สำเร็จ สามารถยกเลิกได้ */}
                 <div className="review-handover-cancel-row">
-                  <button
-                    type="button"
-                    className="review-cancel-link"
+                  <Button
+                    variant="secondary"
+                    className="review-cancel-handover"
                     onClick={() => handleCancelAccepted(activeRequest.id)}
                   >
-                    <XCircle size={14} className="review-cancel-icon" />
-                    <span>ส่งมอบไม่สำเร็จ? ยกเลิกการตอบรับเพื่อกลับไปเลือกคำขออื่นที่รออยู่</span>
-                  </button>
+                    <XCircle size={18} aria-hidden="true" />
+                    ยกเลิกการส่งมอบ
+                  </Button>
                 </div>
               </div>
             )}
@@ -367,7 +386,7 @@ export default function ReviewRequestsPage() {
               <div className="review-status-alert is-completed">
                 <CheckCircle2 size={20} className="review-alert-icon" />
                 <div>
-                  <strong>ส่งมอบสำเร็จเรียบร้อยแล้ว!</strong> ทั้งสองฝ่ายยืนยันครบถ้วน โพสต์ประกาศถูกเปลี่ยนเป็น <strong>CLOSED</strong> และคำขออื่นที่ค้างอยู่ถูกยกเลิกแล้ว
+                   <strong>ส่งมอบสำเร็จแล้ว ระบบปิดประกาศเรียบร้อย</strong>
                 </div>
               </div>
             )}
@@ -408,21 +427,8 @@ export default function ReviewRequestsPage() {
             </div>
 
             {/* ปุ่มกดปฏิเสธ / อนุมัติคำขอ*/}
-            <div className="review-detail-actions">
-              {activeRequest.status === 'ACCEPTED' && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  type="button"
-                  onClick={() => handleResetStatus(activeRequest.id)}
-                >
-                  <RotateCcw size={13} className="review-btn-icon" />
-                  <span>รีเซ็ตเพื่อตรวจใหม่</span>
-                </Button>
-              )}
-
-              {activeRequest.status === 'PENDING' && (
-                <>
+            {activeRequest.status === 'PENDING' && (
+              <div className="review-detail-actions">
                   <Button
                     variant="secondary"
                     type="button"
@@ -439,16 +445,16 @@ export default function ReviewRequestsPage() {
                   >
                     อนุมัติคำขอ
                   </Button>
-                </>
-              )}
-            </div>
+              </div>
+            )}
           </Card>
-        ) : (
+        ) : hasRequests ? (
           <Card className="review-detail-card">
             <p>กรุณาเลือกคำขอที่ต้องการตรวจสอบ</p>
           </Card>
-        )}
+        ) : null}
       </div>
+      )}
     </div>
   );
 }

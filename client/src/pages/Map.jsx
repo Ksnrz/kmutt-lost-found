@@ -27,6 +27,10 @@ export default function Map() {
   return (
     <div className="map-page">
       <div className="map-container">
+        <header className="map-heading">
+          <h1>เลือก<span>สถานที่</span></h1>
+          <p>เลือกตึกเพื่อดูประกาศของหายและพบของ</p>
+        </header>
         {/* Toolbar: ตัวเลือกประเภทโพสต์ */}
         <div className="map-toolbar">
           <div className="map-tabs">

@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import {
-  Inbox,
   CheckCircle2,
   X,
   Search,
@@ -11,10 +10,17 @@ import {
 } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import Badge from '../components/ui/Badge';
+import Button from '../components/ui/Button';
+import EmptyState from '../components/ui/EmptyState';
 import { apiRequest } from '../api';
 import './Listpost.css';
 
 function Listpost() {
+  const location = useLocation();
+  return <PostList key={location.key} />;
+}
+
+function PostList() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,7 +47,7 @@ function Listpost() {
 
   const [searchText, setSearchText] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [requestedPage, setCurrentPage] = useState(1);
 
   const POSTS_PER_PAGE = 8;
 
@@ -135,11 +141,7 @@ function Listpost() {
     filteredPosts.length / POSTS_PER_PAGE
   );
 
-  useEffect(() => {
-    if (currentPage > Math.max(totalPages, 1)) {
-      setCurrentPage(Math.max(totalPages, 1));
-    }
-  }, [currentPage, totalPages]);
+  const currentPage = Math.min(requestedPage, Math.max(totalPages, 1));
 
   const paginatedPosts = filteredPosts.slice(
     (currentPage - 1) * POSTS_PER_PAGE,
@@ -165,16 +167,41 @@ function Listpost() {
     <div className="listpost-page">
       <div className="listpost-container">
         <PageHeader
-          backText="กลับแผนที่"
-          onBack={() => navigate('/map')}
+          className="listpost-page-header"
+          backText={buildingParam ? 'กลับแผนที่' : undefined}
+          onBack={buildingParam ? () => navigate('/map') : undefined}
           tag="CAMPUS POSTS"
           title={
             buildingParam
               ? `รายการโพสต์อาคาร ${buildingParam}`
               : 'รายการโพสต์'
           }
-          subtitle="ดูสิ่งของที่หายและพบในอาคารนี้"
+          subtitle={buildingParam ? 'ดูสิ่งของที่หายและพบในอาคารนี้' : 'ดูสิ่งของที่หายและพบในมหาวิทยาลัย'}
         />
+
+        {/* Search และ Sort */}
+        <div className="listpost-tools">
+          <div className="listpost-search">
+            <Search size={18} aria-hidden="true" />
+
+            <input
+              type="search"
+              value={searchText}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="ค้นหาชื่อสิ่งของหรือรายละเอียด..."
+              aria-label="ค้นหาโพสต์"
+            />
+          </div>
+
+          <select
+            value={sortOrder}
+            onChange={(e) => handleSortChange(e.target.value)}
+            aria-label="เรียงตามวันที่"
+          >
+            <option value="newest">วันที่: ใหม่ไปเก่า</option>
+            <option value="oldest">วันที่: เก่าไปใหม่</option>
+          </select>
+        </div>
 
         {bannerMessage && (
           <div className="listpost-success-banner" role="status">
@@ -196,66 +223,6 @@ function Listpost() {
             </button>
           </div>
         )}
-
-        {/* Search และ Sort */}
-        <div
-          className="listpost-tools"
-          style={{
-            display: 'flex',
-            gap: '12px',
-            flexWrap: 'wrap',
-            margin: '20px 0',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              flex: '1 1 220px',
-              border: '1px solid #ddd',
-              borderRadius: '10px',
-              padding: '0 12px',
-              background: '#fff',
-              minHeight: '44px',
-            }}
-          >
-            <Search size={18} color="#777" />
-
-            <input
-              type="search"
-              value={searchText}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="ค้นหาชื่อสิ่งของหรือรายละเอียด..."
-              aria-label="ค้นหาโพสต์"
-              style={{
-                border: 'none',
-                outline: 'none',
-                width: '100%',
-                minWidth: 0,
-                fontSize: '14px',
-                background: 'transparent',
-              }}
-            />
-          </div>
-
-          <select
-            value={sortOrder}
-            onChange={(e) => handleSortChange(e.target.value)}
-            aria-label="เรียงตามวันที่"
-            style={{
-              minHeight: '44px',
-              padding: '0 12px',
-              border: '1px solid #ddd',
-              borderRadius: '10px',
-              background: '#fff',
-              fontSize: '14px',
-            }}
-          >
-            <option value="newest">วันที่: ใหม่ไปเก่า</option>
-            <option value="oldest">วันที่: เก่าไปใหม่</option>
-          </select>
-        </div>
 
         <div className="filter-container">
           {['ทั้งหมด', 'ของหาย', 'พบของ'].map((filter) => (
@@ -344,7 +311,7 @@ function Listpost() {
                     <div className="post-image">
                       {post.images?.length > 0 ? (
                         <img
-                          src={`http://localhost:3000${post.images[0].item_image_url}`}
+                          src={post.images[0].item_image_url}
                           alt={post.title}
                           style={{
                             width: '100%',
@@ -380,7 +347,7 @@ function Listpost() {
                           type="button"
                           className="detail-btn"
                           onClick={() =>
-                            navigate(`/posts/${post.post_id}`)
+                            navigate(`/posts/${post.post_id}`, { state: { from: `/posts${location.search}` } })
                           }
                         >
                           ดูรายละเอียด →
@@ -408,7 +375,7 @@ function Listpost() {
                     type="button"
                     disabled={currentPage === 1}
                     onClick={() =>
-                      setCurrentPage((page) => page - 1)
+                      setCurrentPage(currentPage - 1)
                     }
                     style={paginationButtonStyle(
                       currentPage === 1
@@ -446,7 +413,7 @@ function Listpost() {
                     type="button"
                     disabled={currentPage === totalPages}
                     onClick={() =>
-                      setCurrentPage((page) => page + 1)
+                      setCurrentPage(currentPage + 1)
                     }
                     style={paginationButtonStyle(
                       currentPage === totalPages
@@ -462,6 +429,7 @@ function Listpost() {
                   textAlign: 'center',
                   color: '#777',
                   fontSize: '13px',
+                  marginTop: '12px',
                   marginBottom: '20px',
                 }}
               >
@@ -472,50 +440,23 @@ function Listpost() {
             </>
           ) : (
             <div className="listpost-empty-box">
-              <div className="listpost-empty-icon-wrap">
-                <Inbox
-                  size={38}
-                  className="listpost-empty-icon"
-                />
-              </div>
-
-              <h3 className="listpost-empty-title">
-                ไม่พบประกาศ
-                {activeFilter !== 'ทั้งหมด'
-                  ? `ประเภท "${activeFilter}"`
-                  : ''}
-                {buildingParam ? ` ในอาคาร ${buildingParam}` : ''}
-              </h3>
-
-              <p className="listpost-empty-subtitle">
-                ยังไม่มีผู้แจ้งของหายหรือพบของที่ตรงกับเงื่อนไข
-                {buildingParam ? ` ในอาคาร ${buildingParam}` : ''}
-                ลองเปลี่ยนคำค้นหาหรือตัวกรองอีกครั้ง
-              </p>
-
-              <div className="listpost-empty-actions">
-                {(activeFilter !== 'ทั้งหมด' || searchText) && (
-                  <button
-                    type="button"
-                    className="filter-btn"
-                    onClick={() => {
+              <EmptyState
+                as="h2"
+                title={`ไม่พบประกาศ${activeFilter === 'ทั้งหมด' ? 'ทุกประเภท' : `ประเภท “${activeFilter}”`}${buildingParam ? `ในอาคาร ${buildingParam}` : ''}`}
+                description="ลองเปลี่ยนคำค้นหาหรือตัวกรองอีกครั้ง"
+                actions={
+                  <>
+                    <Button variant="secondary" onClick={() => {
                       setActiveFilter('ทั้งหมด');
                       setSearchText('');
                       setCurrentPage(1);
-                    }}
-                  >
-                    ล้างตัวกรองและคำค้นหา
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  className="filter-btn active"
-                  onClick={() => navigate('/map')}
-                >
-                  กลับไปดูแผนที่
-                </button>
-              </div>
+                    }}>
+                      ล้างตัวกรองและคำค้นหา
+                    </Button>
+                    <Button onClick={() => navigate('/map')}>กลับไปดูแผนที่</Button>
+                  </>
+                }
+              />
             </div>
           )
         )}

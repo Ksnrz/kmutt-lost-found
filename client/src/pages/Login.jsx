@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
-import mascot from '../assets/login/mascot.png'
+import BrandWordmark from '../components/BrandWordmark'
+import AuthBrandPanel from '../components/AuthBrandPanel'
 import './Login.css'
 
 export default function Login() {
@@ -26,21 +27,10 @@ export default function Login() {
   return (
     <main className="login-page">
       <div className="login-layout">
-        <section className="login-intro">
-          <div className="login-illustration">
-            <img src={mascot} alt="มาสคอตค้นหาของหาย" />
-          </div>
-          <h2 className="login-headline">
-            ของหาย?<br />ให้เรา<span>ช่วยหา</span>
-          </h2>
-          <p className="login-description">
-            ค้นหาประกาศตามตึก แจ้งพบสิ่งของ<br />
-            และส่งคำขอรับคืน พร้อมหลักฐาน
-          </p>
-        </section>
+        <AuthBrandPanel />
 
         <section className="login-card">
-          <p className="login-brand">KMUTT <strong>Lost &amp; Found</strong></p>
+          <p className="login-brand"><BrandWordmark /></p>
           <header className="login-header">
             <h1>เข้าสู่ระบบ</h1>
             <p>กรอกข้อมูลบัญชีเพื่อเข้าใช้งาน</p>

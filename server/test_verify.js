@@ -68,6 +68,79 @@ after(async () => {
   server.kill();
 });
 
+test('claim decisions and handover events notify only the claimant without duplicate retries', async () => {
+  const accepted = await makeClaim(await makePost());
+  const rejected = await makeClaim(await makePost());
+  const cancelled = await makeClaim(await makePost());
+  const putStatus = (id, status) =>
+    call(`/verify/${id}/status`, { token: tok.owner, method: 'PUT', body: { status } });
+  const list = async (token = tok.claimant) => {
+    const result = await call('/claim-notifications', { token });
+    assert.equal(result.status, 200);
+    return result.json.notifications;
+  };
+  const markRead = (id, token = tok.claimant) =>
+    call(`/claim-notifications/${id}/read`, { token, method: 'PATCH' });
+  const unread = async () => (await list()).filter((item) => !item.read_at).length;
+
+  assert.equal((await call('/claim-notifications')).status, 401);
+  assert.equal((await putStatus(accepted, 'ACCEPTED')).status, 200);
+  assert.equal((await putStatus(accepted, 'ACCEPTED')).status, 400);
+  assert.equal((await putStatus(accepted, 'PENDING')).status, 200);
+  assert.equal((await putStatus(accepted, 'PENDING')).status, 400);
+  assert.equal((await putStatus(accepted, 'ACCEPTED')).status, 200);
+  assert.equal((await putStatus(rejected, 'REJECTED')).status, 200);
+  const notifications = await list();
+  assert.deepEqual(notifications.map(({ verify_id, outcome, item_title }) => [verify_id, outcome, item_title]), [
+    [rejected, 'REJECTED', 'test wallet'],
+    [accepted, 'ACCEPTED', 'test wallet'],
+    [accepted, 'HANDOVER_CANCELLED', 'test wallet'],
+    [accepted, 'ACCEPTED', 'test wallet'],
+  ]);
+  assert.equal(await unread(), 4);
+  assert.deepEqual(await list(tok.owner), []);
+  assert.equal((await markRead(notifications[0].notification_id, tok.owner)).status, 404);
+  const firstRead = await markRead(notifications[0].notification_id);
+  assert.equal(firstRead.status, 200);
+  assert.ok(firstRead.json.read_at);
+  assert.equal(await unread(), 3);
+  assert.equal((await markRead(notifications[0].notification_id)).json.read_at, firstRead.json.read_at);
+  assert.equal((await list())[0].read_at, firstRead.json.read_at);
+  const markClaimRead = (token) =>
+    call(`/verify/${accepted}/notifications/read`, { token, method: 'PATCH' });
+  assert.deepEqual((await markClaimRead(tok.owner)).json.notifications, []);
+  assert.equal(await unread(), 3);
+  const secondRead = await markClaimRead(tok.claimant);
+  assert.equal(secondRead.status, 200);
+  assert.deepEqual(
+    new Set(secondRead.json.notifications.map(({ notification_id }) => notification_id)),
+    new Set(notifications.slice(1).map(({ notification_id }) => notification_id))
+  );
+  assert.ok(secondRead.json.notifications.every(({ read_at }) => read_at));
+  assert.deepEqual((await markClaimRead(tok.claimant)).json.notifications, []);
+  assert.equal(await unread(), 0);
+
+  assert.equal((await call(`/verify/${cancelled}/cancel`, { token: tok.claimant, method: 'PATCH', body: {} })).status, 200);
+  const confirmFinder = () =>
+    call(`/verify/${accepted}/confirm`, { token: tok.owner, method: 'PUT', body: { party: 'finder' } });
+  const finderResult = await confirmFinder();
+  assert.equal(finderResult.status, 200);
+  assert.equal(finderResult.json.postClosed, false);
+  assert.equal(await claimStatus(accepted), 'ACCEPTED');
+  assert.equal((await confirmFinder()).status, 200);
+  assert.equal(await unread(), 1);
+  const [handover] = await list();
+  assert.equal(handover.outcome, 'HANDOVER_CONFIRMED');
+  assert.deepEqual(await list(tok.owner), []);
+  assert.equal((await call(`/verify/${accepted}/confirm`, { token: tok.claimant, method: 'PUT', body: { party: 'receiver' } })).status, 200);
+  assert.equal(await claimStatus(cancelled), 'CANCELLED');
+  assert.equal(await claimStatus(accepted), 'COMPLETED');
+  assert.equal((await list()).length, 5);
+  assert.equal(await unread(), 1);
+  assert.equal((await markRead(handover.notification_id)).status, 200);
+  assert.equal(await unread(), 0);
+});
+
 test('requests without a token are rejected', async () => {
   const postId = await makePost();
   assert.equal((await call(`/posts/${postId}/verify`, { method: 'POST', body: { proof_description: 'x' } })).status, 401);

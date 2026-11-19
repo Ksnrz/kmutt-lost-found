@@ -219,7 +219,7 @@ const handleStatusUpdate = async (req, res, next) => {
 
     // ตรวจสอบคำขอและหาเจ้าของโพสต์
     const checkRes = await client.query(
-      `SELECT v.verify_id, v.post_id, v.verify_status, p.user_id AS post_owner_id, p.post_status
+      `SELECT v.verify_id, v.post_id, v.verify_status, v.user_id AS recipient_id, p.user_id AS post_owner_id, p.post_status
        FROM verify_items v
        JOIN posts p ON v.post_id = p.post_id
        WHERE v.verify_id = $1
@@ -234,6 +234,7 @@ const handleStatusUpdate = async (req, res, next) => {
 
     const {
       post_id: postId,
+      recipient_id: recipientId,
       post_owner_id: postOwnerId,
       post_status: postStatus,
       verify_status: currentStatus,
@@ -291,13 +292,28 @@ const handleStatusUpdate = async (req, res, next) => {
       );
     }
 
-    await client.query('COMMIT');
+    if (status === 'ACCEPTED' || status === 'REJECTED') {
+      await client.query(
+        `INSERT INTO claim_notifications (verify_id, recipient_id, outcome)
+         VALUES ($1, $2, $3)`,
+        [verifyId, recipientId, status]
+      );
+    }
+
+    if (currentStatus === 'ACCEPTED' && status === 'PENDING') {
+      await client.query(
+        `INSERT INTO claim_notifications (verify_id, recipient_id, outcome)
+         VALUES ($1, $2, 'HANDOVER_CANCELLED')`,
+        [verifyId, recipientId]
+      );
+    }
 
     const updatedRes = await client.query(
       `SELECT * FROM verify_items WHERE verify_id = $1`,
       [verifyId]
     );
 
+    await client.query('COMMIT');
     res.json({
       message: 'อัปเดตสถานะคำขอสำเร็จ',
       ok: true,
@@ -314,6 +330,51 @@ const handleStatusUpdate = async (req, res, next) => {
 
 router.put('/verify/:id/status', requireAuth, handleStatusUpdate);
 router.patch('/verify/:id/status', requireAuth, handleStatusUpdate);
+
+router.get('/claim-notifications', requireAuth, async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT n.notification_id, n.verify_id, n.outcome, n.created_at, n.read_at,
+            p.title AS item_title
+     FROM claim_notifications n
+     JOIN verify_items v ON v.verify_id = n.verify_id
+     JOIN posts p ON p.post_id = v.post_id
+     WHERE n.recipient_id = $1
+     ORDER BY n.created_at DESC, n.notification_id DESC`,
+    [req.user.user_id]
+  );
+  res.set('Cache-Control', 'private, no-store').json({ notifications: rows });
+});
+
+router.patch('/claim-notifications/:id/read', requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1 || id > 2147483647) {
+    return res.sendStatus(404);
+  }
+
+  const { rows } = await pool.query(
+    `UPDATE claim_notifications
+     SET read_at = COALESCE(read_at, now())
+     WHERE notification_id = $1 AND recipient_id = $2
+     RETURNING notification_id, read_at`,
+    [id, req.user.user_id]
+  );
+  if (!rows.length) return res.sendStatus(404);
+  res.json(rows[0]);
+});
+
+router.patch('/verify/:id/notifications/read', requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1 || id > 2147483647) return res.sendStatus(404);
+
+  const { rows } = await pool.query(
+    `UPDATE claim_notifications
+     SET read_at = now()
+     WHERE verify_id = $1 AND recipient_id = $2 AND read_at IS NULL
+     RETURNING notification_id, read_at`,
+    [id, req.user.user_id]
+  );
+  res.json({ notifications: rows });
+});
 
 // ============================================================
 // C5: PATCH/PUT /api/verify/:id/cancel — ยกเลิกคำขอตัวเอง (เฉพาะที่ยัง PENDING)
@@ -459,6 +520,14 @@ const handleDualConfirm = async (req, res, next) => {
       [newFinderConfirmed, newReceiverConfirmed, isBothConfirmed, verifyId]
     );
 
+    if (party === 'finder' && !current.finder_confirmed && current.verify_status === 'ACCEPTED') {
+      await client.query(
+        `INSERT INTO claim_notifications (verify_id, recipient_id, outcome)
+         VALUES ($1, $2, 'HANDOVER_CONFIRMED')`,
+        [verifyId, current.requester_id]
+      );
+    }
+
     // 2. เมื่อยืนยันครบทั้ง 2 ฝ่าย -> ปิดโพสต์ และยกเลิกคำขออื่นที่ค้าง ใน TRANSACTION เดียวกัน
     if (isBothConfirmed) {
       // ปิดโพสต์ประกาศเป็น CLOSED
@@ -524,6 +593,13 @@ router.get('/verify/my-claims', requireAuth, async (req, res, next) => {
         v.verify_status AS status,
         v.created_at,
         p.title AS "itemTitle",
+        (
+          SELECT i.item_image_url
+          FROM item_images i
+          WHERE i.post_id = p.post_id
+          ORDER BY i.item_image_id
+          LIMIT 1
+        ) AS item_image_url,
         p.title AS "postTitle",
         p.post_type AS "typeEn",
         p.post_status,

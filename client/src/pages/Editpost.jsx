@@ -6,7 +6,10 @@ import { apiRequest } from '../api';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import LocalImagePreview from '../components/ui/LocalImagePreview';
 import PageHeader from '../components/ui/PageHeader';
+import ConfirmModal from '../components/ui/ConfirmModal';
+import { cancelPostConfirmation } from '../components/ui/confirmPresets';
 import './Editpost.css';
 
 const MAX_IMAGES = 5;
@@ -36,7 +39,6 @@ function Editpost() {
   const [existingImages, setExistingImages] = useState([]);
   const [deletedImageIds, setDeletedImageIds] = useState([]);
   const [newImages, setNewImages] = useState([]);
-  const [previewUrls, setPreviewUrls] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -91,22 +93,7 @@ function Editpost() {
   }, [postId]);
 
   // สร้างและล้าง URL สำหรับตัวอย่างรูปใหม่
-  useEffect(() => {
-    const urls = newImages.map((file) =>
-      URL.createObjectURL(file)
-    );
-
-    setPreviewUrls(urls);
-
-    return () => {
-      urls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [newImages]);
-
-  const goBack = () =>
-    navigate(
-      fromAccount ? '/account' : `/posts/${postId}`
-    );
+  const goBack = () => navigate(fromAccount ? '/account' : `/posts/${postId}`);
 
   // เลือกรูปภาพใหม่
   const handleImageChange = (e) => {
@@ -315,7 +302,6 @@ function Editpost() {
     }
   };
 
-  // ยืนยันการยกเลิกประกาศ
   const handleDelete = async () => {
     try {
       setSaving(true);
@@ -333,9 +319,6 @@ function Editpost() {
           }),
         },
       });
-    } catch (err) {
-      setError(err.message);
-      setShowDeleteConfirm(false);
     } finally {
       setSaving(false);
     }
@@ -539,17 +522,16 @@ function Editpost() {
                   </div>
                 ))}
 
-                {/* รูปภาพใหม่ */}
-                {previewUrls.map((url, index) => (
+                {newImages.map((file, index) => (
                   <div
-                    key={`${url}-${index}`}
+                    key={`${file.name}-${index}`}
                     style={{
                       position: 'relative',
                       aspectRatio: '1 / 1',
                     }}
                   >
-                    <img
-                      src={url}
+                    <LocalImagePreview
+                      file={file}
                       alt="ตัวอย่างรูปใหม่"
                       style={{
                         width: '100%',
@@ -614,7 +596,7 @@ function Editpost() {
                 </label>
               )}
 
-              <p style={{ fontSize: '13px', color: '#666' }}>
+              <p style={{ marginTop: '8px', fontSize: '13px', color: '#666' }}>
                 รองรับ JPG, PNG, WEBP และ GIF ขนาดไม่เกิน 5 MB ต่อรูป
               </p>
 
@@ -778,51 +760,11 @@ function Editpost() {
 
       {/* Modal ยืนยันการยกเลิกประกาศ */}
       {showDeleteConfirm && (
-        <div style={modalOverlayStyle}>
-          <div
-            style={modalStyle}
-            role="dialog"
-            aria-modal="true"
-          >
-            <h2>ยืนยันการยกเลิกประกาศ</h2>
-
-            <p>
-              คุณต้องการยกเลิกประกาศนี้ใช่หรือไม่?
-              การกระทำนี้ไม่สามารถย้อนกลับได้
-            </p>
-
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '10px',
-                marginTop: '20px',
-              }}
-            >
-              <Button
-                type="button"
-                onClick={() =>
-                  setShowDeleteConfirm(false)
-                }
-                disabled={saving}
-              >
-                กลับ
-              </Button>
-
-              <Button
-                type="button"
-                className="btn-delete"
-                onClick={handleDelete}
-                disabled={saving}
-              >
-                {saving
-                  ? 'กำลังดำเนินการ...'
-                  : 'ยืนยันยกเลิกประกาศ'}
-              </Button>
-            </div>
-
-          </div>
-        </div>
+        <ConfirmModal
+          {...cancelPostConfirmation}
+          onConfirm={handleDelete}
+          onClose={() => setShowDeleteConfirm(false)}
+        />
       )}
 
     </div>
@@ -842,26 +784,6 @@ const removeImageButtonStyle = {
   fontSize: '20px',
   lineHeight: '20px',
   cursor: 'pointer',
-};
-
-const modalOverlayStyle = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0, 0, 0, 0.5)',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  padding: '16px',
-  zIndex: 9999,
-};
-
-const modalStyle = {
-  background: 'white',
-  borderRadius: '12px',
-  padding: '24px',
-  width: '100%',
-  maxWidth: '440px',
-  boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
 };
 
 export default Editpost;

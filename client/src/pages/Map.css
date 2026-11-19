@@ -6,13 +6,35 @@
 .map-page {
   min-height: calc(100vh - 72px);
   padding: clamp(20px, 3vh, 36px) clamp(20px, 4vw, 40px);
-  background-color: var(--color-bg-page, #f8fafc);
   color: var(--color-gray-dark, #1e2022);
 }
 
 .map-container {
   max-width: 1440px;
   margin: 0 auto;
+}
+
+.map-heading {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.map-heading h1 {
+  color: #512a0b;
+  font-size: clamp(26px, calc(18px + 1.8vw), 36px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.map-heading h1 span {
+  color: var(--color-primary);
+}
+
+.map-heading p {
+  margin-top: 6px;
+  color: #4b5563;
+  font-size: clamp(14px, calc(12px + 0.4vw), 16px);
+  line-height: 1.5;
 }
 
 /* ============================================================
@@ -265,6 +287,17 @@
 
   .map-image {
     aspect-ratio: 906 / 687;
+  }
+}
+
+@media (max-width: 360px) {
+  .map-tabs {
+    max-width: 100%;
+  }
+
+  .map-tabs span {
+    min-width: 0;
+    padding-inline: 8px;
   }
 }
 

@@ -1,9 +1,11 @@
 
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams, useLocation, useOutletContext } from 'react-router-dom';
 import { Handshake, CheckCircle2, Check, Lock } from 'lucide-react';
 
-import BackButton from '../components/BackButton';
+import ConfirmModal from '../components/ui/ConfirmModal';
+import { cancelPostConfirmation } from '../components/ui/confirmPresets';
+import PageHeader from '../components/ui/PageHeader';
 import Card from '../components/Card';
 import StatusBadge from '../components/StatusBadge';
 import Badge from '../components/ui/Badge';
@@ -18,9 +20,18 @@ function PostDetail() {
   const navigate = useNavigate();
   const { postId } = useParams();
   const locationState = useLocation();
+  const { markClaimRead } = useOutletContext();
 
   const navPost = locationState?.state?.post;
   const claim = locationState?.state?.claim;
+  const from = locationState.state?.from;
+  const fromAccount = from === 'account';
+  const backTo = fromAccount
+    ? claim ? `/profile?claim=${claim.verify_id}` : '/account'
+    : typeof from === 'string' && from.startsWith('/posts?') ? from : '/posts';
+  const backText = fromAccount
+    ? (claim ? 'กลับไปหน้าคำขอของฉัน' : 'กลับไปหน้าประกาศของฉัน')
+    : 'กลับไปรายการประกาศ';
 
   const [apiPost, setApiPost] = useState(null);
   const [me, setMe] = useState(null);
@@ -28,7 +39,6 @@ function PostDetail() {
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null);
-  const [confirmLoading, setConfirmLoading] = useState(false);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -53,6 +63,19 @@ function PostDetail() {
   }, [postId]);
 
   useEffect(() => {
+    if (loading || !locationState.state?.readClaimOnOpen || !claim) return;
+    navigate(locationState.pathname + locationState.search, {
+      replace: true,
+      state: { ...locationState.state, readClaimOnOpen: false },
+    });
+    if (error || String(apiPost?.post_id) !== String(postId) || String(claim.post_id) !== String(postId)) return;
+
+    markClaimRead(claim.verify_id).catch(() => {
+      setToast({ message: 'ไม่สามารถบันทึกว่าอ่านแล้วได้ กรุณาเปิดคำขออีกครั้ง', type: 'error' });
+    });
+  }, [loading, error, apiPost, postId, claim, locationState, markClaimRead, navigate]);
+
+  useEffect(() => {
     if (!toast) return;
 
     const timer = setTimeout(() => {
@@ -66,25 +89,6 @@ function PostDetail() {
     setToast({ message, type });
   };
 
-  const askConfirm = (message, onConfirm) => {
-    setConfirmModal({ message, onConfirm });
-  };
-
-  const handleConfirm = async () => {
-    if (!confirmModal || confirmLoading) return;
-
-    const callback = confirmModal.onConfirm;
-
-    setConfirmModal(null);
-    setConfirmLoading(true);
-
-    try {
-      await callback();
-    } finally {
-      setConfirmLoading(false);
-    }
-  };
-
   const formatDate = (date) => {
     if (!date) return '-';
 
@@ -95,65 +99,37 @@ function PostDetail() {
     });
   };
 
-  const handleCancelPost = () => {
-    askConfirm(
-      'คุณต้องการยกเลิกประกาศนี้ใช่หรือไม่?',
-      async () => {
-        try {
-          setError('');
-
-          await apiRequest(`/posts/${postId}/cancel`, {
-            method: 'PATCH',
-          });
-
-          setApiPost((prev) => ({
-            ...prev,
-            post_status: 'CANCELLED',
-          }));
-
-          showToast('ยกเลิกประกาศสำเร็จ!', 'success');
-        } catch (err) {
-          showToast(
-            err.message || 'ยกเลิกประกาศไม่สำเร็จ',
-            'error'
-          );
-        }
-      }
-    );
-  };
+  const handleCancelPost = () => setConfirmModal({
+    ...cancelPostConfirmation,
+    onConfirm: async () => {
+      await apiRequest(`/posts/${postId}/cancel`, { method: 'PATCH' });
+      setApiPost((prev) => ({ ...prev, post_status: 'CANCELLED' }));
+      showToast('ยกเลิกประกาศสำเร็จ!', 'success');
+    },
+  });
 
   const handleReceiverConfirm = () => {
-    askConfirm(
-      'คุณได้ตรวจเช็กและรับสิ่งของจริงถูกต้องครบถ้วนแล้วใช่หรือไม่?',
-      async () => {
+    setConfirmModal({
+      title: 'ยืนยันการรับสิ่งของ',
+      description: 'คุณตรวจสอบและได้รับสิ่งของครบถ้วนแล้วใช่หรือไม่?',
+      confirmText: 'ยืนยันการรับ',
+      icon: CheckCircle2,
+      onConfirm: async () => {
         const claimId = claim.id || claim.verify_id;
         const targetPostId = post.id || claim.post_id;
 
-        try {
-          const result = await claimService.confirmHandover(
-            claimId,
-            'receiver'
-          );
-
-          navigate('/account', {
-            state: {
-              successMessage: result?.postClosed
-                ? 'ยืนยันได้รับของเรียบร้อยแล้ว การส่งมอบสำเร็จสมบูรณ์!'
-                : 'ยืนยันได้รับของแล้ว กำลังรอผู้พบยืนยันการส่งมอบ',
-              confirmedClaimId: claimId,
-              closedPostId: result?.postClosed
-                ? targetPostId
-                : null,
-            },
-          });
-        } catch (err) {
-          showToast(
-            err.message || 'ยืนยันรับมอบไม่สำเร็จ',
-            'error'
-          );
-        }
-      }
-    );
+        const result = await claimService.confirmHandover(claimId, 'receiver');
+        navigate('/account', {
+          state: {
+            successMessage: result?.postClosed
+              ? 'ยืนยันได้รับของเรียบร้อยแล้ว การส่งมอบสำเร็จสมบูรณ์!'
+              : 'ยืนยันได้รับของแล้ว กำลังรอผู้พบยืนยันการส่งมอบ',
+            confirmedClaimId: claimId,
+            closedPostId: result?.postClosed ? targetPostId : null,
+          },
+        });
+      },
+    });
   };
 
   if (loading) {
@@ -170,13 +146,13 @@ function PostDetail() {
     return (
       <div className="postdetail-page">
         <div className="postdetail-container">
-          <BackButton
-            text="กลับไปรายการประกาศ"
-            onClick={() => navigate('/posts')}
+          <PageHeader
+            backText={backText}
+            onBack={() => navigate(backTo)}
+            tag="POST"
+            title="รายละเอียดโพสต์"
+            subtitle={error || 'ไม่พบประกาศนี้'}
           />
-          <p style={{ color: 'red' }}>
-            {error || 'ไม่พบประกาศนี้'}
-          </p>
         </div>
       </div>
     );
@@ -236,49 +212,16 @@ function PostDetail() {
     <div className="postdetail-page">
       <div className="postdetail-container">
 
-        <div className="postdetail-back-row">
-          <BackButton
-            text={
-              locationState?.state?.from === 'account'
-                ? 'กลับไปหน้าประกาศของฉัน'
-                : 'กลับไปรายการประกาศ'
-            }
-            onClick={() => {
-              if (locationState?.state?.from === 'account') {
-                navigate('/account');
-              } else {
-                navigate('/posts');
-              }
-            }}
-          />
-        </div>
-
-        <div className="postdetail-header-row">
-          <div className="postdetail-header-left">
-            <div className="postdetail-tag">
-              POST / {post.typeEn} / {post.building}
-            </div>
-
-            <h1 className="postdetail-title">
-              {post.title}
-            </h1>
-
-            <div className="postdetail-badge-wrap">
-              {/* DEPOSITED posts stay OPEN so they remain listed, but take no claims: show them as done */}
-              {isDeposited ? (
-                <StatusBadge status="closed" customText={`ฝากไว้แล้ว • ติดต่อรับที่ ${post.depositBuilding}`} />
-              ) : (
-                <StatusBadge status={post.status} />
-              )}
-            </div>
-          </div>
-
-          <div className="postdetail-header-right">
-            <span className="postdetail-date-text">
-              โพสต์เมื่อ {post.date}
-            </span>
-          </div>
-        </div>
+        <PageHeader
+          backText={backText}
+          onBack={() => navigate(backTo)}
+          tag={`POST / ${post.typeEn} / ${post.building}`}
+          title={post.title}
+          subtitle={`โพสต์เมื่อ ${post.date}`}
+          status={isDeposited
+            ? <StatusBadge status="closed" customText={`ฝากไว้แล้ว • ติดต่อรับที่ ${post.depositBuilding}`} />
+            : <StatusBadge status={post.status} />}
+        />
 
         <div className="postdetail-layout">
 
@@ -504,10 +447,7 @@ function PostDetail() {
                     </div>
 
                     <p className="review-handover-sub">
-                      ตามกฎระบบ: ทั้งผู้พบและผู้รับต้องยืนยันการส่งมอบ
-                      เมื่อยืนยันครบ โพสต์จะเปลี่ยนเป็น{' '}
-                      <strong>CLOSED</strong>{' '}
-                      และคำขออื่นที่ค้างอยู่จะถูกยกเลิกอัตโนมัติ
+                      เมื่อทั้งผู้พบและผู้รับยืนยันการส่งมอบแล้ว ระบบจะปิดประกาศอัตโนมัติ
                     </p>
 
                     {claim.ownerNote && (
@@ -753,95 +693,7 @@ function PostDetail() {
         </div>
       )}
 
-      {/* Confirmation Modal */}
-      {confirmModal && (
-        <div
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setConfirmModal(null);
-            }
-          }}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 10000,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px',
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="postdetail-confirm-title"
-            style={{
-              background: '#fff',
-              color: '#1f2937',
-              borderRadius: '16px',
-              padding: '28px',
-              width: '100%',
-              maxWidth: '420px',
-              boxShadow: '0 10px 35px rgba(0,0,0,0.2)',
-            }}
-          >
-            <h3
-              id="postdetail-confirm-title"
-              style={{ marginTop: 0 }}
-            >
-              ยืนยันการดำเนินการ
-            </h3>
-
-            <p style={{ lineHeight: 1.7 }}>
-              {confirmModal.message}
-            </p>
-
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                flexWrap: 'wrap',
-                gap: '10px',
-                marginTop: '24px',
-              }}
-            >
-              <button
-                type="button"
-                disabled={confirmLoading}
-                onClick={() => setConfirmModal(null)}
-                style={{
-                  padding: '10px 18px',
-                  border: '1px solid #ddd',
-                  borderRadius: '8px',
-                  background: '#fff',
-                  cursor: 'pointer',
-                }}
-              >
-                ยกเลิก
-              </button>
-
-              <button
-                type="button"
-                disabled={confirmLoading}
-                onClick={handleConfirm}
-                style={{
-                  padding: '10px 18px',
-                  border: 'none',
-                  borderRadius: '8px',
-                  background: '#2563eb',
-                  color: '#fff',
-                  cursor: 'pointer',
-                  opacity: confirmLoading ? 0.6 : 1,
-                }}
-              >
-                {confirmLoading ? 'กำลังดำเนินการ...' : 'ยืนยัน'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {confirmModal && <ConfirmModal {...confirmModal} onClose={() => setConfirmModal(null)} />}
     </div>
   );
 }
