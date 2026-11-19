@@ -26,11 +26,19 @@ function PostDetail() {
   const claim = locationState?.state?.claim;
   const from = locationState.state?.from;
   const fromAccount = from === 'account';
+
   const backTo = fromAccount
-    ? claim ? `/profile?claim=${claim.verify_id}` : '/account'
-    : typeof from === 'string' && from.startsWith('/posts?') ? from : '/posts';
+    ? claim
+      ? `/profile?claim=${claim.verify_id}`
+      : '/account'
+    : typeof from === 'string' && from.startsWith('/posts?')
+      ? from
+      : '/posts';
+
   const backText = fromAccount
-    ? (claim ? 'กลับไปหน้าคำขอของฉัน' : 'กลับไปหน้าประกาศของฉัน')
+    ? claim
+      ? 'กลับไปหน้าคำขอของฉัน'
+      : 'กลับไปหน้าประกาศของฉัน'
     : 'กลับไปรายการประกาศ';
 
   const [apiPost, setApiPost] = useState(null);
@@ -40,6 +48,9 @@ function PostDetail() {
   const [toast, setToast] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null);
 
+  // เก็บ index ของรูปที่กำลังแสดงเป็นรูปหลัก
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
   useEffect(() => {
     const fetchPost = async () => {
       try {
@@ -48,6 +59,9 @@ function PostDetail() {
 
         const data = await apiRequest(`/posts/${postId}`);
         setApiPost(data.post);
+
+        // เมื่อเปลี่ยนโพสต์ ให้กลับไปแสดงรูปแรก
+        setSelectedImageIndex(0);
       } catch (err) {
         setError(err.message || 'โหลดรายละเอียดโพสต์ไม่สำเร็จ');
       } finally {
@@ -64,16 +78,36 @@ function PostDetail() {
 
   useEffect(() => {
     if (loading || !locationState.state?.readClaimOnOpen || !claim) return;
+
     navigate(locationState.pathname + locationState.search, {
       replace: true,
       state: { ...locationState.state, readClaimOnOpen: false },
     });
-    if (error || String(apiPost?.post_id) !== String(postId) || String(claim.post_id) !== String(postId)) return;
+
+    if (
+      error ||
+      String(apiPost?.post_id) !== String(postId) ||
+      String(claim.post_id) !== String(postId)
+    ) {
+      return;
+    }
 
     markClaimRead(claim.verify_id).catch(() => {
-      setToast({ message: 'ไม่สามารถบันทึกว่าอ่านแล้วได้ กรุณาเปิดคำขออีกครั้ง', type: 'error' });
+      setToast({
+        message: 'ไม่สามารถบันทึกว่าอ่านแล้วได้ กรุณาเปิดคำขออีกครั้ง',
+        type: 'error',
+      });
     });
-  }, [loading, error, apiPost, postId, claim, locationState, markClaimRead, navigate]);
+  }, [
+    loading,
+    error,
+    apiPost,
+    postId,
+    claim,
+    locationState,
+    markClaimRead,
+    navigate,
+  ]);
 
   useEffect(() => {
     if (!toast) return;
@@ -99,14 +133,22 @@ function PostDetail() {
     });
   };
 
-  const handleCancelPost = () => setConfirmModal({
-    ...cancelPostConfirmation,
-    onConfirm: async () => {
-      await apiRequest(`/posts/${postId}/cancel`, { method: 'PATCH' });
-      setApiPost((prev) => ({ ...prev, post_status: 'CANCELLED' }));
-      showToast('ยกเลิกประกาศสำเร็จ!', 'success');
-    },
-  });
+  const handleCancelPost = () =>
+    setConfirmModal({
+      ...cancelPostConfirmation,
+      onConfirm: async () => {
+        await apiRequest(`/posts/${postId}/cancel`, {
+          method: 'PATCH',
+        });
+
+        setApiPost((prev) => ({
+          ...prev,
+          post_status: 'CANCELLED',
+        }));
+
+        showToast('ยกเลิกประกาศสำเร็จ!', 'success');
+      },
+    });
 
   const handleReceiverConfirm = () => {
     setConfirmModal({
@@ -118,7 +160,11 @@ function PostDetail() {
         const claimId = claim.id || claim.verify_id;
         const targetPostId = post.id || claim.post_id;
 
-        const result = await claimService.confirmHandover(claimId, 'receiver');
+        const result = await claimService.confirmHandover(
+          claimId,
+          'receiver'
+        );
+
         navigate('/account', {
           state: {
             successMessage: result?.postClosed
@@ -167,6 +213,9 @@ function PostDetail() {
   const imageUrl = (img) =>
     `http://localhost:3000${img.item_image_url}`;
 
+  // รูปที่ถูกเลือกอยู่ในขณะนี้
+  const selectedImage = images[selectedImageIndex];
+
   const isDeposited = apiPost.custody_type === 'DEPOSITED';
 
   const post = {
@@ -204,9 +253,10 @@ function PostDetail() {
     contact: apiPost.contact_text || '-',
     depositBuilding: apiPost.deposit_building_name,
     depositDetail: apiPost.deposit_detail,
+
+    // เก็บรูปแรกไว้รองรับส่วนอื่นที่อาจใช้งาน
     imageUrl: images[0] ? imageUrl(images[0]) : null,
   };
-
 
   return (
     <div className="postdetail-page">
@@ -218,38 +268,64 @@ function PostDetail() {
           tag={`POST / ${post.typeEn} / ${post.building}`}
           title={post.title}
           subtitle={`โพสต์เมื่อ ${post.date}`}
-          status={isDeposited
-            ? <StatusBadge status="closed" customText={`ฝากไว้แล้ว • ติดต่อรับที่ ${post.depositBuilding}`} />
-            : <StatusBadge status={post.status} />}
+          status={
+            isDeposited
+              ? <StatusBadge status="closed" customText={`ฝากไว้แล้ว • ติดต่อรับที่ ${post.depositBuilding}`} />
+              : <StatusBadge status={post.status} />
+          }
         />
 
         <div className="postdetail-layout">
 
           <div className="postdetail-main">
 
-            <div className="postdetail-main-image">
-              {post.imageUrl ? (
-                <img src={post.imageUrl} alt={post.title} />
-              ) : (
-                <span>รูปหลักของสิ่งของ</span>
+            {/* IMAGE GALLERY */}
+            <div className="postdetail-gallery">
+
+              {/* รูปหลัก */}
+              <div className="postdetail-main-image">
+                {selectedImage ? (
+                  <img
+                    key={selectedImage.item_image_id}
+                    src={imageUrl(selectedImage)}
+                    alt={`${post.title} รูปที่ ${selectedImageIndex + 1}`}
+                  />
+                ) : (
+                  <span>ไม่มีรูปภาพของสิ่งของ</span>
+                )}
+              </div>
+
+              {/* รูปย่อยทั้งหมด */}
+              {images.length > 1 && (
+                <div className="postdetail-thumbnails">
+                  {images.map((img, index) => (
+                    <button
+                      type="button"
+                      className={`postdetail-thumb ${
+                        selectedImageIndex === index
+                          ? 'active'
+                          : ''
+                      }`}
+                      key={img.item_image_id}
+                      onClick={() => setSelectedImageIndex(index)}
+                      aria-label={`ดูรูปที่ ${index + 1}`}
+                    >
+                      <img
+                        src={imageUrl(img)}
+                        alt={`${post.title} รูปที่ ${index + 1}`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* จำนวนรูป */}
+              {images.length > 0 && (
+                <div className="postdetail-image-counter">
+                  รูปที่ {selectedImageIndex + 1} / {images.length}
+                </div>
               )}
             </div>
-
-            {images.length > 1 && (
-              <div className="postdetail-thumbnails">
-                {images.slice(1).map((img) => (
-                  <div
-                    className="postdetail-thumb"
-                    key={img.item_image_id}
-                  >
-                    <img
-                      src={imageUrl(img)}
-                      alt={post.title}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
 
             <Card className="postdetail-desc-card">
               <h2 className="postdetail-desc-title">
@@ -291,16 +367,22 @@ function PostDetail() {
                     {post.custodyType}
                   </span>
                 </div>
+
                 {isDeposited && (
                   <>
                     <div className="custody-info-row">
                       <span className="custody-label">สถานที่ฝาก:</span>
-                      <span className="custody-value">{post.depositBuilding}</span>
+                      <span className="custody-value">
+                        {post.depositBuilding}
+                      </span>
                     </div>
+
                     {post.depositDetail && (
                       <div className="custody-info-row">
                         <span className="custody-label">รายละเอียดที่รับฝาก:</span>
-                        <span className="custody-value">{post.depositDetail}</span>
+                        <span className="custody-value">
+                          {post.depositDetail}
+                        </span>
                       </div>
                     )}
                   </>
@@ -639,7 +721,8 @@ function PostDetail() {
                       <span>ปิดรับคำขอ · ฝากไว้แล้ว</span>
                     </div>
                     <p className="postdetail-closed-desc">
-                      สิ่งของนี้ฝากไว้ที่ {post.depositBuilding} หากเป็นของคุณ ติดต่อรับได้ที่จุดฝากโดยตรง
+                      สิ่งของนี้ฝากไว้ที่ {post.depositBuilding}
+                      หากเป็นของคุณ ติดต่อรับได้ที่จุดฝากโดยตรง
                     </p>
                   </div>
                 ) : (
@@ -693,7 +776,12 @@ function PostDetail() {
         </div>
       )}
 
-      {confirmModal && <ConfirmModal {...confirmModal} onClose={() => setConfirmModal(null)} />}
+      {confirmModal && (
+        <ConfirmModal
+          {...confirmModal}
+          onClose={() => setConfirmModal(null)}
+        />
+      )}
     </div>
   );
 }
