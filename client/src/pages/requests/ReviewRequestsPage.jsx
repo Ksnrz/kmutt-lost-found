@@ -16,6 +16,7 @@ import Thumbnail from '../../components/ui/Thumbnail';
 import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import { claimService } from '../../services/claimService';
+import { handoverRoles } from '../../services/handoverRoles';
 import { apiRequest } from '../../api';
 import './ReviewRequestsPage.css';
 
@@ -35,6 +36,7 @@ export default function ReviewRequestsPage() {
   // State 1: โพสต์ประกาศหลัก (ชื่อ + post_status 'OPEN' | 'CLOSED' | 'CANCELLED') โหลดจาก server
   const [post, setPost] = useState(null);
   const postStatus = post?.post_status;
+  const roles = handoverRoles(post?.post_type);
   const setPostStatus = (post_status) => setPost((prev) => ({ ...prev, post_status }));
 
   // State 2: รายการคำขอทั้งหมด
@@ -140,8 +142,8 @@ export default function ReviewRequestsPage() {
 
   // 4. ส่งมอบไม่สำเร็จ ➔ ยกเลิกการตอบรับ (CANCELLED) เพื่อให้กลับไปเลือกคำขออื่นที่รออยู่ได้
   const handleCancelAccepted = (id) => setConfirmation({
-    title: 'ยืนยันการยกเลิกการส่งมอบ',
-    description: 'ต้องการยกเลิกการส่งมอบใช่หรือไม่? คำขอนี้จะกลับไปอยู่ในสถานะรอตรวจ และคุณสามารถเลือกคำขออื่นได้',
+    title: roles.ownerCancel,
+    description: `ต้องการ${roles.ownerCancel}ใช่หรือไม่? คำขอนี้จะกลับไปอยู่ในสถานะรอตรวจ และคุณสามารถเลือกคำขออื่นได้`,
     confirmText: 'ยืนยันการยกเลิก',
     icon: XCircle,
     onConfirm: () => claimService.updateClaimStatus(id, 'PENDING', 'ยกเลิกการตอบรับเนื่องจากส่งมอบไม่สำเร็จ'),
@@ -309,23 +311,29 @@ export default function ReviewRequestsPage() {
                     <Handshake size={20} className="review-handover-icon" />
                     <strong>ขั้นตอนการส่งมอบสิ่งของ (Dual Confirmation)</strong>
                   </div>
-                  <span className="review-handover-badge">รอทั้ง 2 ฝ่ายยืนยัน</span>
+                  <span className="review-handover-badge">
+                    {activeRequest.finderConfirmed
+                      ? `รอ${roles.claimant}ยืนยัน`
+                      : activeRequest.receiverConfirmed
+                        ? 'รอคุณยืนยัน'
+                        : 'รอทั้ง 2 ฝ่ายยืนยัน'}
+                  </span>
                 </div>
                 <p className="review-handover-sub">
-                  เมื่อทั้งผู้พบและผู้รับยืนยันการส่งมอบแล้ว ระบบจะปิดประกาศอัตโนมัติ
+                  เมื่อทั้ง{roles.owner}และ{roles.claimant}ยืนยันแล้ว ระบบจะปิดประกาศอัตโนมัติ
                 </p>
 
                 <div className="review-handover-steps-grid">
-                  {/* ฝ่ายที่ 1: ผู้พบ (คุณ) */}
+                  {/* ฝ่ายที่ 1: เจ้าของโพสต์ (คุณ) */}
                   <div className={`handover-step-card ${activeRequest.finderConfirmed ? 'is-done' : ''}`}>
                     <div className="handover-step-header">
                       <span className="step-num">
                         {activeRequest.finderConfirmed ? <Check size={14} /> : '1'}
                       </span>
-                      <span className="step-label">ฝ่ายผู้พบ (คุณ)</span>
+                      <span className="step-label">ฝ่าย{roles.owner} (คุณ)</span>
                     </div>
                     <p className="step-status-text">
-                      {activeRequest.finderConfirmed ? 'ยืนยันการส่งมอบแล้ว' : 'รอยืนยันการส่งของ'}
+                      {activeRequest.finderConfirmed ? 'ยืนยันแล้ว' : roles.ownerWaiting}
                     </p>
                     {!activeRequest.finderConfirmed ? (
                       <Button
@@ -333,7 +341,7 @@ export default function ReviewRequestsPage() {
                         size="sm"
                         onClick={() => handleConfirmFinder(activeRequest.id)}
                       >
-                        ยืนยันการส่งมอบ
+                        {roles.ownerConfirm}
                       </Button>
                     ) : (
                       <span className="handover-confirmed-tag">
@@ -343,16 +351,16 @@ export default function ReviewRequestsPage() {
                     )}
                   </div>
 
-                  {/* ฝ่ายที่ 2: ผู้รับ (นักศึกษา) */}
+                  {/* ฝ่ายที่ 2: ผู้ส่งคำขอ */}
                   <div className={`handover-step-card ${activeRequest.receiverConfirmed ? 'is-done' : ''}`}>
                     <div className="handover-step-header">
                       <span className="step-num">
                         {activeRequest.receiverConfirmed ? <Check size={14} /> : '2'}
                       </span>
-                      <span className="step-label">ฝ่ายผู้รับ ({activeRequest.requester})</span>
+                      <span className="step-label">ฝ่าย{roles.claimant} ({activeRequest.requester})</span>
                     </div>
                     <p className="step-status-text">
-                      {activeRequest.receiverConfirmed ? 'ยืนยันได้รับของแล้ว' : 'รอผู้รับยืนยัน'}
+                      {activeRequest.receiverConfirmed ? 'ยืนยันแล้ว' : `รอ${roles.claimant}ยืนยัน`}
                     </p>
                     {activeRequest.receiverConfirmed ? (
                       <span className="handover-confirmed-tag">
@@ -361,7 +369,7 @@ export default function ReviewRequestsPage() {
                       </span>
                     ) : (
                       <span className="handover-waiting-tag">
-                        <span>รอผู้รับยืนยัน</span>
+                        <span>รอ{roles.claimant}ยืนยัน</span>
                       </span>
                     )}
                   </div>
@@ -375,7 +383,7 @@ export default function ReviewRequestsPage() {
                     onClick={() => handleCancelAccepted(activeRequest.id)}
                   >
                     <XCircle size={18} aria-hidden="true" />
-                    ยกเลิกการส่งมอบ
+                    {roles.ownerCancel}
                   </Button>
                 </div>
               </div>
@@ -422,7 +430,7 @@ export default function ReviewRequestsPage() {
                 disabled={activeRequest.status !== 'PENDING'}
               />
               <p className="review-note-helper">
-                เมื่อส่งของคืนจริงแล้ว จึงกดยืนยันการส่งคืนและปิดสถานะ
+                {roles.ownerHelper}
               </p>
             </div>
 
