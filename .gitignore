@@ -38,9 +38,8 @@ Desktop.ini
 .codex/
 .agents/
 
-# Documentation & Requirements (Ignore all folders)
-*README*.md
+# Requirements docs
 *REQUIREMENTS*.md
 *requirements*.md
-**/README.md
 **/REQUIREMENTS.md
+.claude/
