@@ -5,7 +5,7 @@ import { requireAuth } from '../middleware/auth.js';
 const router = Router();
 router.use(requireAuth);
 
-const COLUMNS = 'user_id, student_id, email, first_name, last_name, phone_number';
+const COLUMNS = 'user_id, student_id, email, first_name, last_name, phone_number, contact_info';
 
 router.get('/', async (req, res) => {
   const { rows } = await pool.query(`SELECT ${COLUMNS} FROM users WHERE user_id = $1`, [req.user.user_id]);
@@ -35,17 +35,18 @@ router.get('/posts', async (req, res) => {
   res.json({ posts: rows });
 });
 
-// A field that is omitted (or null) keeps its old value; send '' to clear it.
+// A field that is omitted (or null) keeps its old value; send '' to clear it (except the phone).
 router.patch('/', async (req, res) => {
-  const { first_name, last_name, phone_number } = req.body ?? {};
-  // Thai mobile, digits only (the client strips the dashes); '' clears the number
-  if (phone_number && !/^0[689]\d{8}$/.test(phone_number)) {
-    return res.status(400).json({ error: 'เบอร์โทรไม่ถูกต้อง' });
+  const { first_name, last_name, phone_number, contact_info } = req.body ?? {};
+  // Thai mobile, digits only (the client strips the dashes); required, so it cannot be cleared
+  if (phone_number != null && !/^0[689]\d{8}$/.test(phone_number)) {
+    return res.status(400).json({ error: phone_number === '' ? 'กรุณากรอกเบอร์โทร' : 'เบอร์โทรไม่ถูกต้อง' });
   }
   const { rows } = await pool.query(
     `UPDATE users SET first_name = COALESCE($1, first_name), last_name = COALESCE($2, last_name),
-       phone_number = COALESCE($3, phone_number) WHERE user_id = $4 RETURNING ${COLUMNS}`,
-    [first_name, last_name, phone_number, req.user.user_id]
+       phone_number = COALESCE($3, phone_number), contact_info = COALESCE($4, contact_info)
+     WHERE user_id = $5 RETURNING ${COLUMNS}`,
+    [first_name, last_name, phone_number, typeof contact_info === 'string' ? contact_info.trim() : null, req.user.user_id]
   );
   if (!rows[0]) return res.status(404).json({ error: 'Not found' });
   res.json(rows[0]);

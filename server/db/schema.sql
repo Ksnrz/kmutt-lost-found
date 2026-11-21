@@ -12,6 +12,7 @@ CREATE TABLE users (
   first_name    VARCHAR(100),
   last_name     VARCHAR(100),
   phone_number  VARCHAR(20),
+  contact_info  VARCHAR(200),                   -- IG / Line / Facebook, shown after a claim is accepted
   created_at    TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
