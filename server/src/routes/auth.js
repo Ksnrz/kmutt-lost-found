@@ -10,6 +10,10 @@ router.post('/register', async (req, res) => {
   if( !student_id || !email || !password) {
     return res.status(400).json({error: 'กรอกข้อมูลไม่ครบ'})
   }
+  // 8+ chars with a letter and a digit, max 16
+  if (!/^(?=.*[A-Za-z])(?=.*\d).{8,16}$/.test(password)) {
+    return res.status(400).json({ error: 'รหัสผ่านต้องยาว 8-16 ตัว และมีทั้งตัวอักษรและตัวเลข' });
+  }
   const password_hash = await bcrypt.hash(password, 10);
 
   const { rows } = await pool.query(`INSERT INTO users (student_id, email, password_hash)

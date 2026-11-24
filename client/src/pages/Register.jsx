@@ -12,6 +12,10 @@ export default function Register() {
   async function handleSubmit(event) {
     event.preventDefault()
     const form = new FormData(event.target)
+    // same rule as server/src/routes/auth.js
+    if (!/^(?=.*[A-Za-z])(?=.*\d).{8,16}$/.test(form.get('password'))) {
+      return setError('รหัสผ่านต้องยาว 8-16 ตัว และมีทั้งตัวอักษรและตัวเลข')
+    }
     if (form.get('password') !== form.get('confirmPassword')) {
       return setError('รหัสผ่านไม่ตรงกัน')
     }
@@ -49,7 +53,7 @@ export default function Register() {
               </div>
               <div className="login-field">
                 <label htmlFor="register-password">รหัสผ่าน</label>
-                <input id="register-password" name="password" type="password" placeholder="ตั้งรหัสผ่าน" required />
+                <input id="register-password" name="password" type="password" placeholder="อย่างน้อย 8 ตัว มีตัวอักษรและตัวเลข" minLength={8} maxLength={16} required />
               </div>
               <div className="login-field">
                 <label htmlFor="register-confirm-password">ยืนยันรหัสผ่าน</label>
