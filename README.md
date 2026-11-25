@@ -25,7 +25,6 @@ web-kmutt-lost-found/
 │   │   └── routes/         # auth, posts, verify, locations, me
 │   ├── db/
 │   │   ├── schema.sql      # Full schema (drops and recreates tables)
-│   │   ├── seed.sql        # Sample data
 │   │   └── migrations/     # Incremental changes for existing databases
 │   └── uploads/            # Uploaded images
 └── docs/                   # Planning notes
@@ -44,7 +43,6 @@ web-kmutt-lost-found/
 createdb -U postgres lostfound
 cd server
 npm run db:reset   # create tables (wipes existing data)
-npm run db:seed    # optional sample data
 ```
 
 ### 2. Server
